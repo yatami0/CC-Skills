@@ -7,7 +7,7 @@
 | フレームワーク | React | ^19.0.0 | UIフレームワーク | Vue, Svelte, Solid |
 | ルーティング | react-router-dom | ^7.13.0 | SPA ルーティング | TanStack Router, Next.js App Router |
 | 状態管理 | Jotai | ^2.10.3 | クライアント状態のアトミック管理 | Zustand, Redux Toolkit, Recoil |
-| フォーム | React Hook Form | ^7.43.9 | フォーム状態管理・バリデーション | Formik, React Final Form |
+| フォーム | React Hook Form | ^7.43.9 | フォーム状態管理 / バリデーション | Formik, React Final Form |
 | バリデーション | Zod | ^3.22.3 | スキーマバリデーション | Yup, Valibot, ArkType |
 | フォームリゾルバ | @hookform/resolvers | ^3.10.0 | Zod ⇔ RHF ブリッジ | 手動バリデーション |
 | スタイリング | Sass (CSS Modules) | ^1.58.1 | コンポーネントスコープCSS | Tailwind CSS, styled-components, vanilla-extract |
@@ -17,9 +17,9 @@
 | チャート | Chart.js + react-chartjs-2 | ^4.2.1 / ^5.2.0 | データ可視化 | Recharts, Nivo, D3 |
 | DnD | @dnd-kit | core ^6.3.1 | ドラッグ＆ドロップ | react-beautiful-dnd, react-dnd |
 | ドロワー | vaul | 1.1.1 (パッチ適用) | モバイル向けハーフモーダル | Radix Dialog, Headless UI |
-| ズーム | react-zoom-pan-pinch | ^3.7.0 | 画像ズーム・パン操作 | react-medium-image-zoom |
+| ズーム | react-zoom-pan-pinch | ^3.7.0 | 画像ズーム / パン操作 | react-medium-image-zoom |
 | 認証 | oidc-c-ts + react-oidc-context | ^2.2.4 / ^2.2.2 | OpenID Connect 認証 | Auth0 SDK, NextAuth |
-| 暗号化 | crypto-js + jsrsasign | ^4.2.0 / ^11.0.0 | クライアント暗号・署名処理 | Web Crypto API |
+| 暗号化 | crypto-js + jsrsasign | ^4.2.0 / ^11.0.0 | クライアント暗号 / 署名処理 | Web Crypto API |
 | エラーバウンダリ | react-error-boundary | ^6.0.0 | React エラーバウンダリ | 自前実装 |
 | ファイルアップロード | react-dropzone | 14.3.8 | ファイル選択/ドロップUI | 自前 input[type=file] |
 | 並行制御 | p-limit | ^6.2.0 | 同時実行数の制限 | 自前 Semaphore |
@@ -117,7 +117,7 @@ app/src/
 
 UIは `@core` の部品を組み合わせて作る。アプリ側で atom を自前定義せず、`@core` の atom 〜 organism を組み立てて画面用のコンポーネントにし、それをページ配下の `components/` や `dialogs/` へ置く。粒度の階層は `@core` が持ち、アプリ側はその組み合わせ方とドメインロジックに集中する。
 
-ページのドメインロジックは `pages/XxxPage/hooks/` に集約する。`XxxPage.tsx` 本体はフックを呼び出して結果を画面に並べるだけにし、状態の取得・更新やビジネスルールはフック側へ寄せる。ロジックとそれを使うUIを同じページの中にまとめ、読むときの行き来を減らす。
+ページのドメインロジックは `pages/XxxPage/hooks/` に集約する。`XxxPage.tsx` 本体はフックを呼び出して結果を画面に並べるだけにし、状態の取得や更新、ビジネスルールはフック側へ寄せる。ロジックとそれを使うUIを同じページの中にまとめ、読むときの行き来を減らす。
 
 API と状態の扱いは次のとおり。
 
@@ -130,7 +130,7 @@ API と状態の扱いは次のとおり。
 
 UIとロジックはページの中にまとめ、配置はもっぱら利用範囲で決める。1つのページでしか使わないなら `pages/XxxPage/` 配下に置き、複数ページや複数アプリから使うものは `@shared` か `@core` へ上げる。近くに置く、広く使うものだけ共有する、という原則で段階的に昇格させる。
 
-コードを関連する場所のできるだけ近くに置くと保守しやすく、関連するテストや実装にも気付きやすい。この配置の根拠は Kent C. Dodds の「Colocation」にある。一方、`@core` の部品ライブラリは Atomic Design で粒度ごとに整理する。粒度で整理するのはライブラリ層、利用範囲で配置するのはアプリ層、と層によって基準を分ける。
+コードを関連する場所のできるだけ近くに置くと保守しやすく、関連するテストや実装にも気付きやすい。この配置の根拠は Kent C. Dodds の Colocation にある。一方、`@core` の部品ライブラリは Atomic Design で粒度ごとに整理する。粒度で整理するのはライブラリ層、利用範囲で配置するのはアプリ層、と層によって基準を分ける。
 
 ### コンポーネント配置ルール（パターン抽出）
 
@@ -139,7 +139,7 @@ UIとロジックはページの中にまとめ、配置はもっぱら利用範
 | `@core/components/` | 全アプリで共通利用されるUIプリミティブ（Atomic Design） | ボタン、モーダル、レイアウト、フォーム部品 |
 | `@shared/components/` | 一部のアプリ間で共有されるコンポーネント | ドメイン固有の共有コンポーネント |
 | `app/pages/XxxPage/components/` | 1つのページ内でのみ利用するコンポーネント | ページ固有リスト、ヘッダー |
-| `app/pages/XxxPage/dialogs/` | 1つのページ内のモーダル・ドロワー | 確認ダイアログ、編集ドロワー |
+| `app/pages/XxxPage/dialogs/` | 1つのページ内のモーダル / ドロワー | 確認ダイアログ、編集ドロワー |
 
 共通化の昇格基準はシンプルで、複数ページや2つ以上のアプリから参照されるなら `@shared` へ、全アプリ共通なら `@core` へ移す。アプリ直下に共有の置き場を持たないので、ページをまたいで使うものは共通パッケージへ上げるしかない。ESLint の `import/no-restricted-paths` でアプリ間の直接参照を禁止し、この移動を強制する。
 
@@ -151,14 +151,14 @@ UIとロジックはページの中にまとめ、配置はもっぱら利用範
 flowchart TD
   subgraph P[Presentation Layer / UI]
     direction LR
-    A1["pages/XxxPage/"] --> A2["XxxPage/components・dialogs"] --> A3["@core/components atoms〜templates"]
+    A1["pages/XxxPage/"] --> A2["XxxPage/components/dialogs"] --> A3["@core/components atoms〜templates"]
   end
-  subgraph L[Logic Layer / Hooks・Domain]
+  subgraph L[Logic Layer / Hooks/Domain]
     direction LR
     B1["pages/XxxPage/hooks/"] --> B3["@core/hooks/"]
     B4["store/"] --> B5["@core/store/"]
   end
-  subgraph D[Data Layer / API・External]
+  subgraph D[Data Layer / API/External]
     direction LR
     C1["@shared/external/rest/"] --> C2["@core/external/"]
   end
@@ -186,7 +186,7 @@ UIコンポーネントから直接 fetch している箇所はない。API 呼�
 |---|---|---|
 | `useXxxState()` | Atom の読み取り専用ラッパー | 状態読み取り層 |
 | `useXxxAction()` | API呼び出し + Atom 更新 + エラーハンドリング | ビジネスロジック層 |
-| `useXxxDrawer()` / `useXxxModal()` | モーダル・ドロワーの開閉状態管理（排他制御付き） | UI制御層 |
+| `useXxxDrawer()` / `useXxxModal()` | モーダル / ドロワーの開閉状態管理（排他制御付き） | UI制御層 |
 | `useXxxRedirect()` | URLクエリパラメータに基づくリダイレクト処理 | ナビゲーション層 |
 
 同じドメインに対して、読み取りの `useXxxState` と書き込みの `useXxxAction` を分ける。読み取りだけのコンポーネントが書き込みロジックに依存しなくなり、不要な再レンダリングを減らせる。
@@ -303,7 +303,7 @@ API クライアントは純粋な関数で、React フックに依存しない�
 
 ## 設計思想のまとめ
 
-このプロジェクトを貫く設計思想は5つある。
+このプロジェクトを貫く設計思想を以下にまとめる。
 
 共通基盤を git submodule で分離し、pnpm workspace でアプリ群を束ねるモノレポ戦略。メインアプリ（デスクトップとモバイルを統合）/管理/外部の各アプリが同じリポジトリに共存しつつ、UIコンポーネントライブラリや認証基盤は別リポジトリで独立して管理する。ESLint ルールでアプリ間の直接参照を止め、共通化の昇格フローを仕組みとして強制する。
 
