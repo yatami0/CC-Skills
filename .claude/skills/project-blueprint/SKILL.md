@@ -62,7 +62,3 @@ Offer to save the result as a markdown file (e.g. under `doc/`) when the user wo
 - Match the user's language (reply in Japanese if they wrote Japanese).
 - Make every line specific to the user's domain. If you find yourself writing a rule that could apply to anyone, cut it or make it concrete.
 - Keep identifiers, paths, and library names in their original form even in a Japanese document.
-
-## Reference
-
-`doc/claude-project-tech-writing.md` in this repo is a worked example: the blueprint specialized for writing technical documentation for this monorepo. Use it as a model for tone and structure.
