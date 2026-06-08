@@ -48,8 +48,7 @@
 root/
 ├── packages/              # git submodule で管理される共通基盤
 │   └── service/           # 共通コンポーネント・ドメイン・API層（@core）
-├── app-desktop/           # デスクトップ向けメインアプリ（@app）
-├── app-mobile/            # モバイル(SP)向けアプリ（@app-sp）
+├── app/                   # メインアプリ（@app）。デスクトップとモバイルを統合
 ├── app-admin/             # 管理者向けアプリ（@app-admin）
 ├── app-external/          # 外部公開向けアプリ（@app-ext）
 ├── shared/                # アプリ間共有コンポーネント（@shared）
@@ -57,7 +56,9 @@ root/
 └── scripts/               # ビルド・CI スクリプト
 ```
 
-構成は pnpm workspace と git submodule を組み合わせたモノレポ。5つのアプリケーションが1つのリポジトリに共存し、共通パッケージ `packages/service` だけは git submodule として別リポジトリで管理する。
+構成は pnpm workspace と git submodule を組み合わせたモノレポ。3つのアプリケーションが1つのリポジトリに共存し、共通パッケージ `packages/service` だけは git submodule として別リポジトリで管理する。
+
+デスクトップとモバイルは別アプリに分けない。単一の `app` がレスポンシブ設計で両方の画面サイズを扱う。画面幅に応じてレイアウトやUI部品（例: 広い画面はサイドバー、狭い画面は vaul のハーフモーダル）を切り替える。端末ごとにコードベースを二重持ちしないことで、ドメインロジックの重複と実装のズレを防ぐ。
 
 依存関係はルートの `package.json` にまとめ、各アプリの `package.json` にはスクリプト定義しか置かない。バージョンは一箇所で管理する。
 
@@ -65,7 +66,7 @@ root/
 
 ```
 service/src/
-├── components/            # UIコンポーネント群
+├── components/            # UIコンポーネント群（Atomic Design）
 │   ├── atoms/             #   最小単位（ボタン、入力、アイコン、ポータル）
 │   ├── molecules/         #   atoms の組合せ（モーダル、ドロワー、フォーム部品）
 │   ├── organisms/         #   複合UI（ヘッダー、サイドバー、リスト）
@@ -88,76 +89,60 @@ service/src/
 └── tests/                 # テスト共通設定
 ```
 
-UIコンポーネントは Atomic Design で分類する。atoms → molecules → organisms → templates の階層を作り、参照は下位から上位への一方向に限る。
+共通基盤の UIコンポーネントは Atomic Design で分類する。atoms → molecules → organisms → templates の階層を作り、参照は下位から上位への一方向に限る。Atomic Design は Brad Frost が提唱した UI の構成手法で、デザインシステムやコンポーネントライブラリのように、粒度で部品を整理して再利用したい層に向く。`@core` はまさに全アプリが共有する部品ライブラリなので、この分類を採る。
 
-### アプリケーション層の内部構成（代表パターン）
+Atomic Design はこの共通基盤パッケージの中だけで使う。アプリケーション層はこの分類を引き継がない。アプリ側は `@core` の atom 〜 organism を組み合わせて画面用のUIを組み上げ、できあがったコンポーネントはページや機能の単位で配置する。粒度の階層はライブラリの内部構造、利用範囲による配置はアプリの構造、と役割を分ける。
 
-#### デスクトップアプリ（初期設計）
+### アプリケーション層の内部構成
+
+デスクトップとモバイルで構成を分けない。全アプリが次の単一構成に従う。
 
 ```
 app/src/
-├── components/            # アプリ固有のUIコンポーネント
-│   ├── _dropdowns/        #   ドロップダウンメニュー群
-│   └── asides/            #   サイドパネル群
-├── dialogs/               # モーダル・ダイアログ群
-├── pages/                 # ページコンポーネント
+├── pages/                 # ページ。UIとロジックはすべてここに集約する
 │   └── XxxPage/
-│       ├── XxxPage.tsx    #   ページ本体
+│       ├── XxxPage.tsx    #   ページ本体。hooks を組み立てて画面を構成する
 │       ├── components/    #   ページ固有コンポーネント
-│       └── hooks/         #   ページ固有フック
-├── providers/             # React Context プロバイダ群
-├── services/              # ビジネスロジックサービス（純関数）
-├── store/                 # Jotai Atom 定義
-│   ├── atom/              #   Atom 定義
-│   └── hooks/             #   Atom アクセスフック
-├── i18n/                  # 国際化リソース
-├── settings/              # アプリ設定定数
-├── styles/                # グローバルスタイル
-└── Routes.tsx             # ルーティング定義（単一ファイル）
-```
-
-#### モバイルアプリ（後発の改善設計）
-
-```
-app-sp/src/
-├── components/            # アプリ固有のUIコンポーネント（templates/organisms）
-├── dialogs/               # モーダル・ドロワー・メニュー群
-├── features/              # 横断的な機能モジュール（Feature-based）
-│   ├── list/              #   リスト操作
-│   ├── node/              #   ノード操作
-│   ├── nodeAction/        #   ノードアクション
-│   └── route/             #   ルーティングユーティリティ
-├── pages/                 # ページコンポーネント
-│   └── XxxPage/
-│       ├── XxxPage.tsx    #   ページ本体
-│       ├── components/    #   ページ固有コンポーネント
-│       └── hooks/         #   ページ固有ビジネスロジックフック
+│       ├── dialogs/       #   ページ固有のモーダル・ドロワー
+│       └── hooks/         #   ページのドメインロジック（API呼び出しもここ）
 ├── routes/                # ルーティング定義
 │   ├── components/        #   ルートガードコンポーネント
 │   └── hooks/             #   ルーティングフック
-├── store/                 # Jotai Atom 定義
-├── utils/                 # ユーティリティ
+├── providers/             # React Context プロバイダ群
+├── store/                 # グローバル Jotai Atom 定義（状態はすべてここで定義）
+├── i18n/                  # 国際化リソース
 └── styles/                # グローバルスタイル
 ```
 
+アプリのトップレベルに `components/`, `dialogs/`, `hooks/` を置かない。これらはすべてページ配下にまとめる。画面に属するコンポーネント、ダイアログ、フックを `pages/XxxPage/` の中へ同置し、アプリ直下に共有の置き場を作らない。ページをまたいで使い回したくなったものは `@shared` か `@core` へ上げる流れを、置き場がないことで自然に強制する。
+
+UIは `@core` の部品を組み合わせて作る。アプリ側で atom を自前定義せず、`@core` の atom 〜 organism を組み立てて画面用のコンポーネントにし、それをページ配下の `components/` や `dialogs/` へ置く。粒度の階層は `@core` が持ち、アプリ側はその組み合わせ方とドメインロジックに集中する。
+
+ページのドメインロジックは `pages/XxxPage/hooks/` に集約する。`XxxPage.tsx` 本体はフックを呼び出して結果を画面に並べるだけにし、状態の取得・更新やビジネスルールはフック側へ寄せる。ロジックとそれを使うUIを同じページの中にまとめ、読むときの行き来を減らす。
+
+API と状態の扱いは次のとおり。
+
+- API 呼び出しは hooks の中で行う。ページが API を直接 fetch することはない。API そのものはインターフェース（型）だけを `@core/external/api` に共通定義し、機能固有の API という括りは作らない。
+- 状態はグローバルに `store/` で定義する。ページ配下に store を置くことはしない。
+
 ### 分割方式の判定
 
-レイヤーベースとフィーチャーベースのハイブリッド方式を採る。
+ページへのコロケーションを主軸に置く。
 
-トップレベルは `components/`, `pages/`, `store/`, `services/` のようにレイヤーで分割する。一方で `pages/XxxPage/` 配下は、ページごとに `components/` と `hooks/` を同じ場所に置く（コロケーション）。
+UIとロジックはページの中にまとめ、配置はもっぱら利用範囲で決める。1つのページでしか使わないなら `pages/XxxPage/` 配下に置き、複数ページや複数アプリから使うものは `@shared` か `@core` へ上げる。近くに置く、広く使うものだけ共有する、という原則で段階的に昇格させる。
 
-設計には進化の痕跡が残る。初期のデスクトップアプリは `services/` にビジネスロジックの純関数を置いた。後発のモバイルアプリでは `features/` で横断機能をモジュール化し、ページ配下の `hooks/` にドメインロジックを集める形へ変わっている。
+コードを関連する場所のできるだけ近くに置くと保守しやすく、関連するテストや実装にも気付きやすい。この配置の根拠は Kent C. Dodds の「Colocation」にある。一方、`@core` の部品ライブラリは Atomic Design で粒度ごとに整理する。粒度で整理するのはライブラリ層、利用範囲で配置するのはアプリ層、と層によって基準を分ける。
 
 ### コンポーネント配置ルール（パターン抽出）
 
 | 配置場所 | 基準 | 具体例 |
 |---|---|---|
-| `@core/components/` | 全アプリで共通利用されるUIプリミティブ | ボタン、モーダル、レイアウト、フォーム部品 |
+| `@core/components/` | 全アプリで共通利用されるUIプリミティブ（Atomic Design） | ボタン、モーダル、レイアウト、フォーム部品 |
 | `@shared/components/` | 一部のアプリ間で共有されるコンポーネント | ドメイン固有の共有コンポーネント |
-| `app/components/` | 1つのアプリ内で複数ページから利用 | ドロップダウン、サイドパネル |
-| `app/pages/XxxPage/components/` | 1つのページ内でのみ利用 | ページ固有リスト、ヘッダー |
+| `app/pages/XxxPage/components/` | 1つのページ内でのみ利用するコンポーネント | ページ固有リスト、ヘッダー |
+| `app/pages/XxxPage/dialogs/` | 1つのページ内のモーダル・ドロワー | 確認ダイアログ、編集ドロワー |
 
-共通化の昇格基準はシンプルで、2つ以上のアプリから参照されるなら `@shared` へ、全アプリ共通なら `@core` へ移す。ESLint の `import/no-restricted-paths` でアプリ間の直接参照を禁止し、この移動を強制する。
+共通化の昇格基準はシンプルで、複数ページや2つ以上のアプリから参照されるなら `@shared` へ、全アプリ共通なら `@core` へ移す。アプリ直下に共有の置き場を持たないので、ページをまたいで使うものは共通パッケージへ上げるしかない。ESLint の `import/no-restricted-paths` でアプリ間の直接参照を禁止し、この移動を強制する。
 
 ## レイヤー設計
 
@@ -167,28 +152,30 @@ app-sp/src/
 flowchart TD
   subgraph P[Presentation Layer / UI]
     direction LR
-    A1[pages/] --> A2[components/] --> A3[@core/components/]
+    A1["pages/XxxPage/"] --> A2["XxxPage/components・dialogs"] --> A3["@core/components atoms〜templates"]
   end
   subgraph L[Logic Layer / Hooks・Domain]
     direction LR
-    B1[pages/hooks/] --> B2[features/] --> B3[@core/hooks/]
-    B4[store/atom/] --> B5[@core/store/]
+    B1["pages/XxxPage/hooks/"] --> B3["@core/hooks/"]
+    B4["store/"] --> B5["@core/store/"]
   end
   subgraph D[Data Layer / API・External]
     direction LR
-    C1[@shared/external/rest/] --> C2[@core/external/]
+    C1["@shared/external/rest/"] --> C2["@core/external/"]
   end
   subgraph X[Cross-cutting 横断基盤]
     direction LR
-    E1[error/]
-    E2[i18n/]
-    E3[lib/]
-    E4[providers/]
+    E1["error/"]
+    E2["i18n/"]
+    E3["lib/"]
+    E4["providers/"]
   end
   P --> L --> D
 ```
 
 依存は上位から下位への一方向に限り、UI → Logic → Data の向きにしか流れない。逆向きは禁止。
+
+モジュール間の参照も単方向にそろえる。`@core` / `@shared` の共通層 → アプリの `pages/` の向きにだけ流す。ページが共通層を参照し、共通層がアプリを参照することはない。アプリ間の直接参照も禁止し、`import/no-restricted-paths` で機械的に強制する。
 
 UIコンポーネントから直接 fetch している箇所はない。API 呼び出しはすべてカスタムフック `useXxxAction` を経由する。
 
@@ -237,8 +224,8 @@ API クライアントは純粋な関数で、React フックに依存しない�
 ルーティングはコード定義ベースで、ファイルベースルーティングではない。
 
 - `react-router-dom` v7 の `createBrowserRouter` + `createRoutesFromElements` を使う。
-- 各アプリが独自の `Routes.tsx` または `routes/route.tsx` でルート定義を持つ。
-- パスプレフィックス（`base`）でアプリを分ける。`/d`（デスクトップ）, `/ds`（管理）, `/ddv`（外部公開）。
+- 各アプリが `routes/` 配下でルート定義を持つ。
+- パスプレフィックス（`base`）でアプリを分ける。`/ap`（メインアプリ）, `/aps`（管理）, `/apv`（外部公開）。
 
 ### レイアウトの共通化方法
 
@@ -265,7 +252,7 @@ API クライアントは純粋な関数で、React フックに依存しない�
 - 認証ハンドラ: `AuthRouteHandler` がトークンリフレッシュ、未認証リダイレクト、セッション管理をまとめて扱う。
 - 初期化フロー: 認証成功後、`useAtomActionCallback` で Jotai Atom に初期データ（ユーザー情報、ライセンス、テナント設定など）を一括セットする。
 
-### モバイルアプリのルーティング特殊パターン
+### ルートの動的振り分け
 
 - `ts-pattern` の `match` で、URLパラメータをもとに型安全にルートを分岐する。
 - ファイルIDの正規表現 `/^f[0-9]+$/` でリソース種別を判定し、別のページコンポーネントへ振り分ける。
@@ -288,7 +275,7 @@ API クライアントは純粋な関数で、React フックに依存しない�
 @app/*      → app/src/*                   # アプリ固有（自分自身）
 ```
 
-- 各アプリは `@core` と `@shared` を共通参照し、自分自身を `@app`（例: `@ap`, `@ap-c-sp`）で参照する。
+- 各アプリは `@core` と `@shared` を共通参照し、自分自身を `@app`（例: `@ap`）で参照する。
 - `tsconfig.json` の `paths` と `vite.config.ts` の `resolve.alias` で二重に定義する。型チェックとビルドの両方で解決する必要があるため。
 - 共通基盤の `tsconfig.json` を `extends` で継承する。各アプリの tsconfig は共通設定を引き継ぎ、パスエイリアスとアプリ固有の設定だけ上書きする。
 
@@ -297,7 +284,7 @@ API クライアントは純粋な関数で、React フックに依存しない�
 - Flat Config 形式。ESLint v9 の新しい設定形式を採る。共通基盤が `eslint.config.js` を定義し、各アプリがそれを import して拡張する。
 - `react-you-might-not-need-an-effect`: 不要な `useEffect` を機械的に検出するプラグイン。8つのルールをすべて `error` で有効化し、派生状態の計算や状態の連鎖更新を防ぐ。
 - `exhaustive-deps` のカスタムフック対応: `useSemaphoreCallback`, `useAtomActionCallback` などの独自フックも依存配列チェックの対象に加える。
-- `import/no-restricted-paths`: アプリ間の直接参照を禁止する。デスクトップアプリからモバイルアプリのコードを参照するとエラーになり、共通モジュールへの移動を促す。
+- `import/no-restricted-paths`: アプリ間の直接参照を禁止する。あるアプリから別アプリのコードを参照するとエラーになり、共通パッケージ（`@shared` / `@core`）への移動を促す。
 - `import/order`: import 文を `internal → relative → builtin → external` の順に、アルファベット順で並べる。
 - 命名規約の統一: `@typescript-eslint/naming-convention` で変数や関数、クラス、インターフェース、列挙型の命名を縛る。
 
@@ -319,12 +306,12 @@ API クライアントは純粋な関数で、React フックに依存しない�
 
 このプロジェクトを貫く設計思想は5つある。
 
-共通基盤を git submodule で分離し、pnpm workspace でアプリ群を束ねるモノレポ戦略。デスクトップ/モバイル/管理/外部の各アプリが同じリポジトリに共存しつつ、UIコンポーネントライブラリや認証基盤は別リポジトリで独立して管理する。ESLint ルールでアプリ間の直接参照を止め、共通化の昇格フローを仕組みとして強制する。
+共通基盤を git submodule で分離し、pnpm workspace でアプリ群を束ねるモノレポ戦略。メインアプリ（デスクトップとモバイルを統合）/管理/外部の各アプリが同じリポジトリに共存しつつ、UIコンポーネントライブラリや認証基盤は別リポジトリで独立して管理する。ESLint ルールでアプリ間の直接参照を止め、共通化の昇格フローを仕組みとして強制する。
 
 Jotai Atom と State/Action カスタムフックによる状態管理の責務分離。グローバル状態は Jotai のアトミックモデルで持ち、読み取り専用の `useXxxState` と、API呼び出しと書き込みを担う `useXxxAction` に分ける形を全アプリで揃える。UIコンポーネントは状態の読み取りだけに依存するので、ビジネスロジックを変えてもUI層に波及しにくい。
 
 不要な useEffect を排除する仕組み。`react-you-might-not-need-an-effect` の全ルールを error にして、派生状態の計算、状態の連鎖更新、イベントハンドラ内の処理を `useEffect` で書くことを禁止する。React 公式の "You Might Not Need an Effect" をチーム全体で徹底するための歯止め。
 
-ページコロケーションと横断 features のハイブリッド分割。ページ固有のコンポーネントとフックはページディレクトリ内に同置し、複数ページから参照するロジックは `features/` や `@shared`, `@core` へ段階的に上げる。近くに置く、遠くは共有する、という配置の原則。
+部品ライブラリの Atomic Design とアプリのページコロケーションを役割で分ける。`@core` は全アプリ共通の部品ライブラリとして atoms 〜 templates の粒度階層で整理する。アプリ側はその atom を組み合わせて画面用のUIを組み上げ、コンポーネント、ダイアログ、フックをページディレクトリ内に同置する。ページのドメインロジックは `pages/XxxPage/hooks/` に集約し、複数ページや複数アプリで使うものだけ `@shared`, `@core` へ段階的に上げる。粒度で整理するのはライブラリ層、利用範囲で配置するのはアプリ層。Atomic Design は Brad Frost、ページコロケーションは Kent C. Dodds の Colocation を下敷きにしている。
 
 並行実行制御とローディングの一元管理。`useSemaphoreCallback` の Semaphore パターンで重複操作を防ぎ、`withAppLoading` でローディング状態を自動で切り替える。API エラーは `ApiError` で構造化し、エラーコード別のハンドリングを一箇所に集める。ユーザー操作の安全性とエラー復帰の予測しやすさを設計のレベルで担保している。
