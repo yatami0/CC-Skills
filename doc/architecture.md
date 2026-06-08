@@ -34,7 +34,6 @@
 | リンター | ESLint (Flat Config) | ^9.8.0 | コード品質チェック | Biome |
 | フォーマッタ | Prettier | ^2.8.8 | コード整形 | Biome |
 | スペルチェック | cspell | ^9.0.2 | スペルチェック | - |
-| コード生成 | Hygen | ^6.2.11 | テンプレートベースのコード生成 | plop, scaffdog |
 | Git Hooks | simple-git-hooks + lint-staged | ^2.11.1 / ^15.2.10 | コミット前のリント実行 | Husky + lint-staged |
 | パッケージ管理 | pnpm (workspace) | 10.29.3 | モノレポ管理 | npm workspaces, Yarn, Turborepo |
 | ランタイム | Node.js | 24.13.1 (Volta 固定) | JavaScript ランタイム | - |
