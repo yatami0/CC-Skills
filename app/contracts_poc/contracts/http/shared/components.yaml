@@ -1,0 +1,126 @@
+openapi: 3.0.3
+info:
+  title: PoC Shared Components
+  version: 0.1.0
+# このファイルは共通スキーマ定義のみ。エンドポイントは持たない（poc-master-api.yaml から $ref で参照される）。
+paths: {}
+components:
+  schemas:
+    # --- 共通定義: ErrorResponse・Paging ---
+    ErrorResponse:
+      type: object
+      description: エラー応答の共通型（エラーコードはダミー値。採番体系は利用先で定義する）
+      required: [errorCode, message, correlationId]
+      properties:
+        errorCode:
+          type: string
+          description: エラーコード（ダミー値。採番体系は利用先で定義する）
+          example: "ERR-0001"
+        message:
+          type: string
+        correlationId:
+          type: string
+          format: uuid
+
+    Paging:
+      type: object
+      required: [page, size, total]
+      properties:
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        total:
+          type: integer
+          format: int64
+
+    # --- メタ定義（V-5 の源泉。画面コードは1本でこの定義を解釈する） ---
+    MasterMetaField:
+      type: object
+      required: [name, type, required]
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+          enum: [string, number, date, code]
+        required:
+          type: boolean
+        codeValues:
+          type: array
+          items:
+            type: string
+
+    MasterMeta:
+      type: object
+      required: [masterId, fields]
+      properties:
+        masterId:
+          type: string
+        fields:
+          type: array
+          items:
+            $ref: "#/components/schemas/MasterMetaField"
+
+    # --- レコード（混在型: string/number/date/int。V-1 のリネーム破壊が意味を持つよう型を散らす） ---
+    MasterRecord:
+      type: object
+      required: [id, name, unitPrice, effectiveDate, version]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        unitPrice:
+          type: number
+          format: double
+        effectiveDate:
+          type: string
+          format: date
+        version:
+          type: integer
+          format: int32
+          description: 楽観排他用バージョン番号
+
+    RecordPage:
+      type: object
+      required: [items, paging]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/MasterRecord"
+        paging:
+          $ref: "#/components/schemas/Paging"
+
+    CreateRecordRequest:
+      type: object
+      required: [name, unitPrice, effectiveDate]
+      properties:
+        name:
+          type: string
+        unitPrice:
+          type: number
+          format: double
+        effectiveDate:
+          type: string
+          format: date
+
+    UpdateRecordRequest:
+      type: object
+      description: 楽観排他のため version を必須にする
+      required: [name, unitPrice, effectiveDate, version]
+      properties:
+        name:
+          type: string
+        unitPrice:
+          type: number
+          format: double
+        effectiveDate:
+          type: string
+          format: date
+        version:
+          type: integer
+          format: int32

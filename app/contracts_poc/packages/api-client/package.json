@@ -1,0 +1,11 @@
+{
+  "name": "@poc/api-client",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "契約から生成される唯一のAPI経路。src/generated/ は手書き改変禁止。",
+  "exports": {
+    "./generated/poc": "./src/generated/poc.ts",
+    "./generated/model/*": "./src/generated/model/*.ts"
+  }
+}

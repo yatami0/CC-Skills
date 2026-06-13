@@ -1,0 +1,19 @@
+{
+  "name": "@poc/contracts-poc",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "contracts駆動開発 V-1 検証 PoC (TS-only, orval)",
+  "scripts": {
+    "bundle": "redocly bundle contracts/http/poc-master-api.yaml -o contracts/.bundled/poc-master-api.bundled.yaml",
+    "codegen": "pnpm bundle && orval --config ./orval.config.ts && prettier --write \"packages/api-client/src/generated/**/*.ts\"",
+    "codegen:check": "pnpm codegen && git diff --exit-code -- packages/api-client/src/generated",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@redocly/cli": "^1",
+    "orval": "^7",
+    "prettier": "^3",
+    "typescript": "^5.7.0"
+  }
+}

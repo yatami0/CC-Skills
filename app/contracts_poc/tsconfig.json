@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "include": [
+    "packages/api-client/src/**/*.ts",
+    "services/master/web/src/**/*.ts"
+  ],
+  "exclude": ["**/node_modules/**"]
+}

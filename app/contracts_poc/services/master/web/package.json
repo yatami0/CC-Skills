@@ -1,0 +1,10 @@
+{
+  "name": "@poc/master-web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "消費側（features層のみ）。生成 api-client を経由してのみAPIに触れる。",
+  "dependencies": {
+    "@poc/api-client": "workspace:*"
+  }
+}

@@ -1,0 +1,188 @@
+openapi: 3.0.3
+info:
+  title: PoC Master API
+  version: 0.1.0
+  description: |
+    メタ定義駆動のマスタCRUD API（汎用サンプル）。エンドポイントは {masterId} で
+    パラメタライズし、マスタごとにパスを増やさない。HTTPステータスは6コードのみ
+    （200/201/204/400/401/403/404/409）。全レスポンスに examples を持たせ、
+    将来のモック/テストフィクスチャの源泉とする。
+servers:
+  - url: /poc
+paths:
+  /masters/{masterId}/meta:
+    get:
+      operationId: getMasterMeta
+      summary: メタ定義（項目名・型・必須・コード値）取得
+      parameters:
+        - $ref: "#/components/parameters/MasterId"
+      responses:
+        "200":
+          description: メタ定義
+          content:
+            application/json:
+              schema:
+                $ref: "./shared/components.yaml#/components/schemas/MasterMeta"
+              examples:
+                dept:
+                  summary: 単純マスタ（部門相当・文字列とコード値のみ）
+                  value:
+                    masterId: dept
+                    fields:
+                      - { name: code, type: code, required: true, codeValues: ["001", "002"] }
+                      - { name: name, type: string, required: true }
+                price:
+                  summary: 型バリエーションを持つマスタ（単価相当）
+                  value:
+                    masterId: price
+                    fields:
+                      - { name: name, type: string, required: true }
+                      - { name: unitPrice, type: number, required: true }
+                      - { name: effectiveDate, type: date, required: false }
+        "404":
+          $ref: "#/components/responses/Error"
+
+  /masters/{masterId}/records:
+    get:
+      operationId: listRecords
+      summary: レコード一覧（Paging）
+      parameters:
+        - $ref: "#/components/parameters/MasterId"
+        - { name: page, in: query, required: false, schema: { type: integer, format: int32 } }
+        - { name: size, in: query, required: false, schema: { type: integer, format: int32 } }
+      responses:
+        "200":
+          description: レコードページ
+          content:
+            application/json:
+              schema:
+                $ref: "./shared/components.yaml#/components/schemas/RecordPage"
+              examples:
+                page1:
+                  value:
+                    items:
+                      - { id: "1", name: "Pen", unitPrice: 120.0, effectiveDate: "2026-04-01", version: 1 }
+                      - { id: "2", name: "Note", unitPrice: 80.0, effectiveDate: "2026-04-01", version: 3 }
+                    paging: { page: 1, size: 20, total: 2 }
+        "401":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+    post:
+      operationId: createRecord
+      summary: レコード登録
+      parameters:
+        - $ref: "#/components/parameters/MasterId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "./shared/components.yaml#/components/schemas/CreateRecordRequest"
+      responses:
+        "201":
+          description: 登録結果
+          content:
+            application/json:
+              schema:
+                $ref: "./shared/components.yaml#/components/schemas/MasterRecord"
+              examples:
+                created:
+                  value: { id: "3", name: "Eraser", unitPrice: 60.0, effectiveDate: "2026-04-01", version: 1 }
+        "400":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "409":
+          $ref: "#/components/responses/Error"
+
+  /masters/{masterId}/records/{id}:
+    get:
+      operationId: getRecord
+      summary: 1件取得
+      parameters:
+        - $ref: "#/components/parameters/MasterId"
+        - $ref: "#/components/parameters/RecordId"
+      responses:
+        "200":
+          description: レコード
+          content:
+            application/json:
+              schema:
+                $ref: "./shared/components.yaml#/components/schemas/MasterRecord"
+              examples:
+                one:
+                  value: { id: "1", name: "Pen", unitPrice: 120.0, effectiveDate: "2026-04-01", version: 1 }
+        "404":
+          $ref: "#/components/responses/Error"
+    put:
+      operationId: updateRecord
+      summary: "更新（楽観排他: version）"
+      parameters:
+        - $ref: "#/components/parameters/MasterId"
+        - $ref: "#/components/parameters/RecordId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "./shared/components.yaml#/components/schemas/UpdateRecordRequest"
+      responses:
+        "200":
+          description: 更新結果
+          content:
+            application/json:
+              schema:
+                $ref: "./shared/components.yaml#/components/schemas/MasterRecord"
+              examples:
+                updated:
+                  value: { id: "1", name: "Pen", unitPrice: 130.0, effectiveDate: "2026-04-01", version: 2 }
+        "400":
+          $ref: "#/components/responses/Error"
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+        "409":
+          $ref: "#/components/responses/Error"
+    delete:
+      operationId: deleteRecord
+      summary: 削除
+      parameters:
+        - $ref: "#/components/parameters/MasterId"
+        - $ref: "#/components/parameters/RecordId"
+      responses:
+        "204":
+          description: 削除完了
+        "403":
+          $ref: "#/components/responses/Error"
+        "404":
+          $ref: "#/components/responses/Error"
+
+components:
+  parameters:
+    MasterId:
+      name: masterId
+      in: path
+      required: true
+      schema:
+        type: string
+    RecordId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+  responses:
+    Error:
+      description: エラー応答（共通の ErrorResponse 型に正規化）
+      content:
+        application/json:
+          schema:
+            $ref: "./shared/components.yaml#/components/schemas/ErrorResponse"
+          examples:
+            notFound:
+              value:
+                errorCode: "ERR-0001"
+                message: "record not found"
+                correlationId: "00000000-0000-0000-0000-000000000000"
