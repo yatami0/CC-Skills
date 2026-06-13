@@ -1,0 +1,22 @@
+{
+  // スクリプト実行・タスクのパッケージマネージャを pnpm に固定
+  // （package.json の Run ボタン／NPM Scripts が npm ではなく pnpm を使う）
+  "npm.packageManager": "pnpm",
+
+  // 保存時フォーマットは Prettier に統一
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "[typescript]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[typescriptreact]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[javascript]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[json]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[jsonc]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[yaml]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+
+  // Marp デッキ等の Markdown は整形で崩したくないので保存時フォーマット対象外
+  "[markdown]": { "editor.formatOnSave": false },
+
+  // ワークスペース同梱の Prettier / 設定ファイルを優先利用
+  "prettier.requireConfig": true,
+  "prettier.useEditorConfig": false
+}
