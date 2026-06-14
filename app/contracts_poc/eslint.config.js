@@ -7,6 +7,7 @@
 //
 // 対象は消費側(services/master/web)のみ。生成 api-client(packages/api-client)は
 // 唯一 fetch を持ってよい正規の経路なので、ここでは対象外（下の files で限定）。
+import reactHooks from "eslint-plugin-react-hooks";
 import tseslint from "typescript-eslint";
 
 const NO_RAW_HTTP = "生fetch直書き禁止。API は生成 api-client(@poc/api-client) 経由のみ(V-2)。";
@@ -24,11 +25,12 @@ export default [
     ],
   },
   {
-    files: ["services/master/web/src/**/*.ts"],
+    files: ["services/master/web/src/**/*.{ts,tsx}"],
     languageOptions: {
       parser: tseslint.parser,
       ecmaVersion: 2022,
       sourceType: "module",
+      parserOptions: { ecmaFeatures: { jsx: true } },
     },
     rules: {
       // グローバル fetch / XHR への参照を禁止
@@ -65,6 +67,25 @@ export default [
           ],
         },
       ],
+    },
+  },
+  // V-5: React の絶対ルール(Rules of Hooks)を機械検知する(03-react-rules / 09 機械ゲート)。
+  // 対象は React を書く ui-engine と消費側 web の tsx。
+  {
+    files: [
+      "packages/ui-engine/src/**/*.tsx",
+      "services/master/web/src/**/*.tsx",
+    ],
+    languageOptions: {
+      parser: tseslint.parser,
+      ecmaVersion: 2022,
+      sourceType: "module",
+      parserOptions: { ecmaFeatures: { jsx: true } },
+    },
+    plugins: { "react-hooks": reactHooks },
+    rules: {
+      "react-hooks/rules-of-hooks": "error",
+      "react-hooks/exhaustive-deps": "error",
     },
   },
 ];

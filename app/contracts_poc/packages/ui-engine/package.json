@@ -1,0 +1,11 @@
+{
+  "name": "@poc/ui-engine",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "V-5: メタ定義(項目名・型・必須・コード値)を受け取りCRUD画面(一覧＋登録/編集フォーム)を描画する汎用エンジン。マスタ個別の画面コードを持たない(ADR-0003)。API/状態には依存せず props 駆動の純粋な描画層。",
+  "exports": {
+    ".": "./src/index.ts",
+    "./types": "./src/types.ts"
+  }
+}

@@ -3,7 +3,8 @@
     "target": "ES2022",
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "lib": ["ES2022", "DOM"],
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
     "strict": true,
     "noImplicitAny": true,
     "noUncheckedIndexedAccess": false,
@@ -14,7 +15,9 @@
     "isolatedModules": true,
     "verbatimModuleSyntax": false,
     "paths": {
-      "@poc/api-client/*": ["./packages/api-client/src/*"]
+      "@poc/api-client/*": ["./packages/api-client/src/*"],
+      "@poc/ui-engine": ["./packages/ui-engine/src/index.ts"],
+      "@poc/ui-engine/*": ["./packages/ui-engine/src/*"]
     }
   }
 }

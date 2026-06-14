@@ -16,10 +16,27 @@
     "test": "vitest run",
     "verify": "pnpm codegen:check && pnpm typecheck && pnpm lint && pnpm depcruise && pnpm test"
   },
+  "dependencies": {
+    "@hookform/resolvers": "^3.9.1",
+    "jotai": "^2.10.3",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-hook-form": "^7.54.2",
+    "ts-pattern": "^5.6.0",
+    "zod": "^3.22.3"
+  },
   "devDependencies": {
     "@redocly/cli": "^1",
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.1.0",
+    "@testing-library/user-event": "^14.5.2",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
     "dependency-cruiser": "^16",
     "eslint": "^9",
+    "eslint-plugin-react-hooks": "^5.1.0",
+    "jsdom": "^25.0.1",
     "msw": "^2.14.6",
     "orval": "^7",
     "prettier": "^3",

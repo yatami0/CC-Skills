@@ -5,7 +5,10 @@
   },
   "include": [
     "packages/api-client/src/**/*.ts",
-    "services/master/web/src/**/*.ts"
+    "packages/ui-engine/src/**/*.ts",
+    "packages/ui-engine/src/**/*.tsx",
+    "services/master/web/src/**/*.ts",
+    "services/master/web/src/**/*.tsx"
   ],
   "exclude": ["**/node_modules/**"]
 }
