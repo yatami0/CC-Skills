@@ -13,10 +13,16 @@ OpenAPI 契約を一次情報とし、そこから型・API クライアント�
 **生fetch直書き／レイヤ違反／生成物の手書き改変を、機械（lint・構造解析・差分）が CI で落とす。**
 実装側の「配線ミス（経路逸脱・層の逆流）」もレビュー任せにせず機械ゲートで塞ぐ。詳細は [doc/v-2/基本設計.md](doc/v-2/基本設計.md)。
 
+検証する仮説（V-3・追加）:
+**BE未完成の状態で、契約から生成した MSW モックだけで FE の経路結合テストが通る。**
+モックを手書きせず契約 examples から生成することで「モックと本番の乖離」を構造的に消し、FE を BE ゼロで作り進められる。詳細は [doc/v-3/基本設計.md](doc/v-3/基本設計.md)。
+
+> 注: 本 PoC はまだ React/Next 未導入のため、結合するのは「契約→モック→生成client→消費(app/features)」という**経路(データ)結合**。React 描画(render→DOM)＝"画面"の結合は ui-engine 実装(V-5)の領域。親仕様の合格基準「画面結合テスト」を、本 PoC は経路結合テストとして実装している。ランナー(Vitest)も暫定で、V-5 で本決めする。
+
 ## スコープ
 
-- **TS（フロント側）に集中**。codegen ツールは **orval**、越境検知は **dependency-cruiser + ESLint**。
-- 検証は **V-1（契約→codegen破壊検知）＋ V-2（越境・改変の機械検知）**。MSW モック・ランタイム検証・サーバ実装(Java/ArchUnit)は対象外だが、構造を保ったまま後付けできる。
+- **TS（フロント側）に集中**。codegen ツールは **orval**、越境検知は **dependency-cruiser + ESLint**、モック/結合テストは **MSW + Vitest**。
+- 検証は **V-1（契約→codegen破壊検知）＋ V-2（越境・改変の機械検知）＋ V-3（モックによる並行開発）**。ランタイム検証・サーバ実装(Java/ArchUnit)は対象外だが、構造を保ったまま後付けできる。
 
 ## 構成
 
@@ -24,14 +30,20 @@ OpenAPI 契約を一次情報とし、そこから型・API クライアント�
 contracts/http/                正の中心（人が書く OpenAPI 契約）
   poc-master-api.yaml          6エンドポイント・{masterId}パラメタライズ・examples必須
   shared/components.yaml       ErrorResponse / Paging / MasterRecord ほか共通スキーマ
-orval.config.ts                契約→コードの一方向 codegen 設定（client: fetch / mode: single）
+orval.config.ts                契約→コードの一方向 codegen 設定（client: fetch / mode: split / V-3: MSW mock on）
 eslint.config.js               V-2: 生fetch/http直書き禁止（消費側 web のみ対象）
 .dependency-cruiser.cjs        V-2: レイヤ依存方向・生成物直参照の禁止
+vitest.config.ts               V-3: MSW モックだけで回す FE 結合テスト設定（node 環境）
 packages/api-client/
-  src/generated/               orval 出力（コミット対象・手書き改変禁止。唯一 fetch を持つ正規経路）
+  src/generated/poc.ts         orval 出力。型付き fetch クライアント（msw 非依存＝本番経路は純粋）
+  src/generated/poc.msw.ts     orval 出力。MSW ハンドラ（V-3・mock 専用入口。テストが import）
+  src/generated/model/         orval 出力。型（poc.ts / poc.msw.ts が共有）
+                               ※ generated/ はコミット対象・手書き改変禁止（唯一 fetch を持つ正規経路）
 services/master/web/
   src/app/recordsRoute.ts                      app層（ルーティング/BFF入口の代役。features へ委譲のみ）
   src/features/masterRecords/recordsView.ts    消費コード（生成型に静的依存。破壊が現れる場所）
+  test/setup.ts                                V-3: 契約由来 MSW ハンドラで server 起動（BE 不要）
+  test/path.msw.test.ts                        V-3: 経路結合テスト（app→features→api-client→MSW。画面=描画結合は V-5）
 ```
 
 層の依存方向（V-2 で機械強制）: `app → features → @poc/api-client`。逆流・近道・生fetchをすべて lint / dependency-cruiser で塞ぐ。
@@ -54,7 +66,8 @@ services/master/web/
 | `pnpm typecheck` | `tsc --noEmit`（strict）。V-1 の機械ゲート |
 | `pnpm lint` | ESLint。生fetch/http直書きを検知（V-2） |
 | `pnpm depcruise` | dependency-cruiser。レイヤ違反・生成物直参照を検知（V-2） |
-| `pnpm verify` | 上記ゲートを一括（codegen:check → typecheck → lint → depcruise）= ローカル CI 相当 |
+| `pnpm test` | Vitest。MSW モックだけで FE 経路結合テスト（V-3） |
+| `pnpm verify` | 上記ゲートを一括（codegen:check → typecheck → lint → depcruise → test）= ローカル CI 相当 |
 
 ## セットアップ
 
@@ -129,14 +142,45 @@ pnpm verify      # codegen:check → typecheck → lint → depcruise
 
 > 集約スクリプトは `verify`。`ci` という名前は `pnpm ci`（pnpm 組み込みの clean install）と衝突するため避けている（`pnpm run ci` なら可）。
 
+## V-3 検証（モックによる並行開発）
+
+契約 examples から生成した MSW モックだけで、BE を起動せず FE の経路結合テストが通ることを確認する（React 描画＝"画面"の結合は V-5 領域。親仕様の「画面結合テスト」を経路結合として実装）。実測値は [doc/v-3/検証メモ.md](doc/v-3/検証メモ.md)。
+
+```bash
+# (1) モック生成を on にして再生成（orval.config.ts: mode:split + mock={type:"msw",useExamples:true}）
+pnpm codegen
+#   → poc.msw.ts に MSW ハンドラ + getPoCMasterAPIMock() が契約 examples を本文として生成
+#     （client は poc.ts に分離。poc.ts は msw を import しない＝本番経路は純粋）
+
+# (2) BE を一切起動せず、経路結合テストを実行
+pnpm test        # 期待: 終了コード 0。app→features→api-client→fetch→MSW を一気通貫で通す
+#   ✓ services/master/web/test/path.msw.test.ts (4 tests)
+
+# (3) 一括（ローカル CI 相当）
+pnpm verify      # codegen:check → typecheck → lint → depcruise → test
+```
+
+| 検証観点 | 手段 | 実測 |
+|---|---|---|
+| MSW モックだけで経路結合テストが通る | `pnpm test`（BE プロセス無し） | `0`（4 tests passed） |
+| モックの源泉が契約 examples | orval `useExamples: true` | 期待値が契約 yaml と一致 |
+| 本物 BE を叩いていない | MSW `onUnhandledRequest:"error"` | 契約外通信は即エラー |
+| モックと契約の乖離が起きない | V-1 `codegen:check` + 型破壊の波及 | 契約変更→モック再生成→`tsc` で露見 |
+
+> モックと本番は同じ生成 api-client 1本（V-2）を通るため、BE 完成時は「向き先の差し替え」だけで FE は不変。
+> テストハーネス（`web/test/**`）は V-2 の生fetch禁止ルールの対象外（ブラウザの origin を補うため意図的に `globalThis.fetch` を扱う）。
+
 ## codegen ツール選定の記録
 
 | 項目 | 採用 | 理由 |
 |---|---|---|
-| ツール | **orval 7.21.0** | OpenAPI → TS型 + client（+ 将来 MSW/zod）を一括生成。examples をモック源泉に流用可能 |
+| ツール | **orval 7.21.0** | OpenAPI → TS型 + client + MSW モックを一括生成。examples をモック源泉に流用 |
 | client | `fetch` | 純TSで tsc だけで完結。react-query 依存を持ち込まない |
-| mode | `single` | 生成物が1ファイルで `codegen:check` の diff がクリーン |
-| mock / zod | off | スコープ外。examples を契約に保持済みなので1スイッチで後付け可 |
+| mode | `split` | client(poc.ts)と mock(poc.msw.ts)をファイル分離。**本番 client を msw 非依存に保つ**（V-3 で single→split に変更。経緯は doc/v-3/技術調査.md §1.5） |
+| mock | **on（type: msw / useExamples / delay:false）** | V-3。契約 examples を本文に。faker 乱数を使わず期待値を契約に固定 |
+| mock の置き場所 | api-client 内に **split**（別パッケージ msw-mocks は見送り） | orval は mock 単独生成不可で別パッケージ化は型を二重生成するため。本番は出力先分離で昇格 |
+| zod | off | スコープ外。1スイッチで後付け可 |
+| 結合テスト | **MSW 2 + Vitest 2（node）** | 生成ハンドラをそのまま `setupServer`。DOM 不要の経路結合を軽量に回す |
 | ref解決 | redocly bundle 前段 | 跨ファイル `$ref` の orval 不具合を回避 |
 
 検証時の解決バージョン: orval `7.21.0` / typescript `5.9.3` / @redocly/cli `1.34.15` / prettier `3.8.4`（Node 24 / pnpm 10）。
@@ -145,4 +189,5 @@ pnpm verify      # codegen:check → typecheck → lint → depcruise
 
 - module解決は `bundler`（orval 出力が拡張子なし/ディレクトリ import のため）。型解決は tsconfig `paths` でソース直結（ビルド0）。本番は workspace の exports map を使う想定。
 - エラーコード・マスタ名などの値はすべてダミー。利用先の契約に差し替える。
-- このPoCは原則使い捨て。持ち越すのは「契約の書き方・codegen設定・破壊テスト手順」。
+- 生成 api-client が相対 URL で fetch するため、node 結合テストでは origin が無い。本番クライアントに baseUrl を焼かず、テスト側（`web/test/setup.ts`）でブラウザ相当の origin を補う。
+- このPoCは原則使い捨て。持ち越すのは「契約の書き方・codegen設定・破壊テスト手順・モックを生成する設計（examples必須運用）」。

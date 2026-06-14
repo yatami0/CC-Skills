@@ -17,6 +17,10 @@ export default [
       "**/node_modules/**",
       "packages/api-client/src/generated/**", // 生成物は対象外(codegen:check が守る)
       "contracts/.bundled/**",
+      // V-3 テストハーネスは V-2 の生fetch禁止ルールの対象外。
+      // ブラウザ相当の origin 補完のため setup.ts が意図的に globalThis.fetch を扱う
+      // (本番 web/src/** とは別物。生産コードの経路は従来どおり機械検査される)。
+      "services/master/web/test/**",
     ],
   },
   {

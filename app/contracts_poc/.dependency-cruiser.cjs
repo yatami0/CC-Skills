@@ -47,11 +47,11 @@ module.exports = {
     {
       name: "generated-only-via-sanctioned-consumers",
       comment:
-        "生成物 generated/ に触れてよいのは api-client 自身と features 層のみ。app などからの直接参照を禁止。",
+        "生成物 generated/ に触れてよいのは api-client 自身・features 層・テスト(V-3 のモック消費)のみ。app などからの直接参照を禁止。",
       severity: "error",
       from: {
         pathNot:
-          "^(packages/api-client/|services/master/web/src/features/)",
+          "^(packages/api-client/|services/master/web/src/features/|services/master/web/test/)",
       },
       to: { path: "^packages/api-client/src/generated/" },
     },

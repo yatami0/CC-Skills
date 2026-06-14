@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "contracts駆動開発 V-1/V-2 検証 PoC (TS-only, orval + dependency-cruiser + ESLint)",
+  "description": "contracts駆動開発 V-1/V-2/V-3 検証 PoC (TS-only, orval + dependency-cruiser + ESLint + MSW/Vitest)",
   "scripts": {
     "bundle": "redocly bundle contracts/http/poc-master-api.yaml -o contracts/.bundled/poc-master-api.bundled.yaml",
     "codegen": "pnpm bundle && orval --config ./orval.config.ts && prettier --write \"packages/api-client/src/generated/**/*.ts\"",
@@ -13,15 +13,18 @@
     "depcruise": "depcruise --config .dependency-cruiser.cjs services packages",
     "depcruise:graph": "depcruise --config .dependency-cruiser.cjs --output-type mermaid --output-to doc/v-2/dependency-graph.mmd services packages",
     "depcruise:affected": "depcruise --config .dependency-cruiser.cjs --output-type mermaid --affected --output-to doc/v-2/affected-graph.mmd services packages",
-    "verify": "pnpm codegen:check && pnpm typecheck && pnpm lint && pnpm depcruise"
+    "test": "vitest run",
+    "verify": "pnpm codegen:check && pnpm typecheck && pnpm lint && pnpm depcruise && pnpm test"
   },
   "devDependencies": {
     "@redocly/cli": "^1",
     "dependency-cruiser": "^16",
     "eslint": "^9",
+    "msw": "^2.14.6",
     "orval": "^7",
     "prettier": "^3",
     "typescript": "^5.7.0",
-    "typescript-eslint": "^8"
+    "typescript-eslint": "^8",
+    "vitest": "^2.1.9"
   }
 }

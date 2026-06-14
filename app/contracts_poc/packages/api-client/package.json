@@ -3,9 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "契約から生成される唯一のAPI経路。src/generated/ は手書き改変禁止。",
+  "description": "契約から生成される唯一のAPI経路。src/generated/ は手書き改変禁止。poc=本番client(msw非依存) / poc.msw=テスト用MSWハンドラ。",
   "exports": {
     "./generated/poc": "./src/generated/poc.ts",
+    "./generated/poc.msw": "./src/generated/poc.msw.ts",
     "./generated/model/*": "./src/generated/model/*.ts"
   }
 }
