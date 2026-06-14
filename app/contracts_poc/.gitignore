@@ -8,5 +8,9 @@ dist/
 # contract bundle is a build artifact; split yamls under contracts/http/ are the source of truth
 contracts/.bundled/
 
+# affected-graph is a per-PR/per-branch artifact (depcruise:affected, generated in CI).
+# The full snapshot doc/v-2/dependency-graph.mmd IS committed (referenced by 技術調査.md).
+doc/v-2/affected-graph.mmd
+
 # NOTE: packages/api-client/src/generated/ is intentionally NOT ignored.
 # Generated code is committed so codegen:check (git diff --exit-code) can detect drift / hand edits.
