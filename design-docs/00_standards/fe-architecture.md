@@ -1,38 +1,42 @@
 # FE横断アーキテクチャ標準（fe-architecture）
 
-> **位置づけ：第1層・標準（サイト非依存）。** FEの実装方式の横断ルール（レンダリング・状態管理・コンポーネント設計・品質ガードレール・命名 等）の**正本**。
-> **意思決定の根拠は [ADR 0001〜0005](../../FE_architecture/ADR/README.md) が正**であり、本書はそれを横断標準として確定・集約したもの。ADR と食い違う場合は ADR を優先する。
-> 他の標準（[document_guideline.md](./document_guideline.md) / [naming_convention.md](./naming_convention.md) 等）は本ファイルを**参照**し、FE実装方式を重複定義しない。
-
-> **本書は骨子（スケルトン）である。** 各章の中身は、現状 `FE_architecture/doc/アーキテクチャ設計.md`（A系）に投影済みの内容を本書へ集約しながら確定する。各章の `状態` / `集約元` / `TODO` を埋めることで完成する。
+> **位置づけ：第1層・標準（サイト非依存）。** FEの実装方式の横断ルールの**正本**。
+> **意思決定の根拠は [ADR 0001〜0005](../../FE_architecture/ADR/README.md) が正**。ADR と食い違う場合は ADR を優先する。
+> 他の標準（[document_guideline.md](./document_guideline.md) / [naming_convention.md](./naming_convention.md)）は本ファイルを**参照**し、FE実装方式を重複定義しない。
 
 ---
 
-## 0. 30秒サマリ
+## 0. 章立ての出典（なぜこの章なのか）
 
-- 今回のFEは **Next.js（App Router）＋ クライアントファースト ＋ TanStack Query ＋ OpenAPI codegen ＋ Tailwind ＋ RHF/Zod**。フロント1名＋AI開発を、規約と機械ゲートで縛る。
-- メンタルモデルは **「API を叩くクライアントアプリ」**。Server Actions を使わず、サーバー処理は BFF（Route Handler）に集約する。
-- 正しさは散文レビューではなく **型・lint・テスト・codegen drift の機械ゲート**で落とす。
-- 本書（第1層標準）が FE横断ルールの正本。サイト固有の構成（システム構成図・認証・外部連携）は第2層 `04_アーキテクチャ` に置き、本書を参照する。
+本書の章立ては**経験則ではなく、権威ある外部リファレンスと本リポジトリのADRに基づく**。各章は最低1つの権威ソースに紐づく。
 
-> **状態タグの凡例：** ✅ 確定（集約のみ） ／ ⚠️ 部分確定・未決あり ／ ❌ 未記述（要起草）
+| 出典 | 内容 | 役割 |
+|---|---|---|
+| **bulletproof-react**（[docs/](https://github.com/alan2207/bulletproof-react/tree/master/docs)、Reactアーキの事実上標準） | `application-overview / project-structure / components-and-styling / api-layer / state-management / testing / error-handling / security / performance / project-standards / deployment` の12構成 | **章立ての骨格** |
+| **Next.js 公式**（[Project Structure](https://nextjs.org/docs/app/getting-started/project-structure)・[AI Agents](https://nextjs.org/docs/app/guides/ai-agents)・[Deploying](https://nextjs.org/docs/app/getting-started/deploying)） | App Router の file conventions、AGENTS.md/CLAUDE.md 自動生成、配信構成 | **Next.js固有章の根拠** |
+| **本リポジトリ ADR 0001–0005** | 当案件の技術決定 | **各章の中身の正** |
+
+> bulletproof-react に独立章が無い領域（ルーティング・アクセシビリティ）は独立章にしない。ルーティングは §3（Next.js file conventions）に統合、アクセシビリティは §8.1/§12 の小項目で扱う。
+
+> **状態タグ：** ✅ 確定 ／ ⚠️ 部分・未決あり ／ ❌ 未記述
 
 ---
 
-## 1. スコープと前提
+## 1. 概要とスコープ（application-overview）  ✅
 
-- **対象：** 全サイト共通のFE実装方式（サイト非依存）。当面の主対象は基幹システムのマスタデータ管理サイト（CRUD・4〜5画面）。
-- **継承する決定（ADR・再決定しない）：** フレームワーク/レンダリング(0001)、データ取得(0002)、codegen(0003)、AI規約(0004)、テスト(0005)。詳細は [ADR README](../../FE_architecture/ADR/README.md)。
-- **サイト非依存の線引き：** メタデータ駆動・EAV 等のサイト固有方式は本書に書かない（第2層に閉じる）。
+- **対象：** 全サイト共通のFE実装方式（サイト非依存）。当面の主対象は基幹システムのマスタデータ管理サイト（CRUD・4〜5画面）。フロント1名＋AIコーディング主体。
+- **継承する決定（ADR・再決定しない）：** FW/レンダリング(0001)・データ取得(0002)・codegen(0003)・AI規約(0004)・テスト(0005)。
+- **メンタルモデル：** 「API を叩くクライアントアプリ」。OpenAPI から生成した型・client を土台に、サーバー状態は TanStack Query に預け、正しさは型・lint・テスト・codegen drift の機械ゲートで落とす。
+- **出典：** bulletproof-react `application-overview` ／ ADR README
 
-### 1.1 ドキュメント系統の整理（重要）
+### 1.1 ドキュメント系統の整理
 
 | 系統 | 所在 | 位置づけ |
 |---|---|---|
-| **A. 今回の正** | `FE_architecture/doc/アーキテクチャ設計.md` ＋ `ADR 0001–0005` | 本書が集約する一次情報 |
-| B. 補助 | `FE_architecture/doc/共通コンポーネント.md`、doc-kit materials | デザインシステム構想・図解。§9.2 で正系へ統合 |
-| **C. 参考（別PJ分析）** | `FE_architecture/doc/spa_architecture/` | React+Jotai の**別スタック**。今回の正ではない＝**参考扱い**。良い記述は出典明記で移植 |
-| **D. 廃止（旧版）** | `FE_architecture/doc/Archive/` | React SPA 前提の旧構想。**廃止**。本書では参照しない |
+| **A. 今回の正** | A系 `アーキテクチャ設計.md` ＋ `ADR 0001–0005` | 本書が集約する一次情報 |
+| B. 補助 | `共通コンポーネント.md`、doc-kit materials | §8.2 で正系へ統合 |
+| **C. 参考（別PJ分析）** | `spa_architecture/`（React+Jotai・**別スタック**） | 参考扱い。良い記述は出典明記で移植 |
+| **D. 廃止（旧版）** | `Archive/`（React SPA 前提の旧構想） | 廃止。参照しない |
 
 > **TODO：** C/D の各 README に「参考／廃止」を明示する。
 
@@ -40,128 +44,173 @@
 
 ## 2. レンダリング/フレームワーク方針  ✅
 
-- Next.js（App Router）＋ クライアントファースト。RSC は主役にしない。FE/BFF を1つの Next.js に同居。
-- **根拠：** ADR-0001 ／ **集約元：** アーキ設計 §0・§1・§6
+- **Next.js（App Router）＋ クライアントファースト。** RSC は主役にしない。FE/BFF を1つの Next.js アプリに同居させ、BFF は Route Handler（`app/api/**/route.ts`）で実装する。
+- ブラウザは BE の URL もトークンも知らない。`useQuery`/`useMutation` は同一オリジン `/api`（BFF）だけを叩く。
+- RSC を新規に持ち込む場合は ADR を追加してからにする（勝手に増やさない）。
+- **出典：** Next.js公式（Server/Client Components）／**ADR-0001** ／ **集約元：** A系 §0・§1・§6
 
-## 3. ディレクトリ構成・コロケーション  ✅
+## 3. プロジェクト構成・ルーティング・コロケーション  ✅
 
-- `app/` はルーティング定義のみ。実体は `features/{機能}/` にコロケーション。横断UIは `components/ui/`、横断ロジックは `lib/`、生成物は `generated/`。
-- **集約元：** アーキ設計 §2
+```
+src/
+├─ app/                        # App Router＝ルーティング定義のみ（ロジックを書かない）
+│  ├─ layout.tsx               # 骨格。providers を呼ぶだけ
+│  ├─ providers.tsx            # 'use client'：QueryClientProvider
+│  ├─ api/[...path]/route.ts   # BFF キャッチオール proxy（認証付与・整形）
+│  └─ masters/[masterType]/[recordId]/  # 一覧/詳細・更新（動的セグメント1セット）
+├─ features/                   # ★機能単位で凝集（Colocation）。components/ hooks/ types/
+├─ components/ui/              # 横断 UI 部品（自前デザインシステム・§8）
+├─ lib/                        # 横断ユーティリティ（error / i18n / 整形）
+└─ generated/                  # ★OpenAPI 生成物。手で編集しない
+```
+
+- **`app/` はルーティング定義のみ**。page/layout/loading/error/route の file conventions で骨格を組み、実体は持たない。
+- **実体は `features/{機能}/` にコロケーション**。横断共通UIは `components/ui/`、横断ロジックは `lib/`。機能固有のものは `features/` から出さない。
+- **マスタ別フォルダを作らない**。マスタは `app/masters/[masterType]` の動的セグメント1セットで捌く。
+- **ルーティングは独立章にせず本章に含める**（Next.js では file conventions が構成の一部）。
+- **出典：** bulletproof-react `project-structure` ／ Next.js公式（Project Structure / File Conventions）／ **集約元：** A系 §2
 
 ## 4. レイヤーと依存方向  ✅
 
-- UI → Logic → Data の一方向。UIから直 fetch 禁止。生成物の手書き禁止。
-- **根拠：** ADR-0004 ／ **集約元：** アーキ設計 §3
+```
+UI（components/ui・features 内の葉） → Logic（useXxxState/useXxxAction） → Data（generated client → BFF → BE）
+```
 
-## 5. 状態管理
+- 依存は **UI → Logic → Data の一方向**。逆流禁止。
+- **UI から直接 `fetch` しない**。読み取りは `useXxxState`、書き込みは `useXxxAction` を必ず経由（ESLint で強制）。
+- **生成物（`src/generated/`）の手書き改変禁止**（再生成で上書き）。import 経路も lint で固定。
+- **出典：** bulletproof-react `project-structure`（unidirectional）／ ADR-0004 ／ **集約元：** A系 §3
+
+## 5. 状態管理（state-management）
+
+bulletproof-react の5分類（Component / Application / Server Cache / Form / URL）に従い、状態は**それを必要とする場所にできるだけ近づけて局所化**する。最初からすべてをグローバル化しない。
+- **出典：** bulletproof-react `state-management`
 
 ### 5.1 サーバー状態（TanStack Query・queryKey）  ✅
-- `useXxxState`=useQuery / `useXxxAction`=useMutation。queryKey はファクトリに集約、更新成功時はマスタ単位で `invalidateQueries`。取得モードA(クライアント)基本／B(SSRプリフェッチ)加算。QueryClient はサーバー毎回new・クライアントsingleton。
-- **根拠：** ADR-0002 ／ **集約元：** アーキ設計 §4
+- `useXxxState`=`useQuery` ラッパー（読み取り）、`useXxxAction`=`useMutation`＋`invalidateQueries`（書き込み＋無効化＋エラー）。画面固有フックは feature の `hooks/` に置く。
+- queryKey は文字列直書きを禁止し**ファクトリに集約**。更新成功時は**マスタ単位でまとめて無効化**（`invalidateQueries({ queryKey: keys.all(masterType) })`）。
+- 取得モード：**A＝クライアント取得（葉で `useQuery`、初回スケルトン）を基本**。B＝SSRプリフェッチは初回表示性能が要件化した画面のみ加算。BはTanStack公式どおり Server Component で `prefetchQuery`→`dehydrate`→Client `HydrationBoundary`（`initialData` のバケツリレーにしない）。
+- **QueryClient はサーバー毎回 new・クライアント singleton**（サーバーで使い回すとリクエスト間でキャッシュが混ざりデータ漏洩）。サーバー側は `cache()` でリクエスト毎に生成。
+- **出典：** TanStack Query 公式（[overview](https://github.com/TanStack/query/blob/main/docs/framework/react/overview.md) / [advanced-ssr](https://github.com/TanStack/query/blob/main/docs/framework/react/guides/advanced-ssr.md)）／ **ADR-0002** ／ **集約元：** A系 §4
 
-### 5.2 クライアント状態の手段  ⚠️
-- 既定はコンポーネント state。グローバルが必要になった時点で軽量手段を選定。
-- **未決：** 軽量lib（素のstate / Zustand 等）の確定。**参考：** C系 `state_boundaries.md` / `jotai_patterns.md`（別スタックのため設計観点のみ流用）。
-- **TODO：** 選定基準（atom化/state化の境界）を確定して記述。
+### 5.2 クライアント状態の手段  ✅
+- **既定はコンポーネント state（必要に応じて Context）。** CRUD 4〜5画面ではサーバー状態を TanStack Query、フォーム状態を RHF が吸収するため、残るグローバル状態はトースト/モーダル程度に限定され、Context で足りる。
+- グローバル共有が実証された時点で初めて**軽量lib（Zustand）を1つだけ昇格導入**する（Jotai/Redux はこの規模では過剰）。
+- **出典：** bulletproof-react `state-management`（局所化原則）／ ADR-0002 却下案（「必要時のみ コンポーネント state / 必要なら Zustand」）
 
-### 5.3 URL状態の設計指針  ⚠️
-- ブックマーク可能な座標（masterType / recordId / 検索クエリ / ページ）は `searchParams`・動的セグメントに載せる。
-- **TODO：** 「URL=座標／永続=好み／メモリ=一時」の三層基準を明文化（C系 `state_boundaries.md` を出典に移植）。
+### 5.3 URL状態  ✅
+- URLに載せるのは**「ブックマーク・共有・リロードで復元したい座標」**に限る：`masterType`・`recordId`（動的セグメント）、検索クエリ/フィルタ/ソート/ページ（`searchParams`）。
+- **データ実体は載せない**（TanStack Query のキャッシュが持つ。サーバー状態は「リモート永続・古くなりうるキャッシュ」だから）。
+- 基準は **「URL=座標 ／ 永続=好み ／ メモリ=一時（モーダル開閉・入力途中）」**で固定。
+- **出典：** bulletproof-react `state-management` ／ TanStack Query overview
 
-## 6. Server/Client 境界  ✅
+## 6. Server/Client 境界・BFF  ✅
 
-- `'use client'` は葉に押し下げる。**Server Actions / `'use server'` 禁止**（ESLint）。書き込みは mutation → BFF → BE に一本化。
-- **根拠：** ADR-0001/0002/0004 ／ **集約元：** アーキ設計 §6
+- `'use client'` は葉に押し下げる。`layout.tsx`/`page.tsx` は Server のまま、`providers.tsx`（QueryClient）と `features/**` は Client。
+- **Server Actions / `'use server'` 禁止**（ESLint）。書き込みは TanStack mutation → BFF（Route Handler）→ BE に一本化。BFF が既に書き込み経路で、Server Actions を足すと経路と認証が二重化するため。
+- BFF が認証トークン付与・ヘッダ整形・APIアグリゲーションを担う。
+- **出典：** Next.js公式（Route Handlers）／ ADR-0001/0002/0004 ／ **集約元：** A系 §6
 
-## 7. コード生成（OpenAPI）  ⚠️
+## 7. API レイヤー（OpenAPI codegen）  ⚠️
 
-- 型・APIクライアント・Zod を OpenAPI から自動生成。`src/generated/` に隔離・手書き禁止。CI で drift 検出。baseURL=`/api`。
-- **未決：** codegenツールの確定（型/client/Zod）、ケース変換（生成時camelCase / 境界変換）。
-- **根拠：** ADR-0003 ／ **集約元：** アーキ設計 §5・§11
+- API クライアントは**事前設定済みの単一インスタンスを再利用**し、リクエストは別ファイルに定義・コロケーションして TanStack Query hook から呼ぶ（bulletproof-react `api-layer`）。
+- 型・APIクライアント・Zod は **OpenAPI から生成**し `src/generated/` に隔離・手書き禁止。baseURL=`/api`。CI で「再生成結果==コミット済み」を検証（drift 検出）。
+- **codegen ツール（2026-06 時点の保守状況実測に基づく推奨）：本命=orval**（型＋TanStack Query hook＋Zod を1ツールで生成・保守活発）。生成物の透明性を最優先する場合のみ **openapi-typescript + openapi-fetch（型＋fetch）＋ Zod別手段**。**openapi-zod-client は約1.4年更新停止のため非推奨**（ADR-0003 の例示から差し替え）。最終確定は実装着手時（ADR-0003が自ら確定を実装時に委ねている）。
+- **未決：** ケース変換（生成時camelCase / 境界変換）。ドメイン型 camelCase のみ確定。
+- **出典：** bulletproof-react `api-layer` ／ **ADR-0003** ／ GitHub実測（orval-labs/orval・openapi-ts/openapi-typescript・astahmer/openapi-zod-client）／ **集約元：** A系 §5・§11
 
-## 8. UI層・スタイリング・デザインシステム
+## 8. コンポーネント・スタイリング・デザインシステム（components-and-styling）
 
-### 8.1 スタイリング（Tailwind）  ⚠️
-- Tailwind に一本化。arbitrary value（`w-[137px]` 等）は原則禁止・ESLint 検出。状態（hover/focus/disabled/loading/empty/error）を網羅。
-- **TODO：** トークン体系（§8.2）と接続したスタイリング運用詳細。
-- **集約元：** アーキ設計 §7
+bulletproof-react の原則：使う場所の近くにコロケート、ネスト描画関数を持つ巨大コンポーネントを避ける、props を絞る、共通部品はライブラリへ抽出。
+- **出典：** bulletproof-react `components-and-styling`
+
+### 8.1 スタイリング（Tailwind）  ✅
+- スタイリングは **Tailwind CSS v4 に一本化**。色・余白・タイポ・radius・shadow は `@theme` で**集中定義**しユーティリティを生成させる（公式: theme 変数はユーティリティクラスを生む）。デフォルトスケールは `--color-*: initial;` 等で無効化し「定義したトークンのユーティリティだけが存在する」状態を作る。
+- **注意：** Tailwind 自体は arbitrary value を禁止しない（公式はトークン参照 `calc(var(--radius-xl)-1px)` を推奨）。**arbitrary値（`w-[137px]`）の禁止はチーム規約として ESLint で上乗せ**する。
+- 状態（hover/focus/disabled/loading/empty/error）を網羅。**a11y は本節の小項目**（セマンティックHTML・role/label）。
+- **出典：** [Tailwind v4 theme](https://tailwindcss.com/docs/theme) ／ bulletproof-react `components-and-styling` ／ **集約元：** A系 §7
 
 ### 8.2 デザインシステム/共通コンポーネント  ⚠️
-- 3層で考える：① Tokens/Foundations（数値直書きを止める）② Components（役割9カテゴリでフラット分類）③ Patterns/Templates（組み合わせの定石）。Atomic Design の粒度分類は採らない。
-- **未決：** 構想（B系 `共通コンポーネント.md`）の確定と、Tailwind/トークン実装との整合。
-- **集約元：** `共通コンポーネント.md`（B系）→ 本節へ昇格。
+- **デザイントークンは primitive→semantic→component の3層**で設計する。階層は **Material Design 3**（reference/system/component の3クラス）が明示し、**W3C Design Tokens 仕様**がトークン参照（エイリアス・多段参照）として裏付ける。Tailwind `@theme` 上で primitive=生値、semantic=primitive参照として実装。
+- 実装方式は **shadcn/ui 方式**（headless primitive＋Tailwind、ソースを自リポジトリにコピーして所有）を採用。ソース所有は AI がコンポーネントを読み改変・生成できる利点に直結し、フロント1名＋AI主体に最適。土台の headless primitive（Radix 等）は依存として更新を受けるハイブリッド。
+- コンポーネント分類は**役割ベース**（B系 `共通コンポーネント.md` の9カテゴリ）。M3 の component token 階層と整合。Atomic Design の粒度分類は採らない。
+- **未決：** トークン命名のCSS変数規約への翻訳、9カテゴリの確定（B系を昇格）。
+- **出典：** [M3 design tokens](https://m3.material.io/foundations/design-tokens/overview) ／ [W3C Design Tokens](https://www.designtokens.org/TR/drafts/format/) ／ [shadcn/ui](https://ui.shadcn.com/docs) ／ B系 `共通コンポーネント.md`
 
-### 8.3 フォーム（RHF + Zod）  ⚠️
-- React Hook Form + Zod。Zod は更新APIのリクエスト型と整合（生成Zod or 生成型に合わせた手書き）。クライアントエラーはフィールド直下、サーバーエラーは画面レベル。
-- **TODO：** スキーマ配置・型導出（`z.infer`）等の詳細パターン（C系 `rhf_patterns.md` を出典に移植）。
-- **根拠：** ADR-0003/0004 ／ **集約元：** アーキ設計 §7
+### 8.3 フォーム（RHF + Zod）  ✅
+- **React Hook Form + Zod + `@hookform/resolvers` の `zodResolver`** を標準とする。Zod スキーマは画面/機能ごとに**別ファイル**で管理し、`z.infer<typeof schema>` でフォーム型を一元導出（型の二重管理を排除）。
+- 同一スキーマをフォーム検証と更新APIのリクエスト型整合に使う（生成Zod or 生成型に合わせた手書き）。クライアントエラーはフィールド直下、サーバーエラーは画面レベル（§9）。
+- **出典：** [RHF resolvers 公式](https://github.com/react-hook-form/resolvers)（zodResolver サポート）。※bulletproof-react はサンプルコードで採用するが docs に forms 章は無いため権威は RHF 公式に置く。**集約元：** A系 §7
 
-## 9. ルーティング・画面遷移・ガード  ❌
+### 8.4 Storybook の採否  ✅
+- **初期は不採用。** Storybook の主価値（コンポーネント隔離開発・カタログ化）は中〜大規模で効くが、CRUD 4〜5画面・1名＋AI ではセットアップ/保守コストが上回る。代替としてアプリ内サンドボックスページで代用。
+- 再評価の閾値：デザインシステムがコンポーネント10〜15個超、または複数人体制になった時点。
+- **注記：** 公式・bulletproof-react とも Storybook を肯定するが**小規模での要否基準は示していない**。本判断は権威の推奨ではなくコスト便益判断。
+- **出典：** [Storybook docs](https://storybook.js.org/docs) ／ bulletproof-react `components-and-styling`
 
-- **要起草：** App Router でのルート設計、画面遷移定義、認証ガードの配置（未認証時の挙動）、動的セグメントの振り分け。
-- **参考：** C系 architecture §ルーティング（react-router 前提のため概念のみ）。
+## 9. エラーハンドリング・横断（error-handling）  ✅
 
-## 10. 認証・セッション・401/403 の FE 挙動  ⚠️
+- 共通 `ErrorResponse` を `ApiError` で構造化し、**TanStack の `onError`/QueryCache をインターセプターとして一元ハンドリング**（通知トースト・未認可ログアウト・トークンリフレッシュ）。土台は `lib/error`。
+- 個別エラー画面は作らず、**`app/error.tsx`（全体）＋主要画面セグメントの error boundary** で受ける（bulletproof-react「アプリ全体に単一でなく領域ごとに複数の boundary」）。
+- **エラートラッキングは自前実装せず専用サービス（Sentry 等）＋source map アップロード**で発生箇所を特定（監視=§11 と役割分担）。
+- 401/403 は onError 一元ハンドラ内で扱い §10 と結線。
+- **文言（小項目）：** 文言外出し（メッセージカタログ＋ESLint `no-literal-string`）。正本は設計書 `10_メッセージ定義`。
+- **出典：** bulletproof-react `error-handling` ／ **集約元：** A系 §9
 
-- FE は**認可を書かない**。トークン/IdPシークレットは BFF に閉じる。401/403 は再ログイン誘導・編集中データ保護で扱う。認証周りの変更は人間主導。
-- **未決：** 401/403 の具体UX（§残論点）。
-- **集約元：** アーキ設計 §9
+## 10. セキュリティ（security）  ✅
 
-## 11. エラーハンドリング横断  ✅
+- **トークン保管：** localStorage は XSS リスク。**HttpOnly Cookie で BFF(Route Handler) が保持**し、トークン/IdPシークレットはブラウザに出さない（bulletproof-react が最善とする方針の上位互換）。
+- **認可：** bulletproof-react は RBAC/PBAC を FE で扱う例を示すが、**本構成は BE(Spring Boot)/BFF を認可判定の正本**とし、**FE は認可ロジックを書かない**。UI上の出し分け（メニュー/ボタン）は **UX目的のみでセキュリティ境界ではない**。
+- **XSS/入力：** 表示前にユーザー入力をサニタイズ。`dangerouslySetInnerHTML` は原則禁止（ESLint 検出）、必要時のみ DOMPurify 等。**OWASP client-side top 10 を参照基準**とする。
+- **出典：** bulletproof-react `security`（Auth/Authorization/XSS/Input Sanitization）／ **集約元：** A系 §9
 
-- 共通 `ErrorResponse` を `ApiError` で構造化し、TanStack `onError` で一元ハンドリング。個別エラー画面は作らず `error.tsx` で受ける。土台は `lib/error`。
-- **集約元：** アーキ設計 §9
+## 11. パフォーマンス・監視（performance）  ⚠️
 
-## 12. i18n・文言カタログ  ⚠️
+- Next.js 既定のルート単位 code splitting を基本とし、**過剰分割は避ける**（bulletproof-react「excessive splitting は逆効果」）。追加の `next/dynamic` は**重い葉（リッチエディタ/チャート/モーダル）に限定**。
+- データ先読みは TanStack の `queryClient.prefetchQuery` を**取得モードB（SSRプリフェッチ）の実装手段**とする。`staleTime`/`gcTime` は**定数集約**（直書きしない）。
+- 画像は lazy/WEBP/`srcset` を自動充足する **`next/image` を既定採用**。Tailwind は bulletproof-react 推奨の「ビルド時CSS生成（zero-runtime）」方向に合致。
+- **監視：** Web Vitals（Lighthouse/PageSpeed）を基準とする。**RUM（Datadog 等）は bulletproof-react に裏付けが無い上乗せ方針**として、製品選定は社内決定で別記。相関IDは BE 発番を透過。
+- **未決：** `staleTime`/`gcTime` 具体値、モードB導入画面の基準。
+- **出典：** bulletproof-react `performance` ／ **集約元：** A系 §4.4・§9・§11
 
-- 文言外出し（メッセージカタログ ＋ ESLint `no-literal-string`）。多言語は基本不要。メッセージの正本は設計書の `10_メッセージ定義`。
-- **TODO：** FE側カタログの構造・キー命名・設計書との対応を明文化。
-- **集約元：** アーキ設計 §9
+## 12. テスト戦略（testing）  ✅
 
-## 13. アクセシビリティ  ❌
+- 単体/コンポーネント：**Vitest + React Testing Library（jsdom）**（ロジック・Zod・フォーム挙動・一覧のフィルタ/ソート）。E2E：**Playwright（本番ビルド）**（一覧→詳細→更新→反映のハッピーパス）。
+- ロケータは `getByRole`/`getByLabel` 等の意味ベースを優先（a11y と接続・§8.1）。
+- APIモック：単体は生成 client をモック、E2E は Playwright のリクエスト傍受。**モックのレスポンス型は生成型に整合**させ契約のズレを型で検出。
+- 当面追わない：ビジュアルリグレッション・CSS厳密検証・網羅率の数値目標。ライブラリ責務（`isPending` 遷移・`staleTime`）はテストしない。
+- **出典：** bulletproof-react `testing` ／ **ADR-0005** ／ **集約元：** A系 §8
 
-- **要起草：** 最低ラインの方針（セマンティックHTML、ロケータ可能なrole/label、フォーカス管理）。テストのロケータ方針（§15 `getByRole`）と接続。
+## 13. プロジェクト標準・機械ゲート（project-standards）  ⚠️
 
-## 14. パフォーマンス・監視  ⚠️
+- **標準化対象：** ESLint / Prettier / TypeScript(strict) / git hooks（pre-commit で lint・型・format） / 絶対import（`baseUrl`+`paths`） / kebab-case 命名（ESLint 強制）。
+- **機械ゲート：** codegen drift（再生成して `git diff --exit-code`）／ `tsc --noEmit`（strict）／ ESLint（直fetch禁止・generated固定・`'use server'`禁止・arbitrary値禁止・`no-literal-string`・hooks）／ Vitest・Playwright を CI ゲート化（通過しない PR はマージ不可）。
+- **規約の置き場：** `AGENTS.md`（`CLAUDE.md` から `@` インポート。Next.js 公式が create-next-app で自動生成）に ADR-0004 骨子を明文化。`docs/conventions/` に粒度テンプレ。**未作成。**
+- **出典：** bulletproof-react `project-standards` ／ Next.js公式（[AI Agents](https://nextjs.org/docs/app/guides/ai-agents)）／ **ADR-0004** ／ **集約元：** A系 §2・§10
 
-- FE は RUM（Datadog 等）、相関IDは BE 発番を透過。
-- **TODO：** 取得モードB（SSRプリフェッチ）導入基準、`staleTime`/`gcTime` の定数集約。
-- **集約元：** アーキ設計 §4.4・§9・§11
+## 14. デプロイ（deployment）  ✅
 
-## 15. テスト戦略  ✅（一部要判断）
-
-- 単体/コンポーネント：Vitest + RTL（jsdom）。E2E：Playwright（本番ビルド）。ロケータは意味ベース優先。APIモックは生成型に整合。
-- **要判断：** Storybook / VRT の採否（C系は採用、A系は未言及）。本案件規模での要否を決める。
-- **根拠：** ADR-0005 ／ **集約元：** アーキ設計 §8
-
-## 16. 機械ゲート・ガードレール  ✅
-
-- codegen drift / `tsc --noEmit` / ESLint（直fetch禁止・generated固定・`'use server'`禁止・arbitrary値禁止・`no-literal-string`・hooks）／ Vitest・Playwright を CI ゲート化。
-- **根拠：** ADR-0004 ／ **集約元：** アーキ設計 §10
-
-## 17. 規約の実体（AGENTS.md / docs/conventions）  ❌
-
-- **要作成：** `AGENTS.md`（`CLAUDE.md` から `@` インポート）に ADR-0004 の骨子を明文化。`docs/conventions/` に命名・粒度テンプレを置く。
-- **根拠：** ADR-0004 ／ **集約元：** アーキ設計 §2・§10
-
-## 18. 環境構築・ビルド設定  ❌
-
-- **要起草：** Next.js のセットアップ、env モード分け、codegen 実行手順、開発サーバの BFF/プロキシ。サイト個別手順は第2層 `02_環境構築` に置き、横断方式のみ本書。
+- bulletproof-react は「アプリと資産は CDN 越しに配信せよ」とのみ示す薄い章のため、本体は Next.js 公式に従う。
+- FE/BFF 同居かつ Route Handler を使うため **Static export 不可**。**Docker + `output: 'standalone'` を既定配信形態**とする（公式が Docker ベストプラクティスとして名指し。`.next/standalone` が必要ファイルのみトレースしイメージ最小化、`server.js` で起動）。
+- 成果物は `.next/standalone`。`public`・`.next/static` は **CDN 配信前提**（非CDN時のみ手動コピー）。
+- **環境変数：** `NEXT_PUBLIC_*` は**ビルド時にバンドルへインライン化**される（＝環境別に再ビルドが必要）。**秘匿値・環境別エンドポイントを `NEXT_PUBLIC_` に入れない**。BFF→BE のURLやシークレットは非プレフィックスのサーバー変数として実行時に読み「単一イメージを複数環境へ昇格」する（§10 と直結）。
+- 個別の Dockerfile/CI/CD/ホスティング選定は**第2層 `02_環境構築` の担当**。本章は配信形態・成果物・環境変数の横断方針のみ。
+- **出典：** bulletproof-react `deployment` ／ Next.js公式（[Deploying](https://nextjs.org/docs/app/getting-started/deploying)・[output](https://nextjs.org/docs/app/api-reference/config/next-config-js/output)・[Self-hosting](https://nextjs.org/docs/app/guides/self-hosting)）
 
 ---
 
-## 19. 残論点（未決一覧）
+## 15. 残論点（未決一覧）
 
 | 残論点 | 状態 | 関連章 |
 |---|---|---|
-| codegen ツールの確定（型/client/Zod） | 実装着手時に確定。原則は不変 | §7 |
+| codegen ツールの最終確定 | 本命=orval。最終確定は実装着手時（ADR-0003） | §7 |
 | ケース変換（生成時camelCase / 境界変換） | 未決。ドメイン型camelCaseのみ確定 | §7 |
-| クライアント状態の手段 | 未決。必要時に軽量手段を選定 | §5.2 |
-| デザインシステムの確定（3層・Tailwind整合） | 構想段階。B系を昇格して確定 | §8.2 |
-| Storybook / VRT の採否 | 未判断（C系は採用） | §15 |
+| デザインシステムの確定（トークン命名翻訳・9カテゴリ） | 構想→確定。B系を昇格 | §8.2 |
 | 401/403 の UI 挙動 | 残論点 | §10 |
-| `staleTime`/`gcTime` 具体値・モードB導入基準 | 未決。定数集約 | §5.1・§14 |
-| 楽観的更新を入れる画面 | UX要件が出てから画面単位 | §5.1 |
+| `staleTime`/`gcTime` 具体値・モードB導入基準 | 未決。定数集約 | §5.1・§11 |
+| 楽観的更新を入れる画面 | UX要件が出てから | §5.1 |
 | 定義駆動UIの採用 | 不採用。必要化したらADR追加 | §8.2 |
+| AGENTS.md / docs/conventions の作成 | 未作成 | §13 |
 
-> **完成の定義：** 全章の状態タグが ✅ になり、§19 が空になった時点で、本書が `アーキテクチャ設計.md`（A系）を吸収した FE横断標準の正本として独立する。
+> **確定済み（旧・残論点から解消）：** クライアント状態の手段（§5.2）／URL状態の基準（§5.3）／Storybook 採否（§8.4）。
+> **完成の定義：** 全章 ✅ かつ §15 が解消した時点で、本書が A系（`アーキテクチャ設計.md`）を吸収した FE横断標準の正本として独立する。
