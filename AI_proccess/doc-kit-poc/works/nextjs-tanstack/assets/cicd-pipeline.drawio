@@ -1,0 +1,102 @@
+<mxfile host="app.diagrams.net" agent="Claude" version="24.0.0">
+  <diagram name="OpenAPI-to-Deploy Pipeline" id="pipeline-1">
+    <mxGraphModel dx="1100" dy="760" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="900" pageHeight="760" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- ===== ① スキーマ起点の生成 ===== -->
+        <mxCell id="h1" value="① スキーマ起点の生成" style="text;html=1;align=left;verticalAlign=middle;fontStyle=1;fontSize=14;fontColor=#1F1F1D;" vertex="1" parent="1">
+          <mxGeometry x="40" y="20" width="300" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="n1a" value="&lt;b&gt;OpenAPIスキーマ&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;Spring Bootが出力&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FAECE7;strokeColor=#993C1D;fontColor=#712B13;fontSize=13;verticalAlign=middle;arcSize=12;" vertex="1" parent="1">
+          <mxGeometry x="40" y="50" width="200" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="n1b" value="&lt;b&gt;型 / APIクライアント / Zod&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;自動生成（src/generated）&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F1EFE8;strokeColor=#5F5E5A;fontColor=#444441;fontSize=13;verticalAlign=middle;arcSize=12;" vertex="1" parent="1">
+          <mxGeometry x="290" y="50" width="220" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#5F5E5A;endArrow=block;endFill=1;" edge="1" parent="1" source="n1a" target="n1b">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ===== ② ローカル開発 ===== -->
+        <mxCell id="h2" value="② ローカル開発（AIエージェント）" style="text;html=1;align=left;verticalAlign=middle;fontStyle=1;fontSize=14;fontColor=#1F1F1D;" vertex="1" parent="1">
+          <mxGeometry x="40" y="130" width="320" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="n2a" value="&lt;b&gt;AIで実装 + 自己修正ループ&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;AGENTS.md / 型 / lint で拘束&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E6F1FB;strokeColor=#185FA5;fontColor=#0C447C;fontSize=13;verticalAlign=middle;arcSize=12;" vertex="1" parent="1">
+          <mxGeometry x="40" y="160" width="300" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="n2b" value="&lt;b&gt;ローカル検証&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;tsc / Vitest を即実行&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E6F1FB;strokeColor=#185FA5;fontColor=#0C447C;fontSize=13;verticalAlign=middle;arcSize=12;" vertex="1" parent="1">
+          <mxGeometry x="390" y="160" width="220" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="e2flow" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#5F5E5A;endArrow=block;endFill=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="n1b" target="n2a">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#5F5E5A;endArrow=block;endFill=1;" edge="1" parent="1" source="n2a" target="n2b">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ===== ③ CI ===== -->
+        <mxCell id="h3" value="③ CI（GitHub Actions・PRごと）" style="text;html=1;align=left;verticalAlign=middle;fontStyle=1;fontSize=14;fontColor=#1F1F1D;" vertex="1" parent="1">
+          <mxGeometry x="40" y="240" width="320" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="n3a" value="&lt;b&gt;型 + lint&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;tsc / ESLint&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEEDFE;strokeColor=#534AB7;fontColor=#3C3489;fontSize=13;verticalAlign=middle;arcSize=12;" vertex="1" parent="1">
+          <mxGeometry x="40" y="270" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="n3b" value="&lt;b&gt;単体テスト&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;Vitest&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEEDFE;strokeColor=#534AB7;fontColor=#3C3489;fontSize=13;verticalAlign=middle;arcSize=12;" vertex="1" parent="1">
+          <mxGeometry x="200" y="270" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="n3c" value="&lt;b&gt;drift検出&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;再生成と一致確認&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEEDFE;strokeColor=#534AB7;fontColor=#3C3489;fontSize=13;verticalAlign=middle;arcSize=12;" vertex="1" parent="1">
+          <mxGeometry x="360" y="270" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="n3d" value="&lt;b&gt;build&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;next build&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EEEDFE;strokeColor=#534AB7;fontColor=#3C3489;fontSize=13;verticalAlign=middle;arcSize=12;" vertex="1" parent="1">
+          <mxGeometry x="520" y="270" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="e3flow" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#5F5E5A;endArrow=block;endFill=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="n2a" target="n3a">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3a" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#9E97D6;endArrow=open;endFill=0;" edge="1" parent="1" source="n3a" target="n3b">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3b" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#9E97D6;endArrow=open;endFill=0;" edge="1" parent="1" source="n3b" target="n3c">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3c" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#9E97D6;endArrow=open;endFill=0;" edge="1" parent="1" source="n3c" target="n3d">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ===== ④ プレビュー環境でE2E ===== -->
+        <mxCell id="h4" value="④ プレビュー環境でE2E" style="text;html=1;align=left;verticalAlign=middle;fontStyle=1;fontSize=14;fontColor=#1F1F1D;" vertex="1" parent="1">
+          <mxGeometry x="40" y="360" width="320" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="n4a" value="&lt;b&gt;プレビューデプロイ&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;本番同等環境&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EAF3DE;strokeColor=#3B6D11;fontColor=#27500A;fontSize=13;verticalAlign=middle;arcSize=12;" vertex="1" parent="1">
+          <mxGeometry x="40" y="390" width="300" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="n4b" value="&lt;b&gt;Playwright E2E&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;CRUDハッピーパス&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#EAF3DE;strokeColor=#3B6D11;fontColor=#27500A;fontSize=13;verticalAlign=middle;arcSize=12;" vertex="1" parent="1">
+          <mxGeometry x="390" y="390" width="220" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="e4flow" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#5F5E5A;endArrow=block;endFill=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="n3a" target="n4a">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#5F5E5A;endArrow=block;endFill=1;" edge="1" parent="1" source="n4a" target="n4b">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ===== ⑤ 本番 ===== -->
+        <mxCell id="h5" value="⑤ 本番" style="text;html=1;align=left;verticalAlign=middle;fontStyle=1;fontSize=14;fontColor=#1F1F1D;" vertex="1" parent="1">
+          <mxGeometry x="40" y="470" width="320" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="n5a" value="&lt;b&gt;mainマージで本番デプロイ&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;全チェック緑が必須&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FAEEDA;strokeColor=#854F0B;fontColor=#633806;fontSize=13;verticalAlign=middle;arcSize=12;" vertex="1" parent="1">
+          <mxGeometry x="40" y="500" width="300" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="n5note" value="Branch Protection で&lt;br&gt;未通過のPRはマージ不可" style="text;html=1;align=left;verticalAlign=middle;fontSize=11;fontColor=#5F5E5A;" vertex="1" parent="1">
+          <mxGeometry x="390" y="500" width="260" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="e5flow" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#5F5E5A;endArrow=block;endFill=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="n4a" target="n5a">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
