@@ -25,6 +25,7 @@ export function SourceIndex({
                 <a href={entry.href} target="_blank" rel="noopener noreferrer">
                   {entry.text}
                 </a>
+                {entry.note && <span className="ds-source-note">{entry.note}</span>}
               </li>
             ))}
           </ul>

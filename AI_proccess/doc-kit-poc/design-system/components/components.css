@@ -26,6 +26,18 @@ body {
   box-sizing: border-box;
 }
 
+/* ---- Layout: Region（スロット枠。header/body/footer を縦に積む） ---- */
+.ds-region {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-stack);
+}
+.ds-region-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-block);
+}
+
 /* ---- Display: Heading（mode × data-level でサイズを当てる。部品は分岐しない） ---- */
 .ds-heading {
   font-weight: 600;
@@ -80,8 +92,9 @@ body {
 }
 .ds-figure-holder svg {
   display: block;
-  width: 100%;
+  max-width: 100%;
   height: auto;
+  margin: 0 auto; /* 自然サイズで中央寄せ。幅が溢れる図だけ縮める */
 }
 .ds-figure-caption {
   margin-top: var(--spacing-block);
@@ -95,6 +108,36 @@ body {
   display: block;
   margin-top: var(--spacing-block);
   font-style: italic;
+}
+
+/* ---- Display: Image（drawio 等から書き出した図の埋め込み・light/dark 切替） ---- */
+.ds-image {
+  display: block;
+}
+.ds-image img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto; /* 自然サイズで中央寄せ。幅が溢れる図だけ縮める */
+}
+/* ダーク用は既定で隠し、テーマ確定時に light↔dark を入れ替える
+   （図テーマと同じ「@media + data-theme」の二段構え）。 */
+.ds-image-dark {
+  display: none;
+}
+:root[data-theme="dark"] .ds-image--themed .ds-image-light {
+  display: none;
+}
+:root[data-theme="dark"] .ds-image--themed .ds-image-dark {
+  display: block;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .ds-image--themed .ds-image-light {
+    display: none;
+  }
+  :root:not([data-theme="light"]) .ds-image--themed .ds-image-dark {
+    display: block;
+  }
 }
 
 /* ---- DataDisplay: Bullets ---- */
@@ -262,6 +305,12 @@ body {
   font-weight: 600;
   color: var(--color-quote);
   margin-right: var(--spacing-block);
+}
+.ds-source-note {
+  display: block;
+  color: var(--color-fg-muted);
+  font-size: var(--text-page-small);
+  margin-top: calc(var(--spacing-block) / 4);
 }
 
 /* ---- Communication: SourceIndex ---- */

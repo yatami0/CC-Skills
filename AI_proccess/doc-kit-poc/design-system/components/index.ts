@@ -14,6 +14,8 @@ export { Heading } from "./display/Heading";
 export { Eyebrow } from "./display/Eyebrow";
 export { Text } from "./display/Text";
 export { Figure } from "./display/Figure";
+export { Image } from "./display/Image";
+export type { ImageProps } from "./display/Image";
 
 // DataDisplay
 export { Bullets } from "./datadisplay/Bullets";

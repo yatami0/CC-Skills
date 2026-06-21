@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 540" width="560" height="540" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif">
+  <defs>
+    <marker id="dfd-arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M2 1L8 5L2 9" fill="none" stroke="#a8a7a1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <marker id="dfd-arr-loop" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M2 1L8 5L2 9" fill="none" stroke="#34c391" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+
+  <!-- edges -->
+  <g fill="none" stroke="#a8a7a1" stroke-width="1.5">
+    <path d="M240 72 V104" marker-end="url(#dfd-arr)"/>
+    <path d="M240 160 V192" marker-end="url(#dfd-arr)"/>
+    <path d="M240 248 V280" marker-end="url(#dfd-arr)"/>
+    <path d="M240 336 V368" marker-end="url(#dfd-arr)"/>
+    <path d="M240 424 V456" marker-end="url(#dfd-arr)"/>
+  </g>
+  <text x="252" y="356" font-size="12" fill="#a8a7a1">HTTP</text>
+
+  <!-- invalidate loop: spring → cache -->
+  <path d="M390 484 H460 V220 H398" fill="none" stroke="#34c391" stroke-width="1.5" stroke-dasharray="5 5" marker-end="url(#dfd-arr-loop)"/>
+  <text x="470" y="346" font-size="12" fill="#34c391">invalidate</text>
+  <text x="470" y="362" font-size="12" fill="#34c391">→ 再取得</text>
+
+  <!-- boxes -->
+  <g>
+    <rect x="90" y="16" width="300" height="56" rx="10" fill="#0c447c" stroke="#6fa8dc" stroke-width="1.5"/>
+    <text x="240" y="40" text-anchor="middle" font-size="14" font-weight="600" fill="#ffffff">Client Component</text>
+    <text x="240" y="58" text-anchor="middle" font-size="12" fill="#6fa8dc">一覧 / 詳細 / 更新フォーム</text>
+  </g>
+  <g>
+    <rect x="90" y="104" width="300" height="56" rx="10" fill="#0c447c" stroke="#6fa8dc" stroke-width="1.5"/>
+    <text x="240" y="128" text-anchor="middle" font-size="14" font-weight="600" fill="#ffffff">useQuery / useMutation</text>
+    <text x="240" y="146" text-anchor="middle" font-size="12" fill="#6fa8dc">取得・更新・状態管理</text>
+  </g>
+  <g>
+    <rect x="90" y="192" width="300" height="56" rx="10" fill="#1a5446" stroke="#5cc0a3" stroke-width="1.5"/>
+    <text x="240" y="216" text-anchor="middle" font-size="14" font-weight="600" fill="#ffffff">QueryCache</text>
+    <text x="240" y="234" text-anchor="middle" font-size="12" fill="#5cc0a3">queryKey 単位で保持</text>
+  </g>
+  <g>
+    <rect x="90" y="280" width="300" height="56" rx="10" fill="#3a3a37" stroke="#b3b1a9" stroke-width="1.5"/>
+    <text x="240" y="304" text-anchor="middle" font-size="14" font-weight="600" fill="#ffffff">生成APIクライアント</text>
+    <text x="240" y="322" text-anchor="middle" font-size="12" fill="#b3b1a9">OpenAPIから型付き生成</text>
+  </g>
+  <g>
+    <rect x="90" y="368" width="300" height="56" rx="10" fill="#322a6b" stroke="#9b93d6" stroke-width="1.5"/>
+    <text x="240" y="392" text-anchor="middle" font-size="14" font-weight="600" fill="#ffffff">Route Handler（BFF）</text>
+    <text x="240" y="410" text-anchor="middle" font-size="12" fill="#9b93d6">認証付与・整形</text>
+  </g>
+  <g>
+    <rect x="90" y="456" width="300" height="56" rx="10" fill="#6e2c14" stroke="#d98a6e" stroke-width="1.5"/>
+    <text x="240" y="480" text-anchor="middle" font-size="14" font-weight="600" fill="#ffffff">Spring Boot</text>
+    <text x="240" y="498" text-anchor="middle" font-size="12" fill="#d98a6e">REST API / DB</text>
+  </g>
+</svg>

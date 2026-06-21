@@ -16,6 +16,7 @@ export type SourceItem = {
   href: string; // 参照URL（内容ではなくポインタ）
   text: string; // 表示名
   category?: string; // 集約のキー（既定 "その他"）
+  note?: string; // 位置づけの一言（任意）
 };
 
 /** TOC1件（runtime の useTOC が生成して Toc に渡す） */

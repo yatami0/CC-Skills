@@ -8,7 +8,9 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "lint": "eslint .",
-    "shots": "node scripts/screenshot.mjs"
+    "shots": "node scripts/screenshot.mjs",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
   },
   "dependencies": {
     "js-yaml": "^4.1.0",
@@ -25,6 +27,9 @@
   "//devNote": "playwright is for local visual verification only (screenshots).",
   "devDependencies": {
     "@eslint/js": "^9.25.0",
+    "@storybook/addon-a11y": "^10.4.6",
+    "@storybook/addon-docs": "^10.4.6",
+    "@storybook/react-vite": "^10.4.6",
     "@tailwindcss/vite": "^4.1.0",
     "@types/js-yaml": "^4.0.9",
     "@types/react": "^19.1.0",
@@ -33,6 +38,7 @@
     "eslint": "^9.25.0",
     "eslint-plugin-import": "^2.31.0",
     "playwright": "^1.61.0",
+    "storybook": "^10.4.6",
     "tailwindcss": "^4.1.0",
     "typescript": "^5.8.0",
     "typescript-eslint": "^8.30.0",

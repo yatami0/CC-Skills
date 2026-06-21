@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 600" width="560" height="600" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif">
+  <defs>
+    <marker id="ekd-arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M2 1L8 5L2 9" fill="none" stroke="#a8a7a1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+
+  <!-- EKS cluster (背景) -->
+  <rect x="70" y="456" width="420" height="120" rx="14" fill="#16302a" stroke="#5cc0a3" stroke-width="1"/>
+  <text x="82" y="476" font-size="12" font-weight="600" fill="#5cc0a3">EKS クラスタ ・ 同一クラスタ内</text>
+
+  <!-- edges -->
+  <g fill="none" stroke="#a8a7a1" stroke-width="1.5">
+    <path d="M280 72 V104" marker-end="url(#ekd-arr)"/>
+    <path d="M280 160 V192" marker-end="url(#ekd-arr)"/>
+    <path d="M280 248 V280" marker-end="url(#ekd-arr)"/>
+    <path d="M280 336 V368" marker-end="url(#ekd-arr)"/>
+    <path d="M280 424 V472 H184 V498" marker-end="url(#ekd-arr)"/>
+    <path d="M272 526 H296" marker-end="url(#ekd-arr)"/>
+  </g>
+  <text x="292" y="466" font-size="12" fill="#a8a7a1">deploy</text>
+  <text x="284" y="520" font-size="12" fill="#a8a7a1">Service</text>
+
+  <!-- boxes: spine -->
+  <g>
+    <rect x="100" y="16" width="360" height="56" rx="10" fill="#322a6b" stroke="#9b93d6" stroke-width="1.5"/>
+    <text x="280" y="40" text-anchor="middle" font-size="13" font-weight="600" fill="#ffffff">CI: 型+lint / Vitest / drift検出 / build</text>
+    <text x="280" y="58" text-anchor="middle" font-size="12" fill="#9b93d6">全部緑でないと先へ進めない</text>
+  </g>
+  <g>
+    <rect x="100" y="104" width="360" height="56" rx="10" fill="#0c447c" stroke="#6fa8dc" stroke-width="1.5"/>
+    <text x="280" y="128" text-anchor="middle" font-size="14" font-weight="600" fill="#ffffff">standalone ビルド</text>
+    <text x="280" y="146" text-anchor="middle" font-size="12" fill="#6fa8dc">output: standalone</text>
+  </g>
+  <g>
+    <rect x="100" y="192" width="360" height="56" rx="10" fill="#0c447c" stroke="#6fa8dc" stroke-width="1.5"/>
+    <text x="280" y="216" text-anchor="middle" font-size="14" font-weight="600" fill="#ffffff">Docker イメージ化</text>
+    <text x="280" y="234" text-anchor="middle" font-size="12" fill="#6fa8dc">マルチステージ / 軽量</text>
+  </g>
+  <g>
+    <rect x="100" y="280" width="360" height="56" rx="10" fill="#3a3a37" stroke="#b3b1a9" stroke-width="1.5"/>
+    <text x="280" y="304" text-anchor="middle" font-size="14" font-weight="600" fill="#ffffff">ECR に push</text>
+    <text x="280" y="322" text-anchor="middle" font-size="12" fill="#b3b1a9">tag = git sha</text>
+  </g>
+  <g>
+    <rect x="100" y="368" width="360" height="56" rx="10" fill="#3a3a37" stroke="#b3b1a9" stroke-width="1.5"/>
+    <text x="280" y="392" text-anchor="middle" font-size="14" font-weight="600" fill="#ffffff">kubectl / Helm</text>
+    <text x="280" y="410" text-anchor="middle" font-size="12" fill="#b3b1a9">OIDC認証で適用</text>
+  </g>
+
+  <!-- pods (cluster 内) -->
+  <g>
+    <rect x="96" y="498" width="176" height="56" rx="10" fill="#0c447c" stroke="#6fa8dc" stroke-width="1.5"/>
+    <text x="184" y="522" text-anchor="middle" font-size="14" font-weight="600" fill="#ffffff">Next.js 用 Pod</text>
+    <text x="184" y="540" text-anchor="middle" font-size="12" fill="#6fa8dc">FE + BFF</text>
+  </g>
+  <g>
+    <rect x="296" y="498" width="176" height="56" rx="10" fill="#6e2c14" stroke="#d98a6e" stroke-width="1.5"/>
+    <text x="384" y="522" text-anchor="middle" font-size="14" font-weight="600" fill="#ffffff">Spring Boot 用 Pod</text>
+    <text x="384" y="540" text-anchor="middle" font-size="12" fill="#d98a6e">REST API / DB</text>
+  </g>
+</svg>

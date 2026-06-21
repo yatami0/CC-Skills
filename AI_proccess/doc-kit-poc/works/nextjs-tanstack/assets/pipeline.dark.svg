@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 840 650" width="840" height="650" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif">
+  <defs>
+    <marker id="pld-arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M2 1L8 5L2 9" fill="none" stroke="#a8a7a1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+
+  <!-- edges -->
+  <g fill="none" stroke="#a8a7a1" stroke-width="1.5">
+    <path d="M420 72 V104" marker-end="url(#pld-arr)"/>
+    <path d="M420 160 V192" marker-end="url(#pld-arr)"/>
+    <path d="M420 248 C 200 270, 96 268, 96 286" marker-end="url(#pld-arr)"/>
+    <path d="M420 248 C 300 270, 258 268, 258 286" marker-end="url(#pld-arr)"/>
+    <path d="M420 248 V286" marker-end="url(#pld-arr)"/>
+    <path d="M420 248 C 540 270, 582 268, 582 286" marker-end="url(#pld-arr)"/>
+    <path d="M420 248 C 640 270, 744 268, 744 286" marker-end="url(#pld-arr)"/>
+    <path d="M582 344 V400" marker-end="url(#pld-arr)"/>
+    <path d="M582 456 V488" marker-end="url(#pld-arr)"/>
+    <path d="M582 544 V576" marker-end="url(#pld-arr)"/>
+  </g>
+
+  <!-- boxes: spine -->
+  <g>
+    <rect x="270" y="16" width="300" height="56" rx="10" fill="#6e2c14" stroke="#d98a6e" stroke-width="1.5"/>
+    <text x="420" y="40" text-anchor="middle" font-size="14" font-weight="600" fill="#ffffff">① OpenAPIスキーマ</text>
+    <text x="420" y="58" text-anchor="middle" font-size="12" fill="#d98a6e">Spring Bootが出力</text>
+  </g>
+  <g>
+    <rect x="270" y="104" width="300" height="56" rx="10" fill="#3a3a37" stroke="#b3b1a9" stroke-width="1.5"/>
+    <text x="420" y="128" text-anchor="middle" font-size="14" font-weight="600" fill="#ffffff">型 / APIクライアント / Zod</text>
+    <text x="420" y="146" text-anchor="middle" font-size="12" fill="#b3b1a9">自動生成（src/generated）</text>
+  </g>
+  <g>
+    <rect x="270" y="192" width="300" height="56" rx="10" fill="#0c447c" stroke="#6fa8dc" stroke-width="1.5"/>
+    <text x="420" y="216" text-anchor="middle" font-size="14" font-weight="600" fill="#ffffff">② AIで実装 + 自己修正ループ</text>
+    <text x="420" y="234" text-anchor="middle" font-size="12" fill="#6fa8dc">AGENTS.md / 型 / lint で拘束</text>
+  </g>
+
+  <!-- boxes: 5 CI checks -->
+  <g>
+    <rect x="21" y="286" width="150" height="56" rx="10" fill="#0c447c" stroke="#6fa8dc" stroke-width="1.5"/>
+    <text x="96" y="310" text-anchor="middle" font-size="13" font-weight="600" fill="#ffffff">ローカル検証</text>
+    <text x="96" y="328" text-anchor="middle" font-size="11" fill="#6fa8dc">tsc / Vitest を即実行</text>
+  </g>
+  <g>
+    <rect x="183" y="286" width="150" height="56" rx="10" fill="#322a6b" stroke="#9b93d6" stroke-width="1.5"/>
+    <text x="258" y="310" text-anchor="middle" font-size="13" font-weight="600" fill="#ffffff">③ 型 + lint</text>
+    <text x="258" y="328" text-anchor="middle" font-size="11" fill="#9b93d6">tsc / ESLint</text>
+  </g>
+  <g>
+    <rect x="345" y="286" width="150" height="56" rx="10" fill="#322a6b" stroke="#9b93d6" stroke-width="1.5"/>
+    <text x="420" y="310" text-anchor="middle" font-size="13" font-weight="600" fill="#ffffff">単体テスト</text>
+    <text x="420" y="328" text-anchor="middle" font-size="11" fill="#9b93d6">Vitest</text>
+  </g>
+  <g>
+    <rect x="507" y="286" width="150" height="56" rx="10" fill="#322a6b" stroke="#9b93d6" stroke-width="1.5"/>
+    <text x="582" y="310" text-anchor="middle" font-size="13" font-weight="600" fill="#ffffff">drift検出</text>
+    <text x="582" y="328" text-anchor="middle" font-size="11" fill="#9b93d6">再生成と一致確認</text>
+  </g>
+  <g>
+    <rect x="669" y="286" width="150" height="56" rx="10" fill="#322a6b" stroke="#9b93d6" stroke-width="1.5"/>
+    <text x="744" y="310" text-anchor="middle" font-size="13" font-weight="600" fill="#ffffff">build</text>
+    <text x="744" y="328" text-anchor="middle" font-size="11" fill="#9b93d6">next build</text>
+  </g>
+
+  <!-- boxes: deploy column (from drift) -->
+  <g>
+    <rect x="472" y="400" width="220" height="56" rx="10" fill="#27500a" stroke="#97c459" stroke-width="1.5"/>
+    <text x="582" y="424" text-anchor="middle" font-size="14" font-weight="600" fill="#ffffff">④ プレビューデプロイ</text>
+    <text x="582" y="442" text-anchor="middle" font-size="12" fill="#97c459">本番同等環境</text>
+  </g>
+  <g>
+    <rect x="472" y="488" width="220" height="56" rx="10" fill="#27500a" stroke="#97c459" stroke-width="1.5"/>
+    <text x="582" y="512" text-anchor="middle" font-size="14" font-weight="600" fill="#ffffff">Playwright E2E</text>
+    <text x="582" y="530" text-anchor="middle" font-size="12" fill="#97c459">CRUDハッピーパス</text>
+  </g>
+  <g>
+    <rect x="472" y="576" width="220" height="56" rx="10" fill="#633806" stroke="#ef9f27" stroke-width="1.5"/>
+    <text x="582" y="600" text-anchor="middle" font-size="14" font-weight="600" fill="#ffffff">⑤ mainマージで本番デプロイ</text>
+    <text x="582" y="618" text-anchor="middle" font-size="12" fill="#ef9f27">全チェック緑が必須</text>
+  </g>
+</svg>

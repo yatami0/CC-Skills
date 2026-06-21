@@ -1,0 +1,22 @@
+<mxfile host="app.diagrams.net" type="device">
+  <diagram id="dataflow" name="実行時データフロー">
+    <mxGraphModel dx="800" dy="640" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="600" pageHeight="560" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="client" value="&lt;b&gt;Client Component&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;一覧 / 詳細 / 更新フォーム&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e6f1fb;strokeColor=#185fa5;fontColor=#0c447c;" vertex="1" parent="1"><mxGeometry x="90" y="16" width="300" height="56" as="geometry" /></mxCell>
+        <mxCell id="hooks" value="&lt;b&gt;useQuery / useMutation&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;取得・更新・状態管理&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e6f1fb;strokeColor=#185fa5;fontColor=#0c447c;" vertex="1" parent="1"><mxGeometry x="90" y="104" width="300" height="56" as="geometry" /></mxCell>
+        <mxCell id="cache" value="&lt;b&gt;QueryCache&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;queryKey 単位で保持&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1f5ee;strokeColor=#0f6e56;fontColor=#085041;" vertex="1" parent="1"><mxGeometry x="90" y="192" width="300" height="56" as="geometry" /></mxCell>
+        <mxCell id="apiclient" value="&lt;b&gt;生成APIクライアント&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;OpenAPIから型付き生成&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f1efe8;strokeColor=#5f5e5a;fontColor=#444441;" vertex="1" parent="1"><mxGeometry x="90" y="280" width="300" height="56" as="geometry" /></mxCell>
+        <mxCell id="bff" value="&lt;b&gt;Route Handler（BFF）&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;認証付与・整形&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eeedfe;strokeColor=#534ab7;fontColor=#3c3489;" vertex="1" parent="1"><mxGeometry x="90" y="368" width="300" height="56" as="geometry" /></mxCell>
+        <mxCell id="spring" value="&lt;b&gt;Spring Boot&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:11px&quot;&gt;REST API / DB&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#faece7;strokeColor=#993c1d;fontColor=#712b13;" vertex="1" parent="1"><mxGeometry x="90" y="456" width="300" height="56" as="geometry" /></mxCell>
+        <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#6b6a66;endArrow=block;" edge="1" parent="1" source="client" target="hooks"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#6b6a66;endArrow=block;" edge="1" parent="1" source="hooks" target="cache"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#6b6a66;endArrow=block;" edge="1" parent="1" source="cache" target="apiclient"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e4" value="HTTP" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#6b6a66;fontColor=#6b6a66;endArrow=block;" edge="1" parent="1" source="apiclient" target="bff"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#6b6a66;endArrow=block;" edge="1" parent="1" source="bff" target="spring"><mxGeometry relative="1" as="geometry" /></mxCell>
+        <mxCell id="loop" value="invalidate → 再取得" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;strokeColor=#1d9e75;fontColor=#1d9e75;endArrow=block;exitX=1;exitY=0.5;entryX=1;entryY=0.5;" edge="1" parent="1" source="spring" target="cache"><mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="460" y="484" /><mxPoint x="460" y="220" /></Array></mxGeometry></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

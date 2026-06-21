@@ -22,6 +22,7 @@ export function Sources({
             <a href={s.href} target="_blank" rel="noopener noreferrer">
               {s.text}
             </a>
+            {s.note && <span className="ds-source-note">{s.note}</span>}
           </li>
         ))}
       </ul>

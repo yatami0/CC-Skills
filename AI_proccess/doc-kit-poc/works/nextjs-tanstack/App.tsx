@@ -1,51 +1,17 @@
-import { useMemo, type ComponentType } from "react";
-import {
-  PageDoc,
-  WorkProvider,
-  pageTemplates,
-  resolveWork,
-  useScrollSpy,
-  useTOC,
-  useTheme,
-} from "../../design-system";
-import { docConfig } from "./doc.config";
+import { useMemo } from "react";
+import { WorkDocView, resolveWork, useTheme } from "../../design-system";
+import work from "./doc";
 
-// 自分の parts だけを集める（glob は works 側に置く＝design-system は内容を知らない）。
-const rawFiles = import.meta.glob("./parts/*/原稿.md", {
-  query: "?raw",
-  import: "default",
-  eager: true,
-}) as Record<string, string>;
-
-const modules = import.meta.glob("./parts/*/*.tsx", { eager: true }) as Record<
-  string,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  { default: ComponentType<any> }
->;
-
+/** 資料は doc.tsx の 1 宣言にまとまっている。基盤で解決して page に描くだけ。 */
 export function App() {
-  const work = useMemo(
-    () => resolveWork({ rawFiles, modules, templates: pageTemplates }),
-    [],
-  );
+  const resolved = useMemo(() => resolveWork(work), []);
   const { theme, toggle } = useTheme();
-  const tocItems = useTOC(work.parts);
-  const activeId = useScrollSpy(tocItems.map((t) => t.id));
-
   return (
-    <WorkProvider value={{ sourceGroups: work.sourceGroups }}>
-      <PageDoc
-        eyebrow={docConfig.eyebrow}
-        title={docConfig.title}
-        lead={docConfig.lead}
-        footer={docConfig.footer}
-        tocItems={tocItems}
-        activeId={activeId}
-        theme={theme}
-        onToggleTheme={toggle}
-      >
-        {work.parts.map((p) => p.node)}
-      </PageDoc>
-    </WorkProvider>
+    <WorkDocView
+      work={resolved}
+      config={work}
+      theme={theme}
+      onToggleTheme={toggle}
+    />
   );
 }

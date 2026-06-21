@@ -8,9 +8,24 @@ import tseslint from "typescript-eslint";
  *  3. Tailwind 任意値（p-[24px] / bg-[#fff]）と生 px/hex の禁止 → token 経由のみ。
  */
 export default tseslint.config(
-  { ignores: ["dist", "node_modules"] },
+  {
+    ignores: [
+      "dist",
+      "node_modules",
+      "storybook-static",
+      "dist-shots",
+      "dist-pdf",
+    ],
+  },
   js.configs.recommended,
   ...tseslint.configs.recommended,
+  {
+    // Node スクリプト（カタログ撮影など。dev ツール）に node グローバルを許可
+    files: ["scripts/**/*.mjs", "*.mjs"],
+    languageOptions: {
+      globals: { process: "readonly", console: "readonly" },
+    },
+  },
   {
     // ③ 任意値・生値の禁止（全 ts/tsx 共通）
     files: ["**/*.{ts,tsx}"],

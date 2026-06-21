@@ -5,28 +5,22 @@
 // ② Components（役割9カテゴリ）＋ 共有型
 export * from "./components";
 
-// ③ Templates（page）＋ contract 型・schema
-export { PageDoc, Section, pageTemplates } from "./templates/page";
-export {
-  sourceItemSchema,
-  calloutSchema,
-  sectionSchema,
-} from "./templates/page/schema";
+// ③ Templates（page）＋ 成果物が書く Work/Part 型
+export { PageDoc, Section } from "./templates/page";
+export { defineWork } from "./templates/types";
 export type {
   DocConfig,
-  RenderedPart,
-  PartTemplate,
-  PartComponent,
+  Work,
+  Part,
+  FigureBlock,
+  TableBlock,
+  CalloutBlock,
 } from "./templates/types";
 
 // 基盤（runtime）
 export { resolveWork } from "./runtime/resolveWork";
-export type {
-  WorkInput,
-  ResolvedPart,
-  ResolvedWork,
-} from "./runtime/resolveWork";
+export type { ResolvedPart, ResolvedWork } from "./runtime/resolveWork";
 export { useTheme } from "./runtime/page/useTheme";
 export type { Theme } from "./runtime/page/useTheme";
 export { useTOC, useScrollSpy } from "./runtime/page/useScrollSpy";
-export { WorkProvider, useWorkContext } from "./runtime/workContext";
+export { WorkDocView } from "./runtime/WorkDoc";

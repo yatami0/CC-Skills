@@ -52,6 +52,8 @@
   --ref-dia-purple-ink: oklch(0.3792 0.1316 282.05);                                                        /* #3c3489 */
   --ref-dia-gray-fill: oklch(0.9517 0.0096 93.57);    --ref-dia-gray-stroke: oklch(0.4815 0.0064 95.19);   /* #f1efe8 / #5f5e5a */
   --ref-dia-gray-ink: oklch(0.3593 0.0046 106.64);                                                          /* #444441 */
+  --ref-dia-green-fill: #eaf3de;  --ref-dia-green-stroke: #3b6d11;  --ref-dia-green-ink: #27500a;
+  --ref-dia-amber-fill: #faeeda;  --ref-dia-amber-stroke: #854f0b;  --ref-dia-amber-ink: #633806;
   --ref-dia-loop: oklch(0.6557 0.1411 162.49);                                                              /* #1d9e75 invalidate ループ */
 }
 

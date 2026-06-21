@@ -1,0 +1,37 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+import {
+  ColorSwatches,
+  SpacingScale,
+  TypeScale,
+  RadiusScale,
+} from "./TokenSwatches";
+
+<Meta title="Foundations/Tokens" />
+
+# Tokens（① Foundations）
+
+UI が直接使ってよいのは **semantic** だけ。primitive（`--ref-*`）は参照専用、
+component（`--callout-*` 等）はその部品の中だけ。下記はすべて `var(--token)` で実描画しており、
+ツールバーの **Theme** を dark に切り替えると semantic 色が runtime で追従する。
+
+## 色（semantic）
+
+`@theme inline` で公開された semantic 色。dark は素名 semantic（`--bg` 等）だけ上書きする。
+
+<ColorSwatches />
+
+## 余白（spacing・用途名で固定）
+
+数値を発明させないため、用途名（block / stack / region / section）で固定する。
+
+<SpacingScale />
+
+## タイポ（page スケール）
+
+サイズは mode 別スケール。Heading は `[data-mode]` × `data-level` で当たる。
+
+<TypeScale />
+
+## 角丸（radius）
+
+<RadiusScale />
