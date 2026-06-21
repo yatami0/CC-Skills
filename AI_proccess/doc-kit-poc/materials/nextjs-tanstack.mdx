@@ -1,0 +1,80 @@
+{/* 資料 = doc-kit の要素と本文を組むだけ。部品は import 不要（MDXProvider が供給）。 */}
+
+<DocPage
+  eyebrow="アーキテクチャ解説"
+  title="Next.js + TanStack Query のクライアント寄り構成 — 図解"
+  lead="基幹システムのマスタデータ管理サイトを、Next.js を BFF に徹させた「クライアント寄り構成」で作る際の全体像を図解で示す解説ページ（PoC 抜粋: §2〜§4）。"
+  footer="このページは index.html の §2〜§4 を doc-kit（React + Tailwind v4 + MDX）で再構成した PoC です。"
+>
+
+<DocSection id="paradigm" num="02" heading="なぜクライアント寄り構成か（設計思想）">
+
+Next.js には大きく 2 つの寄せ方があります。サーバーファースト（RSC 中心）と、クライアントファースト（Client Components + TanStack Query）。本構成は後者を選びます。理由は、BE が別系で確定していること、CRUD 中心で SEO が不要なこと、そしてフロント 1 名 + AI 開発のもとで「server/client 境界をどちらにするか」という判断軸を一本化したいことです。
+
+<DocTable variant="compare">
+  <thead>
+    <tr><th>観点</th><th>サーバーファースト（RSC 中心）</th><th>クライアントファースト（本構成）</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>データ取得</td><td>Server Component / Server Actions</td><td>Client Component + TanStack Query</td></tr>
+    <tr><td>向いている対象</td><td>コンテンツ / SEO 中心サイト</td><td>ダッシュボード / 内部ツール / CRUD</td></tr>
+    <tr><td>BE が別系のとき</td><td>「サーバーで直接取得」の旨味が薄い</td><td>API を叩く前提なので素直に噛み合う</td></tr>
+    <tr><td>本構成での採否</td><td>✕（旨味が薄く判断負荷が高い）</td><td>◯（採用）</td></tr>
+  </tbody>
+</DocTable>
+
+本構成がクライアントファーストを選ぶのは優劣ではなく「最適化対象が違う」から。RSC は正しく使えばバンドル削減等の利点がありますが、BE 別系・CRUD 中心・フロント 1 名 + AI という制約下では、判断軸を一本化できるクライアント寄りが噛み合います。
+
+<DocSources>
+  <DocSource tag="P1" category="設計思想（パラダイム）" href="https://tanstack.com/start/latest/docs/framework/react/start-vs-nextjs">TanStack 公式 — Start vs Next.js 比較</DocSource>
+  <DocSource tag="P2" category="設計思想（パラダイム）" href="https://www.buildwithmatija.com/blog/tanstack-start-vs-nextjs-16-comparison">Build with Matija — TanStack Start vs Next.js 16</DocSource>
+</DocSources>
+
+</DocSection>
+
+<DocSection id="dataflow" num="03" heading="実行時データフロー（図1）">
+
+実際にアプリが動いているときの、一覧 → 詳細 → 更新 → 再取得という CRUD ループを図にします。ポイントは、コンポーネントが `useQuery` / `useMutation` を呼ぶだけで、その下に層がきれいに並ぶことです。
+
+<DocFigure
+  caption="CRUD の心臓部。コンポーネントは useQuery / useMutation を呼ぶだけで、その下に QueryCache → 生成 API クライアント → Route Handler(BFF) → Spring Boot が層として並ぶ。更新成功時は invalidateQueries（緑の破線）が該当 queryKey を無効化し、自動で再取得される。"
+  extra="※ marker id は useId() で自動ユニーク化。同じ図を複数並べても衝突しない。"
+>
+  <DataflowDiagram />
+</DocFigure>
+
+<DocSources>
+  <DocSource tag="D1" category="データフロー / TanStack Query" href="https://medium.com/@sergey-bocharov/organizing-crud-operations-with-next-js-and-tanstack-query-63d53e539608">Mastering CRUD Operations with Next.js and TanStack Query</DocSource>
+  <DocSource tag="D2" category="データフロー / TanStack Query" href="https://ihsaninh.com/blog/the-complete-guide-to-tanstack-query-next.js-app-router">The Complete Guide to TanStack Query in Next.js App Router</DocSource>
+  <DocSource tag="D3" category="データフロー / TanStack Query" href="https://blog.logrocket.com/using-tanstack-query-next-js/">Using TanStack Query with Next.js (LogRocket)</DocSource>
+</DocSources>
+
+</DocSection>
+
+<DocSection id="generation" num="04" heading="OpenAPI 駆動の自動生成と AI 規約">
+
+クライアント寄り構成の信頼性は、型の正しさに支えられます。本構成では **OpenAPI スキーマを真実の源** とし、そこから型・API クライアント・Zod スキーマを自動生成します。Spring Boot 側がスキーマを出力できるので、フロントは手書きの型を持ちません。
+
+<DocCallout tone="info" title="二重ガードレール">
+  <ul>
+    <li>ソフトな縛り: `AGENTS.md` / `CLAUDE.md` でエージェントに規約を読ませる。</li>
+    <li>ハードな縛り: 型チェック・lint・CI（drift 検出含む）で機械的に検証する。</li>
+  </ul>
+</DocCallout>
+
+<DocSources>
+  <DocSource tag="G1" category="OpenAPI 生成 / AI 規約" href="https://nextjs.org/docs/app/guides/ai-agents">Next.js 公式 — AI Coding Agents ガイド</DocSource>
+  <DocSource tag="G2" category="OpenAPI 生成 / AI 規約" href="https://zeroshot.ghost.io/spec-driven-development-with-ai-coding-agents/">Spec-Driven Development with AI Coding Agents</DocSource>
+</DocSources>
+
+</DocSection>
+
+<DocSection id="sources" num="05" heading="引用ソース一覧">
+
+ページ内の `<DocSource>` を自動集約し、カテゴリ別に重複排除して並べます（手作業の一覧づくりを撤廃）。
+
+<DocSourceIndex />
+
+</DocSection>
+
+</DocPage>

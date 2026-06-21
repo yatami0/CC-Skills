@@ -1,0 +1,163 @@
+@import "tailwindcss";
+
+/* =========================================================================
+   ① primitive（ref）— 生値・参照専用。@theme の外に置くのでユーティリティは生えない。
+   色は OKLCH（広色域・知覚均等・dark 調整が容易）。末尾コメントは由来 HEX（人間用）。
+   ========================================================================= */
+:root {
+  /* neutrals（warm / light） */
+  --ref-white: oklch(1 0 0);                       /* #ffffff */
+  --ref-sand-50: oklch(0.9698 0.0054 95.1);        /* #f6f5f1  surface(light) */
+  --ref-sand-600: oklch(0.4815 0.0064 95.19);      /* #5f5e5a  fg-muted(light) */
+  --ref-sand-900: oklch(0.2385 0.0037 106.68);     /* #1f1f1d  fg(light) */
+  --ref-line-light: oklch(0 0 0 / 0.12);           /* rgba(0,0,0,.12) */
+
+  /* neutrals（dark） */
+  --ref-ink-900: oklch(0.217 0.0038 106.71);       /* #1a1a18  bg(dark) */
+  --ref-ink-800: oklch(0.255 0.0055 106.78);       /* #232320  surface(dark) */
+  --ref-ink-300: oklch(0.7242 0.013 96.49);        /* #a8a69d  fg-muted(dark) */
+  --ref-ink-100: oklch(0.9245 0.0096 93.57);       /* #e8e6df  fg(dark) */
+  --ref-line-dark: oklch(1 0 0 / 0.14);            /* rgba(255,255,255,.14) */
+
+  /* brand */
+  --ref-blue-500: oklch(0.4814 0.1311 252.49);     /* #185fa5  accent(light) */
+  --ref-blue-300: oklch(0.7158 0.114 250.4);       /* #6aa8e8  accent(dark) */
+  --ref-teal-600: oklch(0.4809 0.0908 170.11);     /* #0f6e56  quote(light) */
+  --ref-teal-300: oklch(0.7647 0.1149 168.34);     /* #5dcaa5  quote(dark) */
+  --ref-amber-700: oklch(0.4799 0.1035 64.39);     /* #854f0b  warn（旧 Callout の例外色を ref 化） */
+  --ref-amber-400: oklch(0.7649 0.1316 72.6);      /* #e0a035  warn(dark) */
+  --ref-on-accent: oklch(1 0 0);                   /* accent 上に乗る文字（light） */
+
+  /* spacing scale（4px グリッド） */
+  --ref-space-1: 4px;  --ref-space-2: 8px;  --ref-space-3: 12px;
+  --ref-space-4: 16px; --ref-space-5: 20px; --ref-space-6: 24px;
+  --ref-space-8: 32px; --ref-space-10: 40px; --ref-space-12: 48px;
+  --ref-space-14: 56px; --ref-space-16: 64px;
+
+  /* font-size scale */
+  --ref-fs-300: 13px; --ref-fs-400: 16px; --ref-fs-450: 17px;
+  --ref-fs-500: 22px; --ref-fs-600: 23px; --ref-fs-700: 30px;
+
+  /* radius scale */
+  --ref-radius-1: 4px; --ref-radius-3: 12px;
+
+  /* diagram color ramp（fill / stroke のペア。OKLCH。dark は §dark で上書き） */
+  --ref-dia-blue-fill: oklch(0.9528 0.0179 245.39);   --ref-dia-blue-stroke: oklch(0.4814 0.1311 252.49);  /* #e6f1fb / #185fa5 */
+  --ref-dia-blue-ink: oklch(0.3853 0.1096 253.18);                                                          /* #0c447c */
+  --ref-dia-teal-fill: oklch(0.9535 0.023 172.86);    --ref-dia-teal-stroke: oklch(0.4809 0.0908 170.11);  /* #e1f5ee / #0f6e56 */
+  --ref-dia-teal-ink: oklch(0.4006 0.0759 170.79);                                                          /* #085041 */
+  --ref-dia-coral-fill: oklch(0.9528 0.0167 40.8);    --ref-dia-coral-stroke: oklch(0.4797 0.1322 38.15);  /* #faece7 / #993c1d */
+  --ref-dia-coral-ink: oklch(0.3713 0.1015 37.7);                                                           /* #712b13 */
+  --ref-dia-purple-fill: oklch(0.9519 0.0227 288.67); --ref-dia-purple-stroke: oklch(0.4806 0.1663 281.86);/* #eeedfe / #534ab7 */
+  --ref-dia-purple-ink: oklch(0.3792 0.1316 282.05);                                                        /* #3c3489 */
+  --ref-dia-gray-fill: oklch(0.9517 0.0096 93.57);    --ref-dia-gray-stroke: oklch(0.4815 0.0064 95.19);   /* #f1efe8 / #5f5e5a */
+  --ref-dia-gray-ink: oklch(0.3593 0.0046 106.64);                                                          /* #444441 */
+  --ref-dia-loop: oklch(0.6557 0.1411 162.49);                                                              /* #1d9e75 invalidate ループ */
+}
+
+/* =========================================================================
+   ②a semantic 色の実体 — 素名（--bg 等）で :root に持つ。dark はこの層だけ差し替える。
+   shadcn 流: トークンを :root/.dark に置き、@theme inline で公開する2段名。
+   ========================================================================= */
+:root {
+  --bg: var(--ref-white);
+  --surface: var(--ref-sand-50);
+  --fg: var(--ref-sand-900);
+  --fg-muted: var(--ref-sand-600);
+  --border: var(--ref-line-light);
+  --accent: var(--ref-blue-500);
+  --accent-contrast: var(--ref-on-accent);
+  --quote: var(--ref-teal-600);
+  --warn: var(--ref-amber-700);
+}
+
+/* dark：素名 semantic だけ上書き（prefers を既定、data-theme で明示切替）。
+   ※ --ref-* と寸法は触らない（@theme inline の解決スコープを守るため）。 */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: var(--ref-ink-900);
+    --surface: var(--ref-ink-800);
+    --fg: var(--ref-ink-100);
+    --fg-muted: var(--ref-ink-300);
+    --border: var(--ref-line-dark);
+    --accent: var(--ref-blue-300);
+    --accent-contrast: var(--ref-ink-900);
+    --quote: var(--ref-teal-300);
+    --warn: var(--ref-amber-400);
+  }
+}
+:root[data-theme="dark"] {
+  --bg: var(--ref-ink-900);
+  --surface: var(--ref-ink-800);
+  --fg: var(--ref-ink-100);
+  --fg-muted: var(--ref-ink-300);
+  --border: var(--ref-line-dark);
+  --accent: var(--ref-blue-300);
+  --accent-contrast: var(--ref-ink-900);
+  --quote: var(--ref-teal-300);
+  --warn: var(--ref-amber-400);
+}
+
+/* =========================================================================
+   ②b semantic を @theme に公開してユーティリティを生む。
+   - 色: @theme inline ＝ 生成 utility が var(--bg) を直接参照。dark 差し替えが runtime で効く。
+   - 寸法/タイポ/半径/コンテナ: 静的なので通常の @theme で ref を参照。
+   ========================================================================= */
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-fg: var(--fg);
+  --color-fg-muted: var(--fg-muted);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-contrast: var(--accent-contrast);
+  --color-quote: var(--quote);
+  --color-warn: var(--warn);
+}
+
+@theme {
+  /* typography */
+  --font-sans: system-ui, -apple-system, "Segoe UI", "Hiragino Kaku Gothic ProN",
+    "Noto Sans JP", sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  /* text size — page（ペライチ） */
+  --text-page-eyebrow: var(--ref-fs-300);
+  --text-page-h1: var(--ref-fs-700);
+  --text-page-h2: var(--ref-fs-600);
+  --text-page-h3: var(--ref-fs-450);
+  --text-page-body: var(--ref-fs-400);
+  --text-page-small: var(--ref-fs-300);
+
+  /* spacing（用途名で固定） */
+  --spacing-block: var(--ref-space-4);   /* 段落間 */
+  --spacing-stack: var(--ref-space-6);   /* ブロック間 */
+  --spacing-region: var(--ref-space-10); /* 領域間 */
+  --spacing-section: var(--ref-space-14);/* page セクション間 */
+
+  /* radius */
+  --radius-card: var(--ref-radius-3);
+  --radius-sm: var(--ref-radius-1);
+
+  /* container（最大幅） */
+  --container-measure: 860px; /* page 本文幅 */
+  --container-figure: 700px;  /* 図の最大幅 */
+}
+
+/* =========================================================================
+   ③ component — その部品の中だけ。semantic を参照。utility 不要なものは素の :root。
+   ========================================================================= */
+:root {
+  /* Callout */
+  --callout-border-w: 3px;
+  --callout-accent-note: var(--color-fg-muted);
+  --callout-accent-info: var(--color-accent);
+  --callout-accent-warn: var(--color-warn); /* 旧 #854f0b 直書きを撤去 */
+
+  /* Toc */
+  --toc-width: 280px;
+  --toc-gutter: var(--ref-space-12);
+
+  /* KeyPoints バッジ径 */
+  --keypoint-size: var(--ref-space-8);
+}

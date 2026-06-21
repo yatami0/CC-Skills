@@ -1,0 +1,125 @@
+/* =========================================================================
+   図(SVG)テーマ — 色は ① の --ref-dia-* ランプから導出。
+   固有の図（works 側 Diagram.tsx）は配置・矢印だけ持ち、色は class でこの層に委ねる。
+   ライト/ダークの差はこの1か所で吸収する（雛形 §4）。
+   ========================================================================= */
+
+/* 文字・矢印の地色（semantic を参照） */
+svg .t {
+  fill: var(--color-fg);
+}
+svg .th {
+  fill: var(--color-fg);
+  font-weight: 500;
+}
+svg .ts {
+  fill: var(--color-fg-muted);
+}
+svg .arr {
+  stroke: var(--color-fg-muted);
+  fill: none;
+}
+
+/* 箱：色ランプ（fill / stroke のペア） */
+svg .c-blue rect {
+  fill: var(--ref-dia-blue-fill);
+  stroke: var(--ref-dia-blue-stroke);
+}
+svg .c-teal rect {
+  fill: var(--ref-dia-teal-fill);
+  stroke: var(--ref-dia-teal-stroke);
+}
+svg .c-coral rect {
+  fill: var(--ref-dia-coral-fill);
+  stroke: var(--ref-dia-coral-stroke);
+}
+svg .c-purple rect {
+  fill: var(--ref-dia-purple-fill);
+  stroke: var(--ref-dia-purple-stroke);
+}
+svg .c-gray rect {
+  fill: var(--ref-dia-gray-fill);
+  stroke: var(--ref-dia-gray-stroke);
+}
+
+/* 箱内テキスト：濃インク（見出し）と中間（補足） */
+svg .c-blue .th,
+svg .c-blue .t {
+  fill: var(--ref-dia-blue-ink);
+}
+svg .c-blue .ts {
+  fill: var(--ref-dia-blue-stroke);
+}
+svg .c-teal .th,
+svg .c-teal .t {
+  fill: var(--ref-dia-teal-ink);
+}
+svg .c-teal .ts {
+  fill: var(--ref-dia-teal-stroke);
+}
+svg .c-coral .th,
+svg .c-coral .t {
+  fill: var(--ref-dia-coral-ink);
+}
+svg .c-coral .ts {
+  fill: var(--ref-dia-coral-stroke);
+}
+svg .c-purple .th,
+svg .c-purple .t {
+  fill: var(--ref-dia-purple-ink);
+}
+svg .c-purple .ts {
+  fill: var(--ref-dia-purple-stroke);
+}
+svg .c-gray .th,
+svg .c-gray .t {
+  fill: var(--ref-dia-gray-ink);
+}
+svg .c-gray .ts {
+  fill: var(--ref-dia-gray-stroke);
+}
+
+/* invalidate ループ（旧インライン #1d9e75 を token 化） */
+svg .dia-loop {
+  stroke: var(--ref-dia-loop);
+  fill: none;
+}
+
+/* ---- dark：図ランプ（--ref-dia-*）だけをこの1か所で差し替える。
+        箱は暗い塗り＋明るい枠、文字は反転（雛形 §4 が許す例外）。 ---- */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ref-dia-blue-fill: oklch(0.3853 0.1096 253.18);
+    --ref-dia-blue-stroke: oklch(0.7158 0.114 250.4);
+    --ref-dia-blue-ink: oklch(1 0 0);
+    --ref-dia-teal-fill: oklch(0.4006 0.0759 170.79);
+    --ref-dia-teal-stroke: oklch(0.7647 0.1149 168.34);
+    --ref-dia-teal-ink: oklch(1 0 0);
+    --ref-dia-coral-fill: oklch(0.3713 0.1015 37.7);
+    --ref-dia-coral-stroke: oklch(0.7383 0.1058 40.62);
+    --ref-dia-coral-ink: oklch(1 0 0);
+    --ref-dia-purple-fill: oklch(0.3792 0.1316 282.05);
+    --ref-dia-purple-stroke: oklch(0.7517 0.1042 286.3);
+    --ref-dia-purple-ink: oklch(1 0 0);
+    --ref-dia-gray-fill: oklch(0.3593 0.0046 106.64);
+    --ref-dia-gray-stroke: oklch(0.7242 0.013 96.49);
+    --ref-dia-gray-ink: oklch(1 0 0);
+  }
+}
+:root[data-theme="dark"] {
+  --ref-dia-blue-fill: oklch(0.3853 0.1096 253.18);
+  --ref-dia-blue-stroke: oklch(0.7158 0.114 250.4);
+  --ref-dia-blue-ink: oklch(1 0 0);
+  --ref-dia-teal-fill: oklch(0.4006 0.0759 170.79);
+  --ref-dia-teal-stroke: oklch(0.7647 0.1149 168.34);
+  --ref-dia-teal-ink: oklch(1 0 0);
+  --ref-dia-coral-fill: oklch(0.3713 0.1015 37.7);
+  --ref-dia-coral-stroke: oklch(0.7383 0.1058 40.62);
+  --ref-dia-coral-ink: oklch(1 0 0);
+  --ref-dia-purple-fill: oklch(0.3792 0.1316 282.05);
+  --ref-dia-purple-stroke: oklch(0.7517 0.1042 286.3);
+  --ref-dia-purple-ink: oklch(1 0 0);
+  --ref-dia-gray-fill: oklch(0.3593 0.0046 106.64);
+  --ref-dia-gray-stroke: oklch(0.7242 0.013 96.49);
+  --ref-dia-gray-ink: oklch(1 0 0);
+}

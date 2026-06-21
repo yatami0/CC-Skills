@@ -1,0 +1,453 @@
+/* =========================================================================
+   design-system 構造スタイル — すべて値は var(--token) 経由。
+   生 px / hex は書かない（レビュー指摘1の解消・§6 ガードレール）。
+   Tailwind ユーティリティで素直に書けない「骨格・本文リズム・data 属性分岐」を担当。
+   ========================================================================= */
+
+html {
+  scroll-behavior: smooth;
+}
+/* 前庭障害への配慮（WCAG）：動きを減らす設定では滑らかスクロールを止める */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-fg);
+  font-family: var(--font-sans);
+  font-size: var(--text-page-body);
+  line-height: 1.8;
+  -webkit-font-smoothing: antialiased;
+}
+* {
+  box-sizing: border-box;
+}
+
+/* ---- Display: Heading（mode × data-level でサイズを当てる。部品は分岐しない） ---- */
+.ds-heading {
+  font-weight: 600;
+  line-height: 1.4;
+  margin: 0;
+}
+[data-mode="page"] .ds-heading[data-level="1"] {
+  font-size: var(--text-page-h1);
+}
+[data-mode="page"] .ds-heading[data-level="2"] {
+  font-size: var(--text-page-h2);
+  line-height: 1.35;
+}
+[data-mode="page"] .ds-heading[data-level="3"] {
+  font-size: var(--text-page-h3);
+}
+
+/* ---- Display: Eyebrow ---- */
+.ds-eyebrow {
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+/* ---- Layout: Divider ---- */
+.ds-divider {
+  border: 0;
+  background: var(--color-border);
+}
+.ds-divider-h {
+  height: 1px;
+  width: 100%;
+  margin: var(--spacing-stack) 0;
+}
+.ds-divider-v {
+  width: 1px;
+  align-self: stretch;
+  margin: 0 var(--spacing-block);
+}
+
+/* ---- Display: Figure ---- */
+.ds-figure {
+  margin: var(--spacing-stack) 0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  padding: var(--spacing-stack);
+}
+.ds-figure-holder {
+  max-width: var(--container-figure);
+  margin: 0 auto;
+}
+.ds-figure-holder svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.ds-figure-caption {
+  margin-top: var(--spacing-block);
+  padding-top: var(--spacing-block);
+  border-top: 1px solid var(--color-border);
+  font-size: var(--text-page-small);
+  line-height: 1.7;
+  color: var(--color-fg-muted);
+}
+.ds-figure-extra {
+  display: block;
+  margin-top: var(--spacing-block);
+  font-style: italic;
+}
+
+/* ---- DataDisplay: Bullets ---- */
+.ds-bullets {
+  margin: 0;
+  padding-left: var(--spacing-stack);
+}
+.ds-bullets[data-marker="none"] {
+  list-style: none;
+  padding-left: 0;
+}
+.ds-bullets li {
+  margin: 0 0 var(--spacing-block);
+}
+
+/* ---- DataDisplay: KeyPoints（番号丸つき） ---- */
+.ds-key-points {
+  counter-reset: kp;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.ds-key-points li {
+  position: relative;
+  padding-left: calc(var(--keypoint-size) + var(--spacing-block));
+  margin: 0 0 var(--spacing-block);
+  min-height: var(--keypoint-size);
+}
+.ds-key-points li::before {
+  counter-increment: kp;
+  content: counter(kp);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: var(--keypoint-size);
+  height: var(--keypoint-size);
+  border-radius: 50%;
+  background: var(--color-accent);
+  color: var(--color-accent-contrast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: var(--text-page-small);
+}
+
+/* ---- DataDisplay: Table / CompareTable ---- */
+.ds-table {
+  overflow-x: auto;
+  margin: var(--spacing-stack) 0;
+}
+.ds-table table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: var(--text-page-small);
+}
+.ds-table th,
+.ds-table td {
+  border: 1px solid var(--color-border);
+  padding: var(--spacing-block);
+  text-align: left;
+  vertical-align: top;
+}
+.ds-table thead th {
+  background: var(--color-surface);
+  font-weight: 600;
+}
+.ds-table-caption {
+  caption-side: top;
+  text-align: left;
+  color: var(--color-fg-muted);
+  font-size: var(--text-page-small);
+  margin-bottom: var(--spacing-block);
+}
+.ds-compare tbody th[scope="row"] {
+  background: transparent;
+  white-space: nowrap;
+  font-weight: 600;
+}
+/* 強調列（highlightColumn）。色は token から */
+.ds-compare [data-hot] {
+  background: color-mix(in oklch, var(--color-accent) 8%, transparent);
+}
+.ds-compare thead th[data-hot] {
+  color: var(--color-accent);
+  background: color-mix(in oklch, var(--color-accent) 14%, var(--color-surface));
+}
+
+/* ---- DataDisplay: Tag / Communication: Badge ---- */
+.ds-tag,
+.ds-badge {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: var(--text-page-small);
+  font-weight: 600;
+  line-height: 1;
+  padding: var(--spacing-block);
+  padding-top: calc(var(--spacing-block) / 3);
+  padding-bottom: calc(var(--spacing-block) / 3);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+}
+.ds-tag[data-tone="info"],
+.ds-badge[data-tone="info"] {
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+}
+.ds-tag[data-tone="warn"],
+.ds-badge[data-tone="warn"] {
+  color: var(--color-warn);
+  border-color: var(--color-warn);
+}
+
+/* ---- Communication: Callout ---- */
+.ds-callout {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-left: var(--callout-border-w) solid var(--callout-accent-note);
+  border-radius: var(--radius-card);
+  padding: var(--spacing-stack);
+  margin: var(--spacing-stack) 0;
+}
+.ds-callout[data-tone="info"] {
+  border-left-color: var(--callout-accent-info);
+}
+.ds-callout[data-tone="warn"] {
+  border-left-color: var(--callout-accent-warn);
+}
+.ds-callout-title {
+  font-weight: 600;
+  margin: 0 0 var(--spacing-block);
+}
+.ds-callout :where(ul) {
+  margin: 0;
+  padding-left: var(--spacing-stack);
+}
+
+/* ---- Communication: Sources ---- */
+.ds-sources {
+  border-left: var(--callout-border-w) solid var(--color-quote);
+  background: var(--color-surface);
+  border-radius: 0 var(--radius-card) var(--radius-card) 0;
+  padding: var(--spacing-block) var(--spacing-stack);
+  margin-top: var(--spacing-stack);
+  font-size: var(--text-page-small);
+}
+.ds-sources-title {
+  font-weight: 600;
+  color: var(--color-quote);
+  font-size: var(--text-page-eyebrow);
+  letter-spacing: 0.04em;
+  margin-bottom: var(--spacing-block);
+}
+.ds-sources ul {
+  margin: 0;
+  padding-left: var(--spacing-stack);
+}
+.ds-sources li {
+  margin: 0 0 var(--spacing-block);
+  line-height: 1.6;
+}
+.ds-source-tag {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--color-quote);
+  margin-right: var(--spacing-block);
+}
+
+/* ---- Communication: SourceIndex ---- */
+.ds-src-group {
+  margin: 0 0 var(--spacing-stack);
+}
+.ds-src-group-title {
+  margin: 0 0 var(--spacing-block);
+  font-size: var(--text-page-h3);
+}
+.ds-source-index ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: var(--text-page-small);
+}
+.ds-source-index li {
+  margin: 0 0 var(--spacing-block);
+  line-height: 1.6;
+}
+
+/* ---- Navigation: Toc ---- */
+.ds-toc {
+  position: sticky;
+  top: var(--spacing-section);
+  font-size: var(--text-page-small);
+  border-left: 1px solid var(--color-border);
+  padding-left: var(--spacing-stack);
+}
+.ds-toc-title {
+  font-weight: 600;
+  color: var(--color-fg-muted);
+  font-size: var(--text-page-eyebrow);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: var(--spacing-block);
+}
+.ds-toc ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.ds-toc li {
+  margin: 0 0 var(--spacing-block);
+}
+.ds-toc a {
+  color: var(--color-fg-muted);
+  text-decoration: none;
+  line-height: 1.5;
+  display: block;
+}
+.ds-toc a:hover,
+.ds-toc a[aria-current="location"] {
+  color: var(--color-accent);
+}
+
+/* ---- Action: Link ---- */
+.ds-link,
+.ds-prose a {
+  color: var(--color-accent);
+}
+
+/* ---- 本文リズム（Markdown 本文 = prose） ---- */
+.ds-prose > * + * {
+  margin-top: var(--spacing-block);
+}
+.ds-prose code {
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 0.1em 0.4em;
+}
+.ds-prose strong {
+  font-weight: 600;
+}
+.ds-prose ul,
+.ds-prose ol {
+  margin: 0;
+  padding-left: var(--spacing-stack);
+}
+.ds-prose li {
+  margin: 0 0 var(--spacing-block);
+}
+
+/* =========================================================================
+   ③ Templates（page）骨格 — PageDoc / Section。値はすべて token。
+   ========================================================================= */
+.ds-page-wrap {
+  margin: 0 auto;
+  padding: 0 var(--spacing-stack) var(--spacing-section);
+  position: relative;
+}
+.ds-page-header {
+  max-width: var(--container-measure);
+  margin: 0 auto;
+  padding: var(--spacing-section) 0 var(--spacing-stack);
+}
+.ds-page-title {
+  font-weight: 600;
+  font-size: var(--text-page-h1);
+  line-height: 1.4;
+  margin: var(--spacing-block) 0;
+}
+.ds-page-lead {
+  color: var(--color-fg-muted);
+  margin: 0;
+}
+.ds-page-layout {
+  display: grid;
+  grid-template-columns: minmax(0, var(--container-measure)) var(--toc-width);
+  gap: var(--toc-gutter);
+  justify-content: center;
+  align-items: start;
+}
+.ds-page-prose {
+  min-width: 0;
+}
+.ds-page-footer {
+  max-width: var(--container-measure);
+  margin: var(--spacing-section) auto 0;
+  padding-top: var(--spacing-stack);
+  border-top: 1px solid var(--color-border);
+  color: var(--color-fg-muted);
+  font-size: var(--text-page-small);
+}
+.ds-theme-toggle {
+  position: absolute;
+  top: var(--spacing-stack);
+  right: var(--spacing-stack);
+  width: var(--spacing-region);
+  height: var(--spacing-region);
+  border-radius: 50%;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-fg);
+  cursor: pointer;
+}
+
+/* Section（番号付き見出し + 本文） */
+.ds-section {
+  margin-bottom: var(--spacing-section);
+  scroll-margin-top: var(--spacing-region);
+}
+.ds-section-heading {
+  margin-bottom: var(--spacing-stack);
+}
+.ds-section-num {
+  color: var(--color-accent);
+  margin-right: var(--spacing-block);
+}
+
+/* ---- レスポンシブ：狭い画面は1カラム ---- */
+@media (max-width: 900px) {
+  .ds-page-layout {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+  .ds-toc {
+    position: static;
+    border-left: 0;
+    border-bottom: 1px solid var(--color-border);
+    padding: 0 0 var(--spacing-stack);
+    margin-bottom: var(--spacing-stack);
+  }
+}
+
+/* =========================================================================
+   印刷 / PDF — 本文だけ残し TOC・トグルは隠す。図・表・出典は途中で割らない。
+   ========================================================================= */
+@media print {
+  .ds-no-print {
+    display: none !important;
+  }
+  .ds-page-layout {
+    display: block;
+  }
+  .ds-figure,
+  .ds-table,
+  .ds-callout,
+  .ds-sources,
+  .ds-key-points li {
+    break-inside: avoid;
+  }
+  .ds-heading {
+    break-after: avoid;
+  }
+}
