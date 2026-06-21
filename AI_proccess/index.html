@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Next.js + TanStack Query のクライアント寄り構成 — 図解解説</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --bg-subtle: #f6f5f1;
+    --text: #1f1f1d;
+    --text-muted: #5f5e5a;
+    --border: rgba(0,0,0,0.12);
+    --accent: #185fa5;
+    --accent-quote: #0f6e56;
+    --radius: 12px;
+    --maxw: 860px;
+    --font: system-ui, -apple-system, "Segoe UI", "Hiragino Kaku Gothic ProN", "Noto Sans JP", sans-serif;
+    --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1a1a18;
+      --bg-subtle: #232320;
+      --text: #e8e6df;
+      --text-muted: #a8a69d;
+      --border: rgba(255,255,255,0.14);
+      --accent: #6aa8e8;
+      --accent-quote: #5dcaa5;
+    }
+  }
+
+  * { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    line-height: 1.8;
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 0 24px 96px;
+  }
+
+  /* ヘッダー */
+  header.page {
+    max-width: var(--maxw);
+    margin: 0 auto;
+    padding: 64px 0 24px;
+  }
+  header.page .eyebrow {
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin: 0 0 12px;
+  }
+  header.page h1 {
+    font-weight: 600;
+    font-size: 30px;
+    line-height: 1.4;
+    margin: 0 0 16px;
+  }
+  header.page .lead {
+    color: var(--text-muted);
+    font-size: 16px;
+    margin: 0;
+  }
+
+  /* レイアウト: 本文 + サイド注釈 */
+  .layout {
+    display: grid;
+    grid-template-columns: minmax(0, var(--maxw)) 280px;
+    gap: 48px;
+    justify-content: center;
+    align-items: start;
+  }
+  main { min-width: 0; }
+
+  aside.toc {
+    position: sticky;
+    top: 32px;
+    font-size: 14px;
+    border-left: 1px solid var(--border);
+    padding-left: 20px;
+  }
+  aside.toc .toc-title {
+    font-weight: 600;
+    color: var(--text-muted);
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  aside.toc ol {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  aside.toc li { margin: 0 0 8px; }
+  aside.toc a {
+    color: var(--text-muted);
+    text-decoration: none;
+    line-height: 1.5;
+    display: block;
+  }
+  aside.toc a:hover { color: var(--accent); }
+
+  section { margin: 0 0 56px; scroll-margin-top: 24px; }
+  section > h2 {
+    font-weight: 600;
+    font-size: 23px;
+    line-height: 1.4;
+    margin: 0 0 8px;
+    padding-bottom: 8px;
+  }
+  section > h2 .num {
+    color: var(--accent);
+    font-size: 18px;
+    margin-right: 10px;
+  }
+  section h3 {
+    font-weight: 600;
+    font-size: 17px;
+    margin: 32px 0 8px;
+  }
+  p { margin: 0 0 16px; }
+  a { color: var(--accent); }
+
+  strong { font-weight: 600; }
+
+  /* テーブル */
+  .table-card {
+    overflow-x: auto;
+    margin: 0 0 20px;
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 14px;
+  }
+  table th, table td {
+    border: 1px solid var(--border);
+    padding: 10px 14px;
+    text-align: left;
+    vertical-align: top;
+  }
+  table th {
+    background: var(--bg-subtle);
+    font-weight: 600;
+  }
+  table td:first-child, table th:first-child { white-space: nowrap; }
+
+  /* 図カード */
+  figure.diagram {
+    margin: 24px 0;
+    background: var(--bg-subtle);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+  }
+  figure.diagram .svg-holder {
+    max-width: 700px;
+    margin: 0 auto;
+  }
+  figure.diagram svg { display: block; width: 100%; height: auto; }
+  figure.diagram figcaption {
+    margin-top: 18px;
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--text-muted);
+    border-top: 1px solid var(--border);
+    padding-top: 14px;
+  }
+  figure.diagram figcaption .extra { display: block; margin-top: 8px; font-style: italic; }
+
+  /* コードインライン */
+  code {
+    font-family: var(--font-mono);
+    font-size: 0.88em;
+    background: var(--bg-subtle);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.1em 0.4em;
+  }
+
+  /* 引用ソース枠 */
+  .sources {
+    border-left: 3px solid var(--accent-quote);
+    background: var(--bg-subtle);
+    border-radius: 0 var(--radius) var(--radius) 0;
+    padding: 14px 18px;
+    margin: 20px 0 0;
+    font-size: 13.5px;
+  }
+  .sources .sources-title {
+    font-weight: 600;
+    color: var(--accent-quote);
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    margin-bottom: 8px;
+  }
+  .sources ul { margin: 0; padding-left: 20px; }
+  .sources li { margin: 0 0 6px; line-height: 1.6; }
+  .sources .tag {
+    font-family: var(--font-mono);
+    font-weight: 600;
+    color: var(--accent-quote);
+    margin-right: 4px;
+  }
+
+  /* ソース一覧セクション */
+  .src-group { margin: 0 0 24px; }
+  .src-group h3 { margin: 0 0 10px; }
+  .src-list { list-style: none; margin: 0; padding: 0; font-size: 14px; }
+  .src-list li {
+    margin: 0 0 12px;
+    padding-left: 0;
+    line-height: 1.6;
+  }
+  .src-list .tag {
+    font-family: var(--font-mono);
+    font-weight: 600;
+    color: var(--accent-quote);
+    margin-right: 6px;
+  }
+  .src-list .note { color: var(--text-muted); display: block; font-size: 13px; }
+
+  /* 注意書き */
+  .note-box {
+    background: var(--bg-subtle);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 22px;
+  }
+  .note-box ul { margin: 0; padding-left: 20px; }
+  .note-box li { margin: 0 0 10px; }
+
+  /* 核心メッセージ */
+  .key-msgs { counter-reset: km; list-style: none; margin: 8px 0 0; padding: 0; }
+  .key-msgs li {
+    position: relative;
+    padding: 0 0 0 44px;
+    margin: 0 0 16px;
+    min-height: 32px;
+  }
+  .key-msgs li::before {
+    counter-increment: km;
+    content: counter(km);
+    position: absolute;
+    left: 0; top: 2px;
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 600; font-size: 15px;
+  }
+
+  footer.page {
+    max-width: var(--maxw);
+    margin: 48px auto 0;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+
+  /* SVG 図のテーマ用 CSS（§5-0・4図共通・必須） */
+  svg .t  { font: 400 14px var(--font); fill: var(--text); }
+  svg .ts { font: 400 12px var(--font); fill: var(--text-muted); }
+  svg .th { font: 500 14px var(--font); fill: var(--text); }
+
+  svg .arr    { stroke: var(--text-muted); stroke-width: 1.5; fill: none; }
+  svg .leader { stroke: var(--text-muted); stroke-width: 0.5; stroke-dasharray: 3 3; fill: none; }
+  svg .box    { fill: var(--bg-subtle); stroke: var(--border); }
+
+  svg .c-blue   rect, svg .c-blue   ellipse, svg .c-blue   circle { fill: #E6F1FB; stroke: #185FA5; }
+  svg .c-teal   rect, svg .c-teal   ellipse, svg .c-teal   circle { fill: #E1F5EE; stroke: #0F6E56; }
+  svg .c-coral  rect, svg .c-coral  ellipse, svg .c-coral  circle { fill: #FAECE7; stroke: #993C1D; }
+  svg .c-purple rect, svg .c-purple ellipse, svg .c-purple circle { fill: #EEEDFE; stroke: #534AB7; }
+  svg .c-gray   rect, svg .c-gray   ellipse, svg .c-gray   circle { fill: #F1EFE8; stroke: #5F5E5A; }
+  svg .c-green  rect, svg .c-green  ellipse, svg .c-green  circle { fill: #EAF3DE; stroke: #3B6D11; }
+  svg .c-amber  rect, svg .c-amber  ellipse, svg .c-amber  circle { fill: #FAEEDA; stroke: #854F0B; }
+
+  svg .c-blue   .th, svg .c-blue   .t { fill: #0C447C; }  svg .c-blue   .ts { fill: #185FA5; }
+  svg .c-teal   .th, svg .c-teal   .t { fill: #085041; }  svg .c-teal   .ts { fill: #0F6E56; }
+  svg .c-coral  .th, svg .c-coral  .t { fill: #712B13; }  svg .c-coral  .ts { fill: #993C1D; }
+  svg .c-purple .th, svg .c-purple .t { fill: #3C3489; }  svg .c-purple .ts { fill: #534AB7; }
+  svg .c-gray   .th, svg .c-gray   .t { fill: #444441; }  svg .c-gray   .ts { fill: #5F5E5A; }
+  svg .c-green  .th, svg .c-green  .t { fill: #27500A; }  svg .c-green  .ts { fill: #3B6D11; }
+  svg .c-amber  .th, svg .c-amber  .t { fill: #633806; }  svg .c-amber  .ts { fill: #854F0B; }
+
+  @media (prefers-color-scheme: dark) {
+    svg .c-blue   rect, svg .c-blue   ellipse, svg .c-blue   circle { fill: #0C447C; stroke: #85B7EB; }
+    svg .c-teal   rect, svg .c-teal   ellipse, svg .c-teal   circle { fill: #085041; stroke: #5DCAA5; }
+    svg .c-coral  rect, svg .c-coral  ellipse, svg .c-coral  circle { fill: #712B13; stroke: #F0997B; }
+    svg .c-purple rect, svg .c-purple ellipse, svg .c-purple circle { fill: #3C3489; stroke: #AFA9EC; }
+    svg .c-gray   rect, svg .c-gray   ellipse, svg .c-gray   circle { fill: #444441; stroke: #B4B2A9; }
+    svg .c-green  rect, svg .c-green  ellipse, svg .c-green  circle { fill: #27500A; stroke: #97C459; }
+    svg .c-amber  rect, svg .c-amber  ellipse, svg .c-amber  circle { fill: #633806; stroke: #EF9F27; }
+    svg .c-blue .th,svg .c-blue .t,svg .c-blue .ts,
+    svg .c-teal .th,svg .c-teal .t,svg .c-teal .ts,
+    svg .c-coral .th,svg .c-coral .t,svg .c-coral .ts,
+    svg .c-purple .th,svg .c-purple .t,svg .c-purple .ts,
+    svg .c-gray .th,svg .c-gray .t,svg .c-gray .ts,
+    svg .c-green .th,svg .c-green .t,svg .c-green .ts,
+    svg .c-amber .th,svg .c-amber .t,svg .c-amber .ts { fill: #ffffff; }
+  }
+
+  /* レスポンシブ: モバイルで 1 カラム */
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; gap: 0; }
+    aside.toc {
+      position: static;
+      border-left: none;
+      border-bottom: 1px solid var(--border);
+      padding: 0 0 20px;
+      margin-bottom: 32px;
+    }
+    aside.toc ol { columns: 2; column-gap: 24px; }
+    header.page { padding-top: 40px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="page">
+    <p class="eyebrow">アーキテクチャ解説</p>
+    <h1>Next.js + TanStack Query の<br>クライアント寄り構成 — 図解</h1>
+    <p class="lead">基幹システムのマスタデータ管理サイトを、Next.js を BFF に徹させた「クライアント寄り構成」で作る際の全体像を、実行時データフローから OpenAPI 駆動の自動生成、テスト戦略、EKS デプロイまで図解で示す解説ページ。フロントに明るくないが全体像を掴みたい人、この構成をレビューする人に向けて。</p>
+  </header>
+
+  <div class="layout">
+
+    <aside class="toc">
+      <div class="toc-title">目次</div>
+      <ol>
+        <li><a href="#intro">1. はじめに / プロジェクト背景</a></li>
+        <li><a href="#paradigm">2. なぜクライアント寄り構成か</a></li>
+        <li><a href="#dataflow">3. 実行時データフロー（図1）</a></li>
+        <li><a href="#generation">4. OpenAPI 駆動の自動生成と AI 規約</a></li>
+        <li><a href="#testing">5. テスト戦略</a></li>
+        <li><a href="#pipeline">6. 開発〜CI までの全体フロー（図2）</a></li>
+        <li><a href="#eks">7. EKS へのデプロイ（図3）</a></li>
+        <li><a href="#sources">8. 引用ソース一覧</a></li>
+        <li><a href="#note">9. 注意書き</a></li>
+      </ol>
+    </aside>
+
+    <main>
+
+      <!-- 1. はじめに -->
+      <section id="intro">
+        <h2><span class="num">01</span>はじめに / プロジェクト背景</h2>
+        <p>このページは、ある具体的なプロジェクトに対して下した一連のアーキテクチャ判断を、図で直感的に掴ませつつ、各判断の根拠記事に辿れるようにまとめたものです。まず前提となるプロジェクトの輪郭を示します。</p>
+
+        <div class="table-card">
+          <table>
+            <tbody>
+              <tr><th>対象</th><td>基幹システムのマスタデータ管理サイト</td></tr>
+              <tr><th>画面規模</th><td>4〜5 画面（一覧 / 詳細 / マスタ更新の CRUD が中心）</td></tr>
+              <tr><th>FE / BFF</th><td>Next.js（BFF として REST API を集約・整形）</td></tr>
+              <tr><th>BE</th><td>Java / Spring Boot（確定）</td></tr>
+              <tr><th>BE 連携</th><td>OpenAPI スキーマを Spring Boot 側から提供可能</td></tr>
+              <tr><th>体制</th><td>フロントエンドに明るいのは 1 名のみ</td></tr>
+              <tr><th>開発手法</th><td>AI コーディングエージェントを活用。規約・型・lint・CI で機械的に縛る</td></tr>
+              <tr><th>インフラ</th><td>AWS EKS。Next.js 用 Pod と Spring Boot 用 Pod を同一クラスタに同居</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>このページが伝える核心メッセージ</h3>
+        <ol class="key-msgs">
+          <li>BE が別系（Spring Boot）で確定しているため、Next.js は BFF に徹し、RSC の「サーバーで直接データ取得」の旨味は構造的に効かない。よって <strong>RSC 中心ではなくクライアント寄り（Client Components + TanStack Query）</strong> が適合する。</li>
+          <li>フロント 1 名 + AI 開発という制約下では、<strong>判断ポイントを消し、機械的に検証できる仕様（OpenAPI スキーマ・型・lint・テスト）でエージェントを縛る</strong>ことが鍵。</li>
+          <li>テストと型と CI が、AI のドリフト（もっともらしいが意図とズレたコード）を止める検証ゲートになる。</li>
+        </ol>
+      </section>
+
+      <!-- 2. パラダイム -->
+      <section id="paradigm">
+        <h2><span class="num">02</span>なぜクライアント寄り構成か（設計思想）</h2>
+        <p>Next.js には大きく 2 つの寄せ方があります。サーバーファースト（RSC 中心）と、クライアントファースト（Client Components + TanStack Query）。本構成は後者を選びます。理由は、BE が別系で確定していること、CRUD 中心で SEO が不要なこと、そしてフロント 1 名 + AI 開発のもとで「server/client 境界をどちらにするか」という判断軸を一本化したいことです。</p>
+        <p>公平を期すために言えば、RSC が有利な場面はあります。コンテンツ / SEO 中心のサイトでは、サーバーで直接データを取り、クライアントへ送るバンドルを削れる利点が効きます。優劣ではなく <strong>最適化対象が違う</strong>、というのが正確な捉え方です。</p>
+
+        <div class="table-card">
+          <table>
+            <thead>
+              <tr><th>観点</th><th>サーバーファースト（RSC 中心）</th><th>クライアントファースト（本構成）</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>データ取得</td><td>Server Component / Server Actions でサーバー取得</td><td>Client Component + TanStack Query</td></tr>
+              <tr><td>向いている対象</td><td>コンテンツ / SEO 中心サイト</td><td>ダッシュボード / 内部ツール / CRUD</td></tr>
+              <tr><td>BE が別系のとき</td><td>「サーバーで直接取得」の旨味が薄い</td><td>API を叩く前提なので素直に噛み合う</td></tr>
+              <tr><td>メンタルモデル</td><td>server/client 境界の判断が要る</td><td>「API を叩くクライアントアプリ」で一本化</td></tr>
+              <tr><td>本構成での採否</td><td>✕（旨味が薄く判断負荷が高い）</td><td>◯（採用）</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p>本構成がクライアントファーストを選ぶのは優劣ではなく「最適化対象が違う」から（<a href="https://www.buildwithmatija.com/blog/tanstack-start-vs-nextjs-16-comparison" target="_blank" rel="noopener">P2</a>）。RSC は正しく使えばバンドル削減等の利点がありますが、BE 別系・CRUD 中心・フロント 1 名 + AI という制約下では、判断軸を一本化できるクライアント寄りが噛み合います。</p>
+
+        <div class="sources">
+          <div class="sources-title">出典</div>
+          <ul>
+            <li><span class="tag">[P1]</span><a href="https://tanstack.com/start/latest/docs/framework/react/start-vs-nextjs" target="_blank" rel="noopener">TanStack 公式 — Start vs Next.js 比較</a>（クライアントファースト陣営の主張。ポジショントーク含む点に注意）</li>
+            <li><span class="tag">[P2]</span><a href="https://www.buildwithmatija.com/blog/tanstack-start-vs-nextjs-16-comparison" target="_blank" rel="noopener">Build with Matija — TanStack Start vs Next.js 16</a>（RSC-first と client-first を中立に対比）</li>
+            <li><span class="tag">[P3]</span><a href="https://blog.logrocket.com/tanstack-start-vs-next-js-choosing-the-right-full-stack-react-framework/" target="_blank" rel="noopener">LogRocket — TanStack Start vs Next.js</a>（中立的な技術メディアの比較）</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- 3. データフロー 図1 -->
+      <section id="dataflow">
+        <h2><span class="num">03</span>実行時データフロー（図1）</h2>
+        <p>実際にアプリが動いているときの、一覧 → 詳細 → 更新 → 再取得という CRUD ループを図にします。ポイントは、コンポーネントが <code>useQuery</code> / <code>useMutation</code> を呼ぶだけで、その下に層がきれいに並ぶことです。</p>
+
+        <figure class="diagram">
+          <div class="svg-holder">
+<svg width="100%" viewBox="0 0 680 470" role="img"><title>Next.js + TanStack Query の実行時データフロー</title><desc>ブラウザのClient ComponentがTanStack Queryのhookを使い、生成済みAPIクライアント経由でNext.jsのRoute Handler（BFF）を呼び、それがSpring Bootに転送する流れ。更新時はinvalidateQueriesでキャッシュを無効化し再取得する。</desc>
+<defs><marker id="arrow1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+
+<text class="th" x="40" y="28">ブラウザ（クライアント）</text>
+<g class="c-blue"><rect x="40" y="40" width="280" height="56" rx="8" stroke-width="0.5"/>
+<text class="th" x="180" y="60" text-anchor="middle" dominant-baseline="central">Client Component</text>
+<text class="ts" x="180" y="80" text-anchor="middle" dominant-baseline="central">一覧 / 詳細 / 更新フォーム</text></g>
+
+<g class="c-blue"><rect x="40" y="116" width="280" height="56" rx="8" stroke-width="0.5"/>
+<text class="th" x="180" y="136" text-anchor="middle" dominant-baseline="central">useQuery / useMutation</text>
+<text class="ts" x="180" y="156" text-anchor="middle" dominant-baseline="central">取得・更新・状態管理</text></g>
+
+<g class="c-teal"><rect x="40" y="192" width="280" height="56" rx="8" stroke-width="0.5"/>
+<text class="th" x="180" y="212" text-anchor="middle" dominant-baseline="central">QueryCache</text>
+<text class="ts" x="180" y="232" text-anchor="middle" dominant-baseline="central">queryKey 単位で保持</text></g>
+
+<g class="c-gray"><rect x="40" y="268" width="280" height="56" rx="8" stroke-width="0.5"/>
+<text class="th" x="180" y="288" text-anchor="middle" dominant-baseline="central">生成APIクライアント</text>
+<text class="ts" x="180" y="308" text-anchor="middle" dominant-baseline="central">OpenAPIから型付き生成</text></g>
+
+<text class="th" x="400" y="28">サーバー</text>
+<g class="c-purple"><rect x="400" y="116" width="240" height="56" rx="8" stroke-width="0.5"/>
+<text class="th" x="520" y="136" text-anchor="middle" dominant-baseline="central">Route Handler（BFF）</text>
+<text class="ts" x="520" y="156" text-anchor="middle" dominant-baseline="central">認証付与・整形</text></g>
+
+<g class="c-coral"><rect x="400" y="268" width="240" height="56" rx="8" stroke-width="0.5"/>
+<text class="th" x="520" y="288" text-anchor="middle" dominant-baseline="central">Spring Boot</text>
+<text class="ts" x="520" y="308" text-anchor="middle" dominant-baseline="central">REST API / DB</text></g>
+
+<line x1="180" y1="96" x2="180" y2="114" class="arr" marker-end="url(#arrow1)"/>
+<line x1="180" y1="172" x2="180" y2="190" class="arr" marker-end="url(#arrow1)"/>
+<line x1="180" y1="248" x2="180" y2="266" class="arr" marker-end="url(#arrow1)"/>
+<line x1="320" y1="296" x2="398" y2="160" class="arr" marker-end="url(#arrow1)"/>
+<line x1="520" y1="172" x2="520" y2="266" class="arr" marker-end="url(#arrow1)"/>
+
+<text class="ts" x="350" y="360" text-anchor="middle">更新成功 → invalidateQueries → QueryCache を無効化 → 自動で再取得</text>
+<path d="M180 410 L40 410 L40 250" fill="none" stroke="#1D9E75" stroke-width="1" stroke-dasharray="5 5" marker-end="url(#arrow1)"/>
+<text class="ts" x="190" y="414">更新後の再取得ループ</text>
+</svg>
+          </div>
+          <figcaption>
+            CRUD の心臓部。コンポーネントは <code>useQuery</code> / <code>useMutation</code> を呼ぶだけで、その下に「QueryCache → 生成 API クライアント → Route Handler(BFF) → Spring Boot」が層として並ぶ。更新が成功すると <code>invalidateQueries</code>（緑の破線）が該当 queryKey のキャッシュを無効化し、その key を使う一覧が自動で再取得されて最新化される。データの実体は常に HTTP 越しの API（Spring Boot）であり、Next.js は BFF に徹する。
+          </figcaption>
+        </figure>
+
+        <div class="sources">
+          <div class="sources-title">出典</div>
+          <ul>
+            <li><span class="tag">[D1]</span><a href="https://medium.com/@sergey-bocharov/organizing-crud-operations-with-next-js-and-tanstack-query-63d53e539608" target="_blank" rel="noopener">Mastering CRUD Operations with Next.js and TanStack Query</a>（本構成に最も近い。pure functions → hooks → components のレイヤー分割）</li>
+            <li><span class="tag">[D2]</span><a href="https://ihsaninh.com/blog/the-complete-guide-to-tanstack-query-next.js-app-router" target="_blank" rel="noopener">The Complete Guide to TanStack Query in Next.js App Router</a>（invalidateQueries による再取得ループ）</li>
+            <li><span class="tag">[D3]</span><a href="https://blog.logrocket.com/using-tanstack-query-next-js/" target="_blank" rel="noopener">Using TanStack Query with Next.js (LogRocket)</a>（ReactQueryDevtools でキャッシュ挙動を可視化）</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- 4. OpenAPI 生成 -->
+      <section id="generation">
+        <h2><span class="num">04</span>OpenAPI 駆動の自動生成と AI 規約</h2>
+        <p>クライアント寄り構成の信頼性は、型の正しさに支えられます。本構成では <strong>OpenAPI スキーマを真実の源（source of truth）</strong> とし、そこから型・API クライアント・Zod スキーマを自動生成します。Spring Boot 側がスキーマを出力できるので、フロントは手書きの型を持ちません。</p>
+        <p>これは AI 開発との相性が決定的に良い設計です。手書き型を禁止し、生成物（<code>src/generated</code>）を編集禁止にすると、AI が「それらしい型」をでっち上げる余地が消えます。生成された型・クライアントが、AI を縛る <strong>実行可能な仕様</strong> になるわけです。</p>
+        <p>さらに <code>AGENTS.md</code> / <code>CLAUDE.md</code> でエージェントに規約を読ませ（ソフトな縛り）、型チェック・lint・CI でそれを機械的に検証する（ハードな縛り）。この二重ガードレールで、AI の出力を一定の幅に収めます。CI 側では <strong>drift 検出</strong>（スキーマから再生成した結果がコミット済みと一致するか）も走らせ、スキーマと生成物のズレを止めます。</p>
+
+        <div class="sources">
+          <div class="sources-title">出典</div>
+          <ul>
+            <li><span class="tag">[G1]</span><a href="https://nextjs.org/docs/app/guides/ai-agents" target="_blank" rel="noopener">Next.js 公式 — AI Coding Agents ガイド</a>（AGENTS.md / CLAUDE.md。エージェントに「docs を先に読め」と指示する公式の仕組み）</li>
+            <li><span class="tag">[G2]</span><a href="https://zeroshot.ghost.io/spec-driven-development-with-ai-coding-agents/" target="_blank" rel="noopener">Spec-Driven Development with AI Coding Agents</a>（仕様がエージェントを縛る。ドリフト対策）</li>
+            <li><span class="tag">[G3]</span><a href="https://www.augmentcode.com/guides/what-is-spec-driven-development" target="_blank" rel="noopener">What Is Spec-Driven Development? (Augment Code)</a>（仕様が「実行される検証ゲート」になる）</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- 5. テスト戦略 -->
+      <section id="testing">
+        <h2><span class="num">05</span>テスト戦略</h2>
+        <p>テストは二層構成です。<strong>Vitest</strong> が単体・同期コンポーネントを担い、<strong>Playwright</strong> が E2E（CRUD のハッピーパス）を担います。Jest はすでに Vitest に移行済みです。</p>
+        <p>役割分担には技術的な根拠もあります。非同期 Server Component は Vitest が非対応のため、その検証は E2E 側に寄せます（<a href="https://nextjs.org/docs/app/guides/testing/vitest" target="_blank" rel="noopener">Next.js 公式が明記</a>）。本構成はクライアント寄りなので Server Component は少なめですが、境界の振り分けはこの原則に従います。</p>
+        <p>そして最も重要なのは、これらが <strong>CI ゲート</strong> として働くことです。型・lint・Vitest・E2E がすべて緑でなければマージできない。この機械的な関門が、AI のドリフト（もっともらしいが意図とズレたコード）を止めます。</p>
+
+        <div class="sources">
+          <div class="sources-title">出典</div>
+          <ul>
+            <li><span class="tag">[T1]</span><a href="https://nextjs.org/docs/app/guides/testing" target="_blank" rel="noopener">Next.js 公式 — Testing ガイド</a></li>
+            <li><span class="tag">[T2]</span><a href="https://nextjs.org/docs/app/guides/testing/vitest" target="_blank" rel="noopener">Next.js 公式 — Vitest</a>（非同期 Server Component は Vitest 非対応 → E2E 推奨）</li>
+            <li><span class="tag">[T3]</span><a href="https://nextjs.org/docs/app/guides/testing/playwright" target="_blank" rel="noopener">Next.js 公式 — Playwright</a></li>
+            <li><span class="tag">[T4]</span><a href="https://medium.com/@securestartkit/next-js-testing-in-2026-vitest-playwright-0caf6dd1f829" target="_blank" rel="noopener">Next.js Testing 2026: Vitest and Playwright</a>（二層分担。Jest からの移行）</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- 6. パイプライン 図2 -->
+      <section id="pipeline">
+        <h2><span class="num">06</span>開発〜CI までの全体フロー（図2）</h2>
+        <p>ここまでの判断（クライアント寄り・OpenAPI 生成・二層テスト）が、実際の開発フローのどこに効くかを 1 枚の地図にします。起点はあくまで OpenAPI スキーマで、そこから生成された型・クライアントが AI の手書き余地を消し、CI が独立した最終関門になる、という流れです。</p>
+
+        <figure class="diagram">
+          <div class="svg-holder">
+<svg width="100%" viewBox="0 0 680 540" role="img"><title>OpenAPIからデプロイまでの開発・CI/CDパイプライン</title><desc>Spring BootのOpenAPIスキーマから型・APIクライアント・Zodを生成し、AIエージェントがローカルで実装・自己修正、GitHub Actionsで型チェック・lint・テスト・drift検出を経て、プレビュー環境でE2E、mainマージで本番デプロイする流れ。</desc>
+<defs><marker id="arrow2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+
+<text class="th" x="40" y="26">① スキーマ起点の生成</text>
+<g class="c-coral"><rect x="40" y="38" width="180" height="56" rx="8" stroke-width="0.5"/>
+<text class="th" x="130" y="58" text-anchor="middle" dominant-baseline="central">OpenAPIスキーマ</text>
+<text class="ts" x="130" y="78" text-anchor="middle" dominant-baseline="central">Spring Bootが出力</text></g>
+<g class="c-gray"><rect x="260" y="38" width="200" height="56" rx="8" stroke-width="0.5"/>
+<text class="th" x="360" y="58" text-anchor="middle" dominant-baseline="central">型 / APIクライアント / Zod</text>
+<text class="ts" x="360" y="78" text-anchor="middle" dominant-baseline="central">自動生成（src/generated）</text></g>
+<line x1="220" y1="66" x2="258" y2="66" class="arr" marker-end="url(#arrow2)"/>
+
+<text class="th" x="40" y="130">② ローカル開発（AIエージェント）</text>
+<g class="c-blue"><rect x="40" y="142" width="280" height="56" rx="8" stroke-width="0.5"/>
+<text class="th" x="180" y="162" text-anchor="middle" dominant-baseline="central">AIで実装 + 自己修正ループ</text>
+<text class="ts" x="180" y="182" text-anchor="middle" dominant-baseline="central">AGENTS.md / 型 / lint で拘束</text></g>
+<g class="c-blue"><rect x="360" y="142" width="220" height="56" rx="8" stroke-width="0.5"/>
+<text class="th" x="470" y="162" text-anchor="middle" dominant-baseline="central">ローカル検証</text>
+<text class="ts" x="470" y="182" text-anchor="middle" dominant-baseline="central">tsc / Vitest を即実行</text></g>
+<line x1="360" y1="66" x2="180" y2="140" class="arr" marker-end="url(#arrow2)"/>
+<line x1="320" y1="170" x2="358" y2="170" class="arr" marker-end="url(#arrow2)"/>
+
+<text class="th" x="40" y="234">③ CI（GitHub Actions・PRごと）</text>
+<g class="c-purple"><rect x="40" y="246" width="130" height="56" rx="8" stroke-width="0.5"/>
+<text class="th" x="105" y="266" text-anchor="middle" dominant-baseline="central">型 + lint</text>
+<text class="ts" x="105" y="286" text-anchor="middle" dominant-baseline="central">tsc / ESLint</text></g>
+<g class="c-purple"><rect x="190" y="246" width="130" height="56" rx="8" stroke-width="0.5"/>
+<text class="th" x="255" y="266" text-anchor="middle" dominant-baseline="central">単体テスト</text>
+<text class="ts" x="255" y="286" text-anchor="middle" dominant-baseline="central">Vitest</text></g>
+<g class="c-purple"><rect x="340" y="246" width="130" height="56" rx="8" stroke-width="0.5"/>
+<text class="th" x="405" y="266" text-anchor="middle" dominant-baseline="central">drift検出</text>
+<text class="ts" x="405" y="286" text-anchor="middle" dominant-baseline="central">再生成と一致確認</text></g>
+<g class="c-purple"><rect x="490" y="246" width="130" height="56" rx="8" stroke-width="0.5"/>
+<text class="th" x="555" y="266" text-anchor="middle" dominant-baseline="central">build</text>
+<text class="ts" x="555" y="286" text-anchor="middle" dominant-baseline="central">next build</text></g>
+<line x1="180" y1="198" x2="105" y2="244" class="arr" marker-end="url(#arrow2)"/>
+
+<text class="th" x="40" y="338">④ プレビュー環境でE2E</text>
+<g class="c-green"><rect x="40" y="350" width="280" height="56" rx="8" stroke-width="0.5"/>
+<text class="th" x="180" y="370" text-anchor="middle" dominant-baseline="central">プレビューデプロイ</text>
+<text class="ts" x="180" y="390" text-anchor="middle" dominant-baseline="central">本番同等環境</text></g>
+<g class="c-green"><rect x="360" y="350" width="220" height="56" rx="8" stroke-width="0.5"/>
+<text class="th" x="470" y="370" text-anchor="middle" dominant-baseline="central">Playwright E2E</text>
+<text class="ts" x="470" y="390" text-anchor="middle" dominant-baseline="central">CRUDハッピーパス</text></g>
+<line x1="330" y1="302" x2="180" y2="348" class="arr" marker-end="url(#arrow2)"/>
+<line x1="320" y1="378" x2="358" y2="378" class="arr" marker-end="url(#arrow2)"/>
+
+<text class="th" x="40" y="442">⑤ 本番</text>
+<g class="c-amber"><rect x="40" y="454" width="280" height="56" rx="8" stroke-width="0.5"/>
+<text class="th" x="180" y="474" text-anchor="middle" dominant-baseline="central">mainマージで本番デプロイ</text>
+<text class="ts" x="180" y="494" text-anchor="middle" dominant-baseline="central">全チェック緑が必須</text></g>
+<line x1="180" y1="406" x2="180" y2="452" class="arr" marker-end="url(#arrow2)"/>
+<text class="ts" x="360" y="486">Branch Protection で</text>
+<text class="ts" x="360" y="502">未通過のPRはマージ不可</text>
+</svg>
+          </div>
+          <figcaption>
+            ADR（設計判断）が実際の開発フローのどこに効くかの地図。① OpenAPI スキーマが起点で、型・API クライアント・Zod が生成され、AI が手書きする余地が消える。② AI はローカルで自己修正するが、ローカルでは「動く」と自己納得しがちなため、③ の CI が独立した最終関門になる。<code>drift 検出</code> は「スキーマから再生成した結果がコミット済みと一致するか」の確認。④ プレビュー環境 E2E、⑤ main マージで本番。Branch Protection で未通過の PR はマージ不可。
+            <span class="extra">※ この図はホスティング汎用版。EKS 固有のデプロイ（④⑤）は次セクションの図3 で差し替わる。</span>
+          </figcaption>
+        </figure>
+
+        <div class="sources">
+          <div class="sources-title">出典</div>
+          <ul>
+            <li><span class="tag">[C1]</span><a href="https://pablodiazt.com/tech-stack/ci-cd-vercel-github" target="_blank" rel="noopener">CI/CD Pipeline with Vercel + GitHub</a>（ソロ運用向け 4 ステージ。レビュアー不在を自動チェックで代替）</li>
+            <li><span class="tag">[C2]</span><a href="https://coffey.codes/articles/production-grade-ci-cd-with-nextjs-vercel-and-github-actions" target="_blank" rel="noopener">Production-grade CI/CD with Next.js/Vercel and GitHub Actions</a>（プレビュー環境で E2E を回す。Branch Protection）</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- 7. EKS 図3 -->
+      <section id="eks">
+        <h2><span class="num">07</span>EKS へのデプロイ（図3）</h2>
+        <p>本構成のインフラは Vercel ではなく AWS EKS です。Vercel 前提だった「プレビュー URL・自動ロールバック」が EKS でどう置き換わるかを示します。CI（前セクションの③まで）は EKS でも同じで、変わるのは <strong>成果物の運び方</strong> だけです。</p>
+
+        <figure class="diagram">
+          <div class="svg-holder">
+<svg width="100%" viewBox="0 0 680 560" role="img"><title>Next.js を EKS にデプロイする CI/CD パイプライン</title><desc>GitHub Actions が CI 検証後に Next.js を standalone ビルドして Docker イメージ化、ECR に push、kubectl/Helm で EKS の Next 用 Pod を更新する流れ。同一クラスタ内に Spring Boot 用 Pod も同居し、クラスタ内通信する。</desc>
+<defs><marker id="arrow3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+
+<text class="th" x="40" y="26">CI（GitHub Actions・PRごと）</text>
+<g class="c-purple"><rect x="40" y="38" width="600" height="50" rx="8" stroke-width="0.5"/>
+<text class="th" x="340" y="56" text-anchor="middle" dominant-baseline="central">型 + lint / Vitest / drift検出 / next build</text>
+<text class="ts" x="340" y="74" text-anchor="middle" dominant-baseline="central">全部緑でないと先へ進めない</text></g>
+
+<text class="th" x="40" y="118">CD（mainマージで起動）</text>
+<g class="c-blue"><rect x="40" y="130" width="280" height="56" rx="8" stroke-width="0.5"/>
+<text class="th" x="180" y="150" text-anchor="middle" dominant-baseline="central">standalone ビルド</text>
+<text class="ts" x="180" y="170" text-anchor="middle" dominant-baseline="central">output: standalone</text></g>
+<g class="c-blue"><rect x="360" y="130" width="280" height="56" rx="8" stroke-width="0.5"/>
+<text class="th" x="500" y="150" text-anchor="middle" dominant-baseline="central">Docker イメージ化</text>
+<text class="ts" x="500" y="170" text-anchor="middle" dominant-baseline="central">マルチステージ / 軽量</text></g>
+
+<g class="c-gray"><rect x="40" y="218" width="280" height="56" rx="8" stroke-width="0.5"/>
+<text class="th" x="180" y="238" text-anchor="middle" dominant-baseline="central">ECR に push</text>
+<text class="ts" x="180" y="258" text-anchor="middle" dominant-baseline="central">tag = git sha</text></g>
+<g class="c-gray"><rect x="360" y="218" width="280" height="56" rx="8" stroke-width="0.5"/>
+<text class="th" x="500" y="238" text-anchor="middle" dominant-baseline="central">kubectl / Helm</text>
+<text class="ts" x="500" y="258" text-anchor="middle" dominant-baseline="central">OIDC認証で適用</text></g>
+
+<line x1="340" y1="88" x2="180" y2="128" class="arr" marker-end="url(#arrow3)"/>
+<line x1="320" y1="158" x2="358" y2="158" class="arr" marker-end="url(#arrow3)"/>
+<line x1="180" y1="186" x2="180" y2="216" class="arr" marker-end="url(#arrow3)"/>
+<line x1="320" y1="246" x2="358" y2="246" class="arr" marker-end="url(#arrow3)"/>
+
+<text class="th" x="40" y="306">EKS クラスタ</text>
+<g class="c-teal"><rect x="40" y="318" width="600" height="180" rx="20" stroke-width="0.5"/>
+<text class="th" x="64" y="344">同一クラスタ内</text>
+
+<g class="c-blue"><rect x="80" y="368" width="240" height="100" rx="12" stroke-width="0.5"/>
+<text class="th" x="200" y="394" text-anchor="middle" dominant-baseline="central">Next.js 用 Pod</text>
+<text class="ts" x="200" y="414" text-anchor="middle" dominant-baseline="central">FE + BFF</text>
+<text class="ts" x="200" y="434" text-anchor="middle" dominant-baseline="central">replicas で複数</text></g>
+
+<g class="c-coral"><rect x="360" y="368" width="240" height="100" rx="12" stroke-width="0.5"/>
+<text class="th" x="480" y="394" text-anchor="middle" dominant-baseline="central">Spring Boot 用 Pod</text>
+<text class="ts" x="480" y="414" text-anchor="middle" dominant-baseline="central">REST API / DB</text>
+<text class="ts" x="480" y="434" text-anchor="middle" dominant-baseline="central">replicas で複数</text></g>
+
+<text class="ts" x="340" y="408" text-anchor="middle">Service</text>
+<line x1="320" y1="418" x2="358" y2="418" class="arr" marker-end="url(#arrow3)"/></g>
+
+<line x1="500" y1="274" x2="200" y2="366" class="arr" marker-end="url(#arrow3)"/>
+<text class="ts" x="40" y="530">置き換え: プレビューURL → 一時namespace、自動ロールバック → 前イメージへkubectl rollout undo</text>
+</svg>
+          </div>
+          <figcaption>
+            図2 の ④⑤ を EKS 用に差し替えたもの。CI（③まで）は EKS でも同じ。変わるのは成果物の運び方で、<code>output: "standalone"</code> で最小ビルド → Docker イメージ化 → ECR に push（tag は git sha）→ kubectl/Helm で EKS に適用、という経路になる。Next.js 用 Pod と Spring Boot 用 Pod は同一クラスタに同居し、クラスタ内 Service で通信する。認証は OIDC federation で、長期 AWS アクセスキーを GitHub Secrets に置かない。Vercel 前提だった「プレビュー URL」は一時 namespace、「自動ロールバック」は <code>kubectl rollout undo</code> や Canary に置き換わる。
+          </figcaption>
+        </figure>
+
+        <div class="sources">
+          <div class="sources-title">出典</div>
+          <ul>
+            <li><span class="tag">[E1]</span><a href="https://medium.com/@meet2sudhakar/ci-cd-on-amazon-eks-using-github-actions-an-end-to-end-guide-for-devops-engineers-c707d5919629" target="_blank" rel="noopener">CI/CD on Amazon EKS Using GitHub Actions</a>（本構成に最も近い。Dockerfile・k8s マニフェスト・Helm・OIDC 全部入り）</li>
+            <li><span class="tag">[E2]</span><a href="https://itdefined.org/blogs/details/78/build-your-first-end-to-end-cicd-pipeline-on-aws-using-github-actions-ecr-and-eks/" target="_blank" rel="noopener">CI/CD on AWS — GitHub Actions + ECR + EKS</a>（OIDC を「アクセスキーを置くな」の観点で解説）</li>
+            <li><span class="tag">[E3]</span><a href="https://medium.com/@modifyljf/aws-eks-github-action-nextjs-part-1-903165663cb9" target="_blank" rel="noopener">AWS EKS + GitHub Action + NextJS</a>（Next.js 前提のマルチステージ Dockerfile。やや古くバージョン読み替え要）</li>
+            <li><span class="tag">[E4]</span><a href="https://nextjs.org/docs/app/getting-started/deploying" target="_blank" rel="noopener">Next.js 公式 — Deploying</a>（output: "standalone" で最小本番イメージ。Kubernetes/Docker 対応の一次情報）</li>
+            <li><span class="tag">[E5]</span><a href="https://medium.com/@unosega/ci-cd-deployment-for-nextjs-application-using-docker-and-github-actions-on-a-remote-server-b1de03db6414" target="_blank" rel="noopener">CI/CD Deployment for Next.js Using Docker and GitHub Actions</a>（standalone ビルドと Dockerfile の具体解説）</li>
+            <li><span class="tag">[E6]</span><a href="https://github.com/Jareechang/ecs-nextjs" target="_blank" rel="noopener">Jareechang/ecs-nextjs (GitHub)</a>（しきい値ベース自動ロールバック付き blue-green canary の実装例。ECS 向けなので EKS には読み替え）</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- 8. ソース一覧 -->
+      <section id="sources">
+        <h2><span class="num">08</span>引用ソース一覧</h2>
+        <p>ページ内で参照した記事を、カテゴリ別に一覧化します。各リンクに位置づけを一言添えています。</p>
+
+        <div class="src-group">
+          <h3>設計思想（パラダイム）</h3>
+          <ul class="src-list">
+            <li><span class="tag">[P1]</span><a href="https://tanstack.com/start/latest/docs/framework/react/start-vs-nextjs" target="_blank" rel="noopener">TanStack 公式 — Start vs Next.js 比較</a><span class="note">クライアントファースト陣営の主張。ポジショントーク含む点に注意。</span></li>
+            <li><span class="tag">[P2]</span><a href="https://www.buildwithmatija.com/blog/tanstack-start-vs-nextjs-16-comparison" target="_blank" rel="noopener">Build with Matija — TanStack Start vs Next.js 16</a><span class="note">RSC-first と client-first を中立に対比。「どちらが優れているかではなく最適化対象が違う」。</span></li>
+            <li><span class="tag">[P3]</span><a href="https://blog.logrocket.com/tanstack-start-vs-next-js-choosing-the-right-full-stack-react-framework/" target="_blank" rel="noopener">LogRocket — TanStack Start vs Next.js</a><span class="note">中立的な技術メディアの比較。</span></li>
+          </ul>
+        </div>
+
+        <div class="src-group">
+          <h3>データフロー / TanStack Query</h3>
+          <ul class="src-list">
+            <li><span class="tag">[D1]</span><a href="https://medium.com/@sergey-bocharov/organizing-crud-operations-with-next-js-and-tanstack-query-63d53e539608" target="_blank" rel="noopener">Mastering CRUD Operations with Next.js and TanStack Query</a><span class="note">本構成に最も近い。pure functions → hooks → components のレイヤー分割を図解。</span></li>
+            <li><span class="tag">[D2]</span><a href="https://ihsaninh.com/blog/the-complete-guide-to-tanstack-query-next.js-app-router" target="_blank" rel="noopener">The Complete Guide to TanStack Query in Next.js App Router</a><span class="note">invalidateQueries による再取得ループ。</span></li>
+            <li><span class="tag">[D3]</span><a href="https://blog.logrocket.com/using-tanstack-query-next-js/" target="_blank" rel="noopener">Using TanStack Query with Next.js (LogRocket)</a><span class="note">ReactQueryDevtools でキャッシュ挙動を可視化。</span></li>
+          </ul>
+        </div>
+
+        <div class="src-group">
+          <h3>OpenAPI 生成 / AI 規約</h3>
+          <ul class="src-list">
+            <li><span class="tag">[G1]</span><a href="https://nextjs.org/docs/app/guides/ai-agents" target="_blank" rel="noopener">Next.js 公式 — AI Coding Agents ガイド</a><span class="note">AGENTS.md / CLAUDE.md の自動生成。エージェントに「docs を先に読め」と指示する公式の仕組み。</span></li>
+            <li><span class="tag">[G2]</span><a href="https://zeroshot.ghost.io/spec-driven-development-with-ai-coding-agents/" target="_blank" rel="noopener">Spec-Driven Development with AI Coding Agents</a><span class="note">仕様がエージェントを縛る。ドリフト対策。</span></li>
+            <li><span class="tag">[G3]</span><a href="https://www.augmentcode.com/guides/what-is-spec-driven-development" target="_blank" rel="noopener">What Is Spec-Driven Development? (Augment Code)</a><span class="note">仕様が「実行される検証ゲート」になる。</span></li>
+          </ul>
+        </div>
+
+        <div class="src-group">
+          <h3>テスト</h3>
+          <ul class="src-list">
+            <li><span class="tag">[T1]</span><a href="https://nextjs.org/docs/app/guides/testing" target="_blank" rel="noopener">Next.js 公式 — Testing ガイド</a></li>
+            <li><span class="tag">[T2]</span><a href="https://nextjs.org/docs/app/guides/testing/vitest" target="_blank" rel="noopener">Next.js 公式 — Vitest</a><span class="note">非同期 Server Component は Vitest 非対応 → E2E 推奨、と明記。</span></li>
+            <li><span class="tag">[T3]</span><a href="https://nextjs.org/docs/app/guides/testing/playwright" target="_blank" rel="noopener">Next.js 公式 — Playwright</a></li>
+            <li><span class="tag">[T4]</span><a href="https://medium.com/@securestartkit/next-js-testing-in-2026-vitest-playwright-0caf6dd1f829" target="_blank" rel="noopener">Next.js Testing 2026: Vitest and Playwright</a><span class="note">Vitest と Playwright の二層分担。Jest からの移行。</span></li>
+          </ul>
+        </div>
+
+        <div class="src-group">
+          <h3>CI/CD（汎用）</h3>
+          <ul class="src-list">
+            <li><span class="tag">[C1]</span><a href="https://pablodiazt.com/tech-stack/ci-cd-vercel-github" target="_blank" rel="noopener">CI/CD Pipeline with Vercel + GitHub</a><span class="note">ソロ運用向け 4 ステージ。レビュアー不在を自動チェックで代替。</span></li>
+            <li><span class="tag">[C2]</span><a href="https://coffey.codes/articles/production-grade-ci-cd-with-nextjs-vercel-and-github-actions" target="_blank" rel="noopener">Production-grade CI/CD with Next.js/Vercel and GitHub Actions</a><span class="note">プレビュー環境で E2E を回す。Branch Protection。</span></li>
+          </ul>
+        </div>
+
+        <div class="src-group">
+          <h3>EKS / コンテナデプロイ</h3>
+          <ul class="src-list">
+            <li><span class="tag">[E1]</span><a href="https://medium.com/@meet2sudhakar/ci-cd-on-amazon-eks-using-github-actions-an-end-to-end-guide-for-devops-engineers-c707d5919629" target="_blank" rel="noopener">CI/CD on Amazon EKS Using GitHub Actions</a><span class="note">本構成に最も近い。Dockerfile・k8s マニフェスト・Helm・OIDC・deploy.yml 全部入り。2026 年更新。</span></li>
+            <li><span class="tag">[E2]</span><a href="https://itdefined.org/blogs/details/78/build-your-first-end-to-end-cicd-pipeline-on-aws-using-github-actions-ecr-and-eks/" target="_blank" rel="noopener">CI/CD on AWS — GitHub Actions + ECR + EKS</a><span class="note">OIDC を「アクセスキーを置くな」の観点で解説。Helm values、ハマりどころ集。</span></li>
+            <li><span class="tag">[E3]</span><a href="https://medium.com/@modifyljf/aws-eks-github-action-nextjs-part-1-903165663cb9" target="_blank" rel="noopener">AWS EKS + GitHub Action + NextJS</a><span class="note">Next.js 前提のマルチステージ Dockerfile。やや古くバージョン読み替え要。</span></li>
+            <li><span class="tag">[E4]</span><a href="https://nextjs.org/docs/app/getting-started/deploying" target="_blank" rel="noopener">Next.js 公式 — Deploying</a><span class="note">output: "standalone" で最小本番イメージ。Kubernetes/Docker 対応の一次情報。</span></li>
+            <li><span class="tag">[E5]</span><a href="https://medium.com/@unosega/ci-cd-deployment-for-nextjs-application-using-docker-and-github-actions-on-a-remote-server-b1de03db6414" target="_blank" rel="noopener">CI/CD Deployment for Next.js Using Docker and GitHub Actions</a><span class="note">standalone ビルドと Dockerfile の具体解説。</span></li>
+            <li><span class="tag">[E6]</span><a href="https://github.com/Jareechang/ecs-nextjs" target="_blank" rel="noopener">Jareechang/ecs-nextjs (GitHub)</a><span class="note">しきい値ベース自動ロールバック付き blue-green canary の実装例。ECS 向けなので EKS には読み替え。</span></li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- 9. 注意書き -->
+      <section id="note">
+        <h2><span class="num">09</span>注意書き</h2>
+        <div class="note-box">
+          <ul>
+            <li>これらの図・記事は複数ソースの組み合わせであり、この 1 構成を一枚で説明する公式教材は存在しません。各図は別々の出典から本構成に合わせて再構成したものです。</li>
+            <li>EKS 教材の多くは汎用 DevOps 例で、Next + TanStack の FE レイヤーとは別レイヤーの話です。FE の設計判断とインフラの手順は分けて読んでください。</li>
+            <li>価格・ツールの保守状況・バージョンは時間で変わります。実装時には必ず各一次情報で最新を確認してください。</li>
+          </ul>
+        </div>
+      </section>
+
+      <footer class="page">
+        このページは、基幹システムのマスタ管理（Next + Spring Boot、フロント 1 名 + AI 開発、EKS）に対して下した一連のアーキテクチャ判断を、図で直感的に掴ませつつ各判断の根拠記事に辿れるようにまとめたものです。引用は言い換え主体で、各記事リンクから詳細に辿れます。
+      </footer>
+
+    </main>
+  </div>
+</div>
+</body>
+</html>
