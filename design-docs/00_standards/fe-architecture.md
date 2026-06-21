@@ -93,10 +93,13 @@ bulletproof-react の5分類（Component / Application / Server Cache / Form / U
 - **QueryClient はサーバー毎回 new・クライアント singleton**（サーバーで使い回すとリクエスト間でキャッシュが混ざりデータ漏洩）。サーバー側は `cache()` でリクエスト毎に生成。
 - **出典：** TanStack Query 公式（[overview](https://github.com/TanStack/query/blob/main/docs/framework/react/overview.md) / [advanced-ssr](https://github.com/TanStack/query/blob/main/docs/framework/react/guides/advanced-ssr.md)）／ **ADR-0002** ／ **集約元：** A系 §4
 
-### 5.2 クライアント状態の手段  ✅
-- **既定はコンポーネント state（必要に応じて Context）。** CRUD 4〜5画面ではサーバー状態を TanStack Query、フォーム状態を RHF が吸収するため、残るグローバル状態はトースト/モーダル程度に限定され、Context で足りる。
-- グローバル共有が実証された時点で初めて**軽量lib（Zustand）を1つだけ昇格導入**する（Jotai/Redux はこの規模では過剰）。
-- **出典：** bulletproof-react `state-management`（局所化原則）／ ADR-0002 却下案（「必要時のみ コンポーネント state / 必要なら Zustand」）
+### 5.2 クライアント状態の手段（Jotai）  ✅
+- **ローカルな一時状態はコンポーネント state**。画面をまたぐ／複数コンポーネントで共有するクライアントUI状態（選択行・ドロワー/モーダル開閉・トースト等）は **Jotai（atom）** で持つ。**サーバー状態は持たせない**（§5.1・TanStack Query が正本）。
+- **採用根拠：** pmndrs 製・コア約2kb・最小API。atom が純粋 config で状態は store 側にあるため `createStore()` でテスト独立性が高い。加えて社内 spa_architecture（C系・別スタック・参考扱い）に **Vitest ベースの Jotai テスト基盤（毎テスト独立 store ＋独自ラッパー/マッチャ）の実運用知見が実在**し、本チームの加点要素。
+- **正確な注記（誇張回避）：** 「Jotai は Vitest と特に相性が良い」という*固有*の根拠は一次情報では確認できない。テスト容易性はランナー非依存の性質で、Vitest 名指しの公式テストレシピはむしろ Zustand 側にある。Jotai を活かせるのは上記の社内テスト基盤による。
+- **App Router 注意：** store はリクエスト間で共有されると漏洩リスク。Provider をルート（client）に置きリクエストごとに store を限定する。hydration は `useHydrateAtoms`。atom 利用箇所は `'use client'`。
+- **役割分担：** API レスポンスを atom に直書きしない（C系の反面教師：キャッシュ無し・重複フェッチ・楽観的更新の複雑化）。
+- **出典：** [Jotai introduction](https://jotai.org/docs/introduction) ／ [testing](https://jotai.org/docs/guides/testing) ／ [Next.js](https://jotai.org/docs/guides/nextjs) ／ [pmndrs/jotai](https://github.com/pmndrs/jotai) ／ C系 `jotai_patterns.md`
 
 ### 5.3 URL状態  ✅
 - URLに載せるのは**「ブックマーク・共有・リロードで復元したい座標」**に限る：`masterType`・`recordId`（動的セグメント）、検索クエリ/フィルタ/ソート/ページ（`searchParams`）。
@@ -113,11 +116,11 @@ bulletproof-react の5分類（Component / Application / Server Cache / Form / U
 
 ## 7. API レイヤー（OpenAPI codegen）  ⚠️
 
-- API クライアントは**事前設定済みの単一インスタンスを再利用**し、リクエストは別ファイルに定義・コロケーションして TanStack Query hook から呼ぶ（bulletproof-react `api-layer`）。
-- 型・APIクライアント・Zod は **OpenAPI から生成**し `src/generated/` に隔離・手書き禁止。baseURL=`/api`。CI で「再生成結果==コミット済み」を検証（drift 検出）。
-- **codegen ツール（2026-06 時点の保守状況実測に基づく推奨）：本命=orval**（型＋TanStack Query hook＋Zod を1ツールで生成・保守活発）。生成物の透明性を最優先する場合のみ **openapi-typescript + openapi-fetch（型＋fetch）＋ Zod別手段**。**openapi-zod-client は約1.4年更新停止のため非推奨**（ADR-0003 の例示から差し替え）。最終確定は実装着手時（ADR-0003が自ら確定を実装時に委ねている）。
+- API クライアントは**事前設定済みの単一インスタンスを再利用**し、リクエストは別ファイルに定義・コロケーションして TanStack Query hook から呼ぶ（bulletproof-react `api-layer`）。型・client は **OpenAPI から生成**し `src/generated/` に隔離・手書き禁止。baseURL=`/api`。CI で「再生成結果==コミット済み」を検証（drift 検出）。
+- **codegen ツール = orval（確定）。** `client: 'react-query'`＋`httpClient: 'fetch'`（fetch が既定）で、**TypeScript 型 ＋ fetch ベースの TanStack Query hooks（useQuery/useMutation）を生成**（axios 非依存）。共通の認証/baseURL/エラー処理は `override.mutator` でカスタム fetch を1つ注入。`mock` は付けない。出力は `mode: 'tags-split'` を推奨。
+- **Zod は orval で生成しない。** Zod は orval の独立 client（`client: 'zod'`）で react-query 生成には同梱されないため Zod output を定義しない。**バリデーション Zod は手書きし、生成型に整合**させる（§8.3・ADR-0003 の縮退運用）。※ ADR-0003 が例示した `openapi-zod-client` は約1.4年更新停止のため不採用。
 - **未決：** ケース変換（生成時camelCase / 境界変換）。ドメイン型 camelCase のみ確定。
-- **出典：** bulletproof-react `api-layer` ／ **ADR-0003** ／ GitHub実測（orval-labs/orval・openapi-ts/openapi-typescript・astahmer/openapi-zod-client）／ **集約元：** A系 §5・§11
+- **出典：** [orval output 設定](https://orval.dev/docs/reference/configuration/output/) ／ [react-query](https://orval.dev/docs/guides/react-query/) ／ [fetch client](https://orval.dev/docs/guides/fetch-client/) ／ bulletproof-react `api-layer` ／ **ADR-0003** ／ **集約元：** A系 §5・§11
 
 ## 8. コンポーネント・スタイリング・デザインシステム（components-and-styling）
 
@@ -142,10 +145,10 @@ bulletproof-react の原則：使う場所の近くにコロケート、ネス�
 - 同一スキーマをフォーム検証と更新APIのリクエスト型整合に使う（生成Zod or 生成型に合わせた手書き）。クライアントエラーはフィールド直下、サーバーエラーは画面レベル（§9）。
 - **出典：** [RHF resolvers 公式](https://github.com/react-hook-form/resolvers)（zodResolver サポート）。※bulletproof-react はサンプルコードで採用するが docs に forms 章は無いため権威は RHF 公式に置く。**集約元：** A系 §7
 
-### 8.4 Storybook の採否  ✅
-- **初期は不採用。** Storybook の主価値（コンポーネント隔離開発・カタログ化）は中〜大規模で効くが、CRUD 4〜5画面・1名＋AI ではセットアップ/保守コストが上回る。代替としてアプリ内サンドボックスページで代用。
-- 再評価の閾値：デザインシステムがコンポーネント10〜15個超、または複数人体制になった時点。
-- **注記：** 公式・bulletproof-react とも Storybook を肯定するが**小規模での要否基準は示していない**。本判断は権威の推奨ではなくコスト便益判断。
+### 8.4 Storybook（採用）  ✅
+- **採用する。** 自前デザインシステムの共通コンポーネントをデザイントークン（§8.2）から構築するため、各部品を隔離開発・状態網羅・カタログ化する基盤として Storybook を用いる。bulletproof-react も「コンポーネントの隔離開発・テスト・カタログに有用」と位置づける。
+- 用途：① デザインシステム部品のカタログ ② 状態（hover/focus/disabled/loading/empty/error）の網羅確認 ③ AI へ各部品の状態仕様を機械可読に与える。
+- データを要する story は **MSW** でモックする（テストと同じモックを共有・§12）。VRT（reg-suit/Chromatic 等）の採否は別途（当面は追わない＝§12）。
 - **出典：** [Storybook docs](https://storybook.js.org/docs) ／ bulletproof-react `components-and-styling`
 
 ## 9. エラーハンドリング・横断（error-handling）  ✅
@@ -203,7 +206,6 @@ bulletproof-react の原則：使う場所の近くにコロケート、ネス�
 
 | 残論点 | 状態 | 関連章 |
 |---|---|---|
-| codegen ツールの最終確定 | 本命=orval。最終確定は実装着手時（ADR-0003） | §7 |
 | ケース変換（生成時camelCase / 境界変換） | 未決。ドメイン型camelCaseのみ確定 | §7 |
 | デザインシステムの確定（トークン命名翻訳・9カテゴリ） | 構想→確定。B系を昇格 | §8.2 |
 | 401/403 の UI 挙動 | 残論点 | §10 |
@@ -211,6 +213,36 @@ bulletproof-react の原則：使う場所の近くにコロケート、ネス�
 | 楽観的更新を入れる画面 | UX要件が出てから | §5.1 |
 | 定義駆動UIの採用 | 不採用。必要化したらADR追加 | §8.2 |
 | AGENTS.md / docs/conventions の作成 | 未作成 | §13 |
+| 本セッション決定の ADR 追記 | 要記録（下記） | §5.2・§7・§8.4 |
 
-> **確定済み（旧・残論点から解消）：** クライアント状態の手段（§5.2）／URL状態の基準（§5.3）／Storybook 採否（§8.4）。
+> **確定済み（旧・残論点から解消）：** クライアント状態手段＝**Jotai**（§5.2）／URL状態の基準（§5.3）／codegen＝**orval・Zod非生成**（§7）／Storybook＝**採用**（§8.4）。
+> **ADR への要追記：** クライアント状態手段の Jotai 採用（ADR-0002 はZustandを候補に挙げていた）と、codegen の orval 確定（ADR-0003 は openapi-typescript/-fetch/-zod-client を例示）は、本書で決定したため新規 ADR または既存 ADR 追記で根拠を記録する。
 > **完成の定義：** 全章 ✅ かつ §15 が解消した時点で、本書が A系（`アーキテクチャ設計.md`）を吸収した FE横断標準の正本として独立する。
+
+---
+
+## 16. 使用ライブラリ一覧
+
+> 採否のみを示す。**バージョンの正本は各リポジトリの設定ファイル（`package.json`）**であり、本表では固定しない。「決定」は本書/ADRで確定、「候補」は実装着手時に確定する。
+
+| 分類 | ライブラリ | 用途 | 状態 |
+|---|---|---|---|
+| フレームワーク | **Next.js**（App Router） | FE＋BFF 同居 | 決定（ADR-0001） |
+| 言語 | **TypeScript**（strict） | 型安全 | 決定 |
+| サーバー状態 | **TanStack Query**（React Query） | API状態・キャッシュ・無効化 | 決定（ADR-0002） |
+| クライアント状態 | **Jotai** | クライアントUI状態（選択・開閉・トースト等） | 決定（§5.2） |
+| フォーム | **React Hook Form** | フォーム状態管理 | 決定（ADR-0004） |
+| バリデーション | **Zod** ＋ `@hookform/resolvers` | スキーマ検証／RHF連携（手書き・生成型に整合） | 決定（ADR-0003/0004） |
+| コード生成 | **orval** | 型＋fetch＋TanStack Query hooks 生成（Zod非生成） | 決定（§7） |
+| スタイリング | **Tailwind CSS v4** | ユーティリティ／`@theme` トークン | 決定（§8.1） |
+| Headless UI 部品 | Radix UI（shadcn/ui 方式） | デザインシステムの土台 | 候補（§8.2） |
+| コンポーネントカタログ | **Storybook** | 隔離開発・状態網羅・カタログ | 決定（§8.4） |
+| API モック | MSW | Storybook／開発／テストのモック共有 | 候補（§8.4・§12） |
+| HTML サニタイズ | DOMPurify | XSS 対策（必要時のみ） | 候補（§10） |
+| 単体/コンポーネントテスト | **Vitest** ＋ **React Testing Library** | ロジック・コンポーネント | 決定（ADR-0005） |
+| E2E | **Playwright** | ハッピーパス | 決定（ADR-0005） |
+| Lint / Format | **ESLint** ＋ **Prettier** | コード品質・整形 | 決定（ADR-0004） |
+| Git hooks | lint-staged ＋ simple-git-hooks / husky | pre-commit 検証 | 候補（§13） |
+| エラートラッキング | Sentry | エラー監視＋source map | 候補（§9） |
+| 監視（RUM） | Datadog RUM | Real User Monitoring | 候補（社内決定・§11） |
+| 配信 | Docker（`output: 'standalone'`） | デプロイ成果物 | 決定（§14） |
