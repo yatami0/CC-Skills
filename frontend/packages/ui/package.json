@@ -1,0 +1,11 @@
+{
+  "name": "@repo/ui",
+  "version": "0.0.0",
+  "private": true,
+  "license": "UNLICENSED",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "comment": "横断 UI 部品（設計 §2.2）。基盤時点は空〜最小。横断再利用するものだけ components/ui からここへ昇格する。"
+}

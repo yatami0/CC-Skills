@@ -1,0 +1,33 @@
+# dependencies
+node_modules/
+.pnpm-store/
+
+# next
+.next/
+out/
+next-env.d.ts
+
+# build / deploy
+dist/
+build/
+.deploy/
+
+# test artifacts
+coverage/
+playwright-report/
+test-results/
+storybook-static/
+
+# typescript
+*.tsbuildinfo
+
+# claude personal settings
+.claude/settings.local.json
+
+# env
+.env
+.env*.local
+
+# os
+.DS_Store
+Thumbs.db

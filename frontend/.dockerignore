@@ -1,0 +1,13 @@
+# docker build -f apps/master/Dockerfile . （context = frontend/）で効く ignore。
+**/node_modules
+**/.next
+**/.turbo
+**/coverage
+**/playwright-report
+**/test-results
+**/storybook-static
+**/*.tsbuildinfo
+**/.env*.local
+.git
+.github
+docs

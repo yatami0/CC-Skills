@@ -1,0 +1,60 @@
+name: frontend
+
+# polyglot モノレポ。frontend サブツリーへの変更時のみ走らせる（設計 §4.1）。
+# repo-root に 1 つの .github を置き path filter で振り分ける構成（要検討・暫定）。
+on:
+  push:
+    paths:
+      - 'frontend/**'
+      - 'specs/**'
+      - '.github/workflows/frontend.yml'
+  pull_request:
+    paths:
+      - 'frontend/**'
+      - 'specs/**'
+      - '.github/workflows/frontend.yml'
+
+defaults:
+  run:
+    working-directory: frontend
+
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      # 1. install
+      - run: pnpm install --frozen-lockfile
+
+      # 2. codegen → drift 検出（再生成結果 == コミット済み生成物）
+      - run: pnpm -r gen:api
+      - name: codegen drift check
+        run: git diff --exit-code
+
+      # 3. typecheck（tsc --noEmit / strict）
+      - run: pnpm -r typecheck
+
+      # 4. lint（機械ゲート §3.7）
+      - run: pnpm -r lint
+
+      # 5. test（Vitest。portable stories 経由の story 実行も含む）
+      - run: pnpm -r test
+
+      # 6. build（next build）+ storybook build
+      - run: pnpm -r build
+
+      # 7. e2e（本番相当ビルドに対して MSW モックモード §3.6）
+      - name: install Playwright browsers
+        run: pnpm --filter master exec playwright install --with-deps chromium
+      - run: pnpm -r e2e

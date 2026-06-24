@@ -1,0 +1,10 @@
+**/node_modules
+**/.next
+**/.turbo
+**/coverage
+**/playwright-report
+**/test-results
+**/storybook-static
+**/*.tsbuildinfo
+**/.env*.local
+.git
