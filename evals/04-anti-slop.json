@@ -1,0 +1,23 @@
+{
+  "name": "04-anti-slop",
+  "intent": "AI slop(AIっぽさ)に流れやすい汎用 SaaS LP。複数デザイン方向の提示・既定への非ドリフト(規約)・ユーザー起動 anti-slop パスが効くか。",
+  "skills": ["web-design-mock"],
+  "query": "スタートアップ向けの SaaS プロダクトのランディングページのモックを作って。トーンはおまかせでモダンな感じで。",
+  "files": [],
+  "expected_behavior": [
+    "フェーズ1で要件を2〜4行で言い換え、画面タイプ(マーケLP)から Apple 哲学を選ぶ",
+    "詳細設計の初回(mock-v1)で、色/タイポ/レイアウトを変えた 2〜3 の異なるデザイン方向を提示し、ユーザーに選ばせる(設計 §8.4)。方向選択後は単一案を v2→vN で磨く",
+    "既定に逃げない: フォントは Inter/Roboto/Arial/Open Sans/Lato でなく Apple 固有フォント(SF system stack)を使う(SKILL.md §7 AI slop 規約)",
+    "白背景の紫(indigo/violet)グラデや既定 indigo アクセントに流れず、accent は哲学(systemBlue)またはブランドから決める",
+    "radius/padding を一律にせず、:root のスケールを階層に応じて使い分ける",
+    "平均化されたプレースホルダ('Build the future' 的な常套句)を避け、文脈に即した具体的な文言を使う",
+    "ユーザーが anti-slop を希望したときだけ scripts/anti-slop.mjs を実行し、指摘を反映した版を output/mock-vN-anti-slop.html として別名保存する(内側ループの一反復・承認不要)"
+  ],
+  "anti_behavior": [
+    "初回に単一案だけ出し、複数のデザイン方向を提示しない",
+    "Inter/Roboto 等の逃げフォント、白背景の紫グラデ、既定 indigo アクセントに流れる",
+    "全要素を一律の radius/padding にして階層を平坦化する",
+    "anti-slop を自動実行する、または warning でブロックして次に進めなくする(advisory のはず)",
+    "anti-slop 版を別名保存せず元の mock-vN.html を上書きする"
+  ]
+}
