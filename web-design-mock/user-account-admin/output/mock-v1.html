@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>管理コンソール — ユーザー管理</title>
+<style>
+  /* ============================================================
+     :root — IBM Carbon(White テーマ)由来トークンの単一の真実
+     以降のスタイルは全て var(--…) を参照する
+     ============================================================ */
+  :root {
+    /* フォント(IBM Plex / CJK は Plex Sans JP へフォールバック) */
+    --font-sans: "IBM Plex Sans", "IBM Plex Sans JP", "Helvetica Neue",
+                 "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, Arial, sans-serif;
+    --font-mono: "IBM Plex Mono", "SFMono-Regular", Menlo, Consolas, monospace;
+
+    /* 背景レイヤー(公式 White テーマ) */
+    --background:      #ffffff;
+    --layer-01:        #f4f4f4;
+    --layer-02:        #ffffff;
+    --layer-accent-01: #e0e0e0;
+    --field-01:        #f4f4f4;
+
+    /* テキスト */
+    --text-primary:     #161616;
+    --text-secondary:   #525252;
+    --text-helper:      #6f6f6f;
+    --text-placeholder: #a8a8a8;
+    --text-on-color:    #ffffff;
+    --text-disabled:    rgba(22,22,22,0.25);
+
+    /* 罫線 */
+    --border-subtle:      #e0e0e0;
+    --border-strong:      #8d8d8d;
+    --border-interactive: #0f62fe;
+
+    /* アクセント(= interactive / Blue 60)。宣言はここ 1 箇所のみ */
+    --color-accent:        #0f62fe;
+    --color-accent-hover:  #0353e9;
+    --color-accent-active: #002d9c;
+    --color-on-accent:     #ffffff;
+    --link-primary:        #0f62fe;
+    --focus:               #0f62fe;
+
+    /* ステータス(support トークン) */
+    --color-danger:  #da1e28;
+    --color-success: #24a148;
+    --color-warning: #f1c21b;
+    --color-info:    #0043ce;
+
+    /* グレースケール(Gray 10–100) */
+    --gray-10: #f4f4f4; --gray-20: #e0e0e0; --gray-30: #c6c6c6; --gray-40: #a8a8a8;
+    --gray-50: #8d8d8d; --gray-60: #6f6f6f; --gray-70: #525252; --gray-80: #393939;
+    --gray-90: #262626; --gray-100:#161616;
+
+    /* タイポ(productive type tokens) */
+    --text-caption-01: 12px; --leading-caption-01: 16px; --weight-caption-01: 400;
+    --text-label-01:   12px; --leading-label-01:   16px; --weight-label-01:   400;
+    --text-body-01:    14px; --leading-body-01:    20px; --weight-body-01:    400;
+    --text-body-02:    16px; --leading-body-02:    24px; --weight-body-02:    400;
+    --text-heading-01: 14px; --leading-heading-01: 20px; --weight-heading-01: 600;
+    --text-heading-03: 20px; --leading-heading-03: 28px; --weight-heading-03: 400;
+    --text-heading-04: 28px; --leading-heading-04: 36px; --weight-heading-04: 400;
+
+    /* スペーシング(8px mini-unit) */
+    --spacing-01: 2px;  --spacing-02: 4px;  --spacing-03: 8px;  --spacing-04: 12px;
+    --spacing-05: 16px; --spacing-06: 24px; --spacing-07: 32px; --spacing-08: 40px;
+    --spacing-09: 48px; --spacing-10: 64px;
+
+    /* 角丸(Carbon は基本 0) */
+    --radius-0: 0;
+    --radius-s: 4px;
+
+    /* 影(浮く要素のみ) */
+    --shadow-overlay: 0 2px 6px rgba(0,0,0,0.20);
+
+    /* a11y / レイアウト */
+    --target-min: 44px;
+    --sidenav-width: 256px;
+    --header-height: 48px;
+    --panel-width: 480px;
+
+    /* 名前空間トークン(Carbon グレー語彙の範囲内・派生) */
+    --overlay-scrim: rgba(22,22,22,0.5);
+    --row-hover: #e8e8e8;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html, body { height: 100%; }
+
+  body {
+    margin: 0;
+    font-family: var(--font-sans);
+    font-size: var(--text-body-01);
+    line-height: var(--leading-body-01);
+    color: var(--text-primary);
+    background: var(--background);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── UI Shell ヘッダー(濃色面) ───────────────────────────── */
+  .shell-header {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: var(--header-height);
+    display: flex;
+    align-items: center;
+    background: var(--gray-100);
+    color: var(--text-on-color);
+    border-bottom: 1px solid var(--gray-90);
+    z-index: 40;
+  }
+  .shell-header__brand {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-03);
+    padding: 0 var(--spacing-05);
+    height: 100%;
+    font-size: var(--text-heading-01);
+    font-weight: var(--weight-heading-01);
+    letter-spacing: 0.01em;
+  }
+  .shell-header__brand .dot {
+    width: 16px; height: 16px;
+    background: var(--color-accent);
+    flex: 0 0 auto;
+  }
+  .shell-header__spacer { flex: 1; }
+  .shell-header__actions {
+    display: flex;
+    align-items: center;
+    height: 100%;
+  }
+  .shell-icon-btn {
+    height: 100%;
+    width: var(--header-height);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: var(--text-on-color);
+    cursor: pointer;
+    font-size: var(--text-body-01);
+  }
+  .shell-icon-btn:hover { background: var(--gray-80); }
+  .shell-icon-btn:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: -2px;
+  }
+  .shell-avatar {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    background: var(--color-accent);
+    color: var(--text-on-color);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--text-caption-01);
+    font-weight: var(--weight-heading-01);
+  }
+
+  /* ── レイアウト(ヘッダー下: サイドナビ + メイン) ──────────── */
+  .layout {
+    display: flex;
+    padding-top: var(--header-height);
+    min-height: 100%;
+  }
+
+  /* ── サイドナビ(管理データ項目 = 一覧切替) ───────────────── */
+  .sidenav {
+    width: var(--sidenav-width);
+    flex: 0 0 var(--sidenav-width);
+    background: var(--background);
+    border-right: 1px solid var(--border-subtle);
+    position: sticky;
+    top: var(--header-height);
+    align-self: flex-start;
+    height: calc(100vh - var(--header-height));
+    overflow-y: auto;
+  }
+  .sidenav__label {
+    padding: var(--spacing-05) var(--spacing-05) var(--spacing-03);
+    font-size: var(--text-label-01);
+    color: var(--text-helper);
+    text-transform: none;
+    letter-spacing: 0.02em;
+  }
+  .sidenav__list { list-style: none; margin: 0; padding: 0; }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-04);
+    height: 40px;
+    padding: 0 var(--spacing-05);
+    border-left: 3px solid transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    user-select: none;
+    font-size: var(--text-body-01);
+  }
+  .nav-item .glyph {
+    width: 16px; height: 16px;
+    flex: 0 0 auto;
+    border: 1px solid var(--gray-50);
+  }
+  .nav-item:hover { background: var(--layer-01); color: var(--text-primary); }
+  .nav-item:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: -2px;
+  }
+  .nav-item[aria-current="page"] {
+    background: var(--layer-01);
+    border-left-color: var(--color-accent);
+    color: var(--text-primary);
+    font-weight: var(--weight-heading-01);
+  }
+  .nav-item[aria-current="page"] .glyph { border-color: var(--color-accent); }
+
+  /* ── メイン ──────────────────────────────────────────────── */
+  .main {
+    flex: 1 1 auto;
+    min-width: 0;
+    background: var(--background);
+  }
+  .content {
+    max-width: 1312px;
+    padding: 0 0 var(--spacing-09);
+  }
+
+  /* ── ツールバー(検索 + フィルタ) ────────────────────────── */
+  .toolbar {
+    display: flex;
+    align-items: stretch;
+    gap: 1px;
+    background: var(--border-subtle);
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .search {
+    position: relative;
+    flex: 1 1 auto;
+    min-width: 200px;
+    background: var(--layer-01);
+  }
+  .search__icon {
+    position: absolute;
+    left: var(--spacing-05);
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px; height: 16px;
+    border: 2px solid var(--text-secondary);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+  .search input {
+    width: 100%;
+    height: var(--spacing-09);
+    border: none;
+    background: transparent;
+    padding: 0 var(--spacing-05) 0 var(--spacing-09);
+    font-family: var(--font-sans);
+    font-size: var(--text-body-01);
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--border-strong);
+  }
+  .search input::placeholder { color: var(--text-placeholder); }
+  .search input:focus {
+    outline: 2px solid var(--focus);
+    outline-offset: -2px;
+  }
+  .filter {
+    position: relative;
+    flex: 0 0 200px;
+    background: var(--layer-01);
+  }
+  .filter select {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 100%;
+    height: var(--spacing-09);
+    border: none;
+    border-bottom: 1px solid var(--border-strong);
+    background: transparent;
+    padding: 0 var(--spacing-08) 0 var(--spacing-05);
+    font-family: var(--font-sans);
+    font-size: var(--text-body-01);
+    color: var(--text-primary);
+    cursor: pointer;
+  }
+  .filter select:focus {
+    outline: 2px solid var(--focus);
+    outline-offset: -2px;
+  }
+  .filter__caret {
+    position: absolute;
+    right: var(--spacing-05);
+    top: 50%;
+    width: 8px; height: 8px;
+    border-right: 1.5px solid var(--text-secondary);
+    border-bottom: 1.5px solid var(--text-secondary);
+    transform: translateY(-65%) rotate(45deg);
+    pointer-events: none;
+  }
+
+  /* ── データテーブル ──────────────────────────────────────── */
+  .table-wrap { width: 100%; overflow-x: auto; }
+  table.data {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--text-body-01);
+    background: var(--background);
+  }
+  table.data thead th {
+    text-align: left;
+    font-size: var(--text-heading-01);
+    font-weight: var(--weight-heading-01);
+    line-height: var(--leading-heading-01);
+    color: var(--text-primary);
+    background: var(--layer-01);
+    height: var(--spacing-08);
+    padding: 0 var(--spacing-05);
+    border-bottom: 1px solid var(--border-subtle);
+    white-space: nowrap;
+  }
+  table.data tbody td {
+    height: var(--spacing-09);
+    padding: 0 var(--spacing-05);
+    border-bottom: 1px solid var(--border-subtle);
+    color: var(--text-secondary);
+    vertical-align: middle;
+  }
+  table.data tbody tr { cursor: pointer; }
+  table.data tbody tr:nth-child(even) { background: var(--layer-01); }
+  table.data tbody tr:hover { background: var(--row-hover); }
+  table.data tbody tr:focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: -2px;
+  }
+
+  .cell-name {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-04);
+    color: var(--text-primary);
+    font-weight: var(--weight-heading-01);
+  }
+  .avatar-sm {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    flex: 0 0 auto;
+    background: var(--gray-20);
+    color: var(--text-secondary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--text-caption-01);
+    font-weight: var(--weight-heading-01);
+  }
+  .cell-email { font-family: var(--font-mono); color: var(--text-secondary); }
+
+  /* ロールタグ(中立) */
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    height: 24px;
+    padding: 0 var(--spacing-03);
+    background: var(--layer-accent-01);
+    color: var(--text-primary);
+    font-size: var(--text-label-01);
+    border-radius: 12px;
+    white-space: nowrap;
+  }
+  .tag--admin {
+    background: var(--gray-80);
+    color: var(--text-on-color);
+  }
+
+  /* ステータス(色ドット + ラベル / 色のみ依存しない) */
+  .status {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-03);
+    color: var(--text-primary);
+    white-space: nowrap;
+  }
+  .status .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex: 0 0 auto;
+  }
+  .status--active   .dot { background: var(--color-success); }
+  .status--invited  .dot { background: var(--color-warning); }
+  .status--disabled .dot { background: var(--gray-50); }
+  .status--disabled { color: var(--text-helper); }
+
+  .cell-muted { color: var(--text-helper); }
+
+  /* ── ページネーション ────────────────────────────────────── */
+  .pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-05);
+    height: var(--spacing-08);
+    padding: 0 var(--spacing-05);
+    background: var(--layer-01);
+    border-top: 1px solid var(--border-subtle);
+    font-size: var(--text-body-01);
+    color: var(--text-secondary);
+    flex-wrap: wrap;
+  }
+  .pagination__group { display: flex; align-items: center; gap: var(--spacing-04); }
+  .pagination__select {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+  }
+  .pagination__select select {
+    appearance: none;
+    -webkit-appearance: none;
+    height: var(--spacing-08);
+    border: none;
+    background: transparent;
+    padding: 0 var(--spacing-07) 0 var(--spacing-04);
+    font-family: var(--font-sans);
+    font-size: var(--text-body-01);
+    color: var(--text-primary);
+    border-left: 1px solid var(--border-subtle);
+    cursor: pointer;
+  }
+  .pager-btn {
+    width: var(--spacing-08);
+    height: var(--spacing-08);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    border-left: 1px solid var(--border-subtle);
+    color: var(--text-primary);
+    cursor: pointer;
+    font-size: var(--text-body-01);
+  }
+  .pager-btn:hover { background: var(--layer-accent-01); }
+  .pager-btn:disabled { color: var(--text-disabled); cursor: not-allowed; }
+  .pager-btn:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
+
+  /* ── 詳細スライドパネル ──────────────────────────────────── */
+  .scrim {
+    position: fixed;
+    inset: 0;
+    background: var(--overlay-scrim);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity .12s ease;
+    z-index: 50;
+  }
+  .scrim.open { opacity: 1; visibility: visible; }
+
+  .panel {
+    position: fixed;
+    top: 0; right: 0;
+    height: 100vh;
+    width: var(--panel-width);
+    max-width: 92vw;
+    background: var(--background);
+    border-left: 1px solid var(--border-subtle);
+    box-shadow: var(--shadow-overlay);
+    transform: translateX(100%);
+    transition: transform .16s cubic-bezier(.2,0,.38,.9);
+    z-index: 60;
+    display: flex;
+    flex-direction: column;
+  }
+  .panel.open { transform: translateX(0); }
+  .panel__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--spacing-04);
+    padding: var(--spacing-05);
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .panel__title {
+    margin: 0;
+    font-size: var(--text-heading-03);
+    line-height: var(--leading-heading-03);
+    font-weight: var(--weight-heading-01);
+    color: var(--text-primary);
+  }
+  .panel__sub { color: var(--text-helper); font-size: var(--text-label-01); }
+  .panel__close {
+    flex: 0 0 auto;
+    width: var(--spacing-08);
+    height: var(--spacing-08);
+    background: transparent;
+    border: none;
+    color: var(--text-primary);
+    cursor: pointer;
+    font-size: var(--text-heading-03);
+    line-height: 1;
+  }
+  .panel__close:hover { background: var(--layer-01); }
+  .panel__close:focus-visible { outline: 2px solid var(--focus); outline-offset: -2px; }
+  .panel__body { padding: var(--spacing-05); overflow-y: auto; }
+  .field-row { padding: var(--spacing-04) 0; border-bottom: 1px solid var(--border-subtle); }
+  .field-row__label {
+    display: block;
+    font-size: var(--text-label-01);
+    color: var(--text-helper);
+    margin-bottom: var(--spacing-02);
+  }
+  .field-row__value { font-size: var(--text-body-02); color: var(--text-primary); }
+
+  /* ── レスポンシブ ────────────────────────────────────────── */
+  @media (max-width: 1055px) {
+    .filter { flex-basis: 160px; }
+  }
+  @media (max-width: 671px) {
+    .sidenav { display: none; }
+    .toolbar { flex-wrap: wrap; }
+    .search { flex-basis: 100%; }
+    .filter { flex: 1 1 50%; }
+    .cell-email { display: none; }
+  }
+
+  .visually-hidden {
+    position: absolute; width: 1px; height: 1px;
+    margin: -1px; padding: 0; overflow: hidden;
+    clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+  }
+</style>
+</head>
+<body>
+
+<!-- UI Shell ヘッダー -->
+<header class="shell-header">
+  <div class="shell-header__brand">
+    <span class="dot" aria-hidden="true"></span>
+    管理コンソール
+  </div>
+  <div class="shell-header__spacer"></div>
+  <div class="shell-header__actions">
+    <button class="shell-icon-btn" aria-label="通知">◔</button>
+    <button class="shell-icon-btn" aria-label="アカウントメニュー">
+      <span class="shell-avatar">大</span>
+    </button>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- サイドナビ = 管理データ項目(選択で一覧が切替) -->
+  <nav class="sidenav" aria-label="管理データ">
+    <div class="sidenav__label">管理データ</div>
+    <ul class="sidenav__list">
+      <li class="nav-item" tabindex="0"><span class="glyph" aria-hidden="true"></span>ダッシュボード</li>
+      <li class="nav-item" tabindex="0" aria-current="page"><span class="glyph" aria-hidden="true"></span>ユーザー</li>
+      <li class="nav-item" tabindex="0"><span class="glyph" aria-hidden="true"></span>組織・部署</li>
+      <li class="nav-item" tabindex="0"><span class="glyph" aria-hidden="true"></span>ロール・権限</li>
+      <li class="nav-item" tabindex="0"><span class="glyph" aria-hidden="true"></span>API キー</li>
+      <li class="nav-item" tabindex="0"><span class="glyph" aria-hidden="true"></span>監査ログ</li>
+      <li class="nav-item" tabindex="0"><span class="glyph" aria-hidden="true"></span>設定</li>
+    </ul>
+  </nav>
+
+  <!-- メイン -->
+  <main class="main">
+    <div class="content">
+      <h1 class="visually-hidden">ユーザー一覧</h1>
+
+      <!-- ツールバー: 検索 + フィルタ -->
+      <div class="toolbar">
+        <div class="search">
+          <span class="search__icon" aria-hidden="true"></span>
+          <input type="search" placeholder="名前・メールで検索" aria-label="ユーザーを検索">
+        </div>
+        <div class="filter">
+          <select aria-label="ロールで絞り込み">
+            <option>ロール: すべて</option>
+            <option>管理者</option>
+            <option>一般</option>
+          </select>
+          <span class="filter__caret" aria-hidden="true"></span>
+        </div>
+        <div class="filter">
+          <select aria-label="ステータスで絞り込み">
+            <option>ステータス: すべて</option>
+            <option>有効</option>
+            <option>招待中</option>
+            <option>無効</option>
+          </select>
+          <span class="filter__caret" aria-hidden="true"></span>
+        </div>
+      </div>
+
+      <!-- データテーブル -->
+      <div class="table-wrap">
+        <table class="data">
+          <thead>
+            <tr>
+              <th scope="col">名前</th>
+              <th scope="col">メール</th>
+              <th scope="col">ロール</th>
+              <th scope="col">ステータス</th>
+              <th scope="col">最終ログイン</th>
+            </tr>
+          </thead>
+          <tbody id="rows">
+            <!-- 行は JS で描画(realistic placeholder) -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- ページネーション -->
+      <div class="pagination">
+        <div class="pagination__group">
+          <span class="pagination__select">
+            <select aria-label="1ページの表示件数">
+              <option>10 件</option>
+              <option>25 件</option>
+              <option>50 件</option>
+            </select>
+          </span>
+          <span>1–10 / 128 件</span>
+        </div>
+        <div class="pagination__group">
+          <span>ページ 1 / 13</span>
+          <button class="pager-btn" aria-label="前のページ" disabled>‹</button>
+          <button class="pager-btn" aria-label="次のページ">›</button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- 詳細スライドパネル -->
+<div class="scrim" id="scrim"></div>
+<aside class="panel" id="panel" aria-hidden="true" aria-label="ユーザー詳細">
+  <div class="panel__header">
+    <div>
+      <h2 class="panel__title" id="p-name">—</h2>
+      <span class="panel__sub" id="p-id">—</span>
+    </div>
+    <button class="panel__close" id="panelClose" aria-label="詳細を閉じる">×</button>
+  </div>
+  <div class="panel__body">
+    <div class="field-row">
+      <span class="field-row__label">メールアドレス</span>
+      <span class="field-row__value" id="p-email">—</span>
+    </div>
+    <div class="field-row">
+      <span class="field-row__label">ロール</span>
+      <span class="field-row__value" id="p-role">—</span>
+    </div>
+    <div class="field-row">
+      <span class="field-row__label">ステータス</span>
+      <span class="field-row__value" id="p-status">—</span>
+    </div>
+    <div class="field-row">
+      <span class="field-row__label">最終ログイン</span>
+      <span class="field-row__value" id="p-login">—</span>
+    </div>
+    <div class="field-row">
+      <span class="field-row__label">作成日</span>
+      <span class="field-row__value" id="p-created">—</span>
+    </div>
+  </div>
+</aside>
+
+<script>
+  // realistic placeholder データ
+  const USERS = [
+    { name: "佐藤 健一", initial: "佐", email: "k.sato@example.co.jp",     role: "管理者", status: "active",   login: "2026/06/27 09:14", created: "2023/04/01", id: "USR-1042" },
+    { name: "鈴木 美咲", initial: "鈴", email: "m.suzuki@example.co.jp",   role: "一般",   status: "active",   login: "2026/06/26 18:02", created: "2023/05/12", id: "USR-1043" },
+    { name: "高橋 亮",   initial: "高", email: "r.takahashi@example.co.jp", role: "一般",   status: "invited",  login: "—",                created: "2026/06/20", id: "USR-1101" },
+    { name: "田中 由紀", initial: "田", email: "y.tanaka@example.co.jp",   role: "管理者", status: "active",   login: "2026/06/27 08:41", created: "2022/11/03", id: "USR-0918" },
+    { name: "伊藤 直樹", initial: "伊", email: "n.ito@example.co.jp",      role: "一般",   status: "disabled", login: "2026/03/02 11:20", created: "2021/08/19", id: "USR-0612" },
+    { name: "渡辺 彩",   initial: "渡", email: "a.watanabe@example.co.jp", role: "一般",   status: "active",   login: "2026/06/25 14:33", created: "2024/01/15", id: "USR-1188" },
+    { name: "山本 大輔", initial: "山", email: "d.yamamoto@example.co.jp", role: "一般",   status: "invited",  login: "—",                created: "2026/06/24", id: "USR-1190" },
+    { name: "中村 香織", initial: "中", email: "k.nakamura@example.co.jp", role: "管理者", status: "active",   login: "2026/06/27 07:55", created: "2023/02/28", id: "USR-1009" },
+    { name: "小林 翔",   initial: "小", email: "s.kobayashi@example.co.jp", role: "一般",   status: "disabled", login: "2025/12/10 16:48", created: "2022/06/07", id: "USR-0744" },
+    { name: "加藤 真衣", initial: "加", email: "m.kato@example.co.jp",     role: "一般",   status: "active",   login: "2026/06/26 22:17", created: "2024/03/30", id: "USR-1205" }
+  ];
+
+  const STATUS = {
+    active:   { label: "有効",   cls: "status--active" },
+    invited:  { label: "招待中", cls: "status--invited" },
+    disabled: { label: "無効",   cls: "status--disabled" }
+  };
+
+  const tbody = document.getElementById("rows");
+  USERS.forEach((u, i) => {
+    const s = STATUS[u.status];
+    const roleTagCls = u.role === "管理者" ? "tag tag--admin" : "tag";
+    const tr = document.createElement("tr");
+    tr.tabIndex = 0;
+    tr.setAttribute("role", "button");
+    tr.setAttribute("aria-label", u.name + " の詳細を開く");
+    tr.innerHTML =
+      '<td><span class="cell-name"><span class="avatar-sm">' + u.initial + '</span>' + u.name + '</span></td>' +
+      '<td class="cell-email">' + u.email + '</td>' +
+      '<td><span class="' + roleTagCls + '">' + u.role + '</span></td>' +
+      '<td><span class="status ' + s.cls + '"><span class="dot" aria-hidden="true"></span>' + s.label + '</span></td>' +
+      '<td class="' + (u.login === "—" ? "cell-muted" : "") + '">' + u.login + '</td>';
+    tr.addEventListener("click", () => openPanel(u));
+    tr.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openPanel(u); }
+    });
+    tbody.appendChild(tr);
+  });
+
+  const scrim = document.getElementById("scrim");
+  const panel = document.getElementById("panel");
+
+  function openPanel(u) {
+    document.getElementById("p-name").textContent = u.name;
+    document.getElementById("p-id").textContent = u.id;
+    document.getElementById("p-email").textContent = u.email;
+    document.getElementById("p-role").textContent = u.role;
+    document.getElementById("p-status").textContent = STATUS[u.status].label;
+    document.getElementById("p-login").textContent = u.login;
+    document.getElementById("p-created").textContent = u.created;
+    panel.classList.add("open");
+    scrim.classList.add("open");
+    panel.setAttribute("aria-hidden", "false");
+    document.getElementById("panelClose").focus();
+  }
+  function closePanel() {
+    panel.classList.remove("open");
+    scrim.classList.remove("open");
+    panel.setAttribute("aria-hidden", "true");
+  }
+  document.getElementById("panelClose").addEventListener("click", closePanel);
+  scrim.addEventListener("click", closePanel);
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closePanel(); });
+</script>
+</body>
+</html>

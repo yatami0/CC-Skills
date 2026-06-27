@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>管理コンソール — ユーザー</title>
+<style>
+  /* ============================================================
+     :root — Apple HIG(light)ベース + AUX Mobility ブランド上書き
+     哲学は Apple のまま。accent をブランド色(コーポレートブルー)へ差し替え。
+     System Colors / Dynamic Type は公式値 / spacing・角丸・影は導出。
+     以降のスタイルは全て var(--…) を参照する。
+     ============================================================ */
+  :root {
+    --font-sans:
+      -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
+      "Helvetica Neue", "Noto Sans JP", "Hiragino Sans",
+      "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
+
+    /* タイポ: Dynamic Type iOS デフォルト(Large) */
+    --text-largetitle: 34px; --leading-largetitle: 41px; --weight-largetitle: 400;
+    --text-title1:     28px; --leading-title1:     34px; --weight-title1:     400;
+    --text-title2:     22px; --leading-title2:     28px; --weight-title2:     400;
+    --text-title3:     20px; --leading-title3:     25px; --weight-title3:     400;
+    --text-headline:   17px; --leading-headline:   22px; --weight-headline:   600;
+    --text-body:       17px; --leading-body:       22px; --weight-body:       400;
+    --text-callout:    16px; --leading-callout:    21px; --weight-callout:    400;
+    --text-subhead:    15px; --leading-subhead:    20px; --weight-subhead:    400;
+    --text-footnote:   13px; --leading-footnote:   18px; --weight-footnote:   400;
+    --text-caption1:   12px; --leading-caption1:   16px; --weight-caption1:   400;
+
+    /* カラー: System Colors / light(背景・ラベル・区切りは Apple のまま) */
+    --color-bg:            #FFFFFF;
+    --color-bg-secondary:  #F2F2F7;
+    --color-surface:       #FFFFFF;
+
+    --color-label:            rgba(0,0,0,1);
+    --color-label-secondary:  rgba(60,60,67,0.60);
+    --color-label-tertiary:   rgba(60,60,67,0.30);
+
+    --color-separator:        rgba(60,60,67,0.29);
+    --color-separator-opaque: #C6C6C8;
+    --color-fill:             rgba(120,120,128,0.20);
+    --color-fill-strong:      rgba(120,120,128,0.32);
+
+    /* アクセント = AUX コーポレートブルー(ブランド上書き)。宣言はここ 1 箇所のみ */
+    --color-accent:        #005fa2;   /* AUX corporate blue */
+    --color-accent-hover:  #003a63;   /* AUX navy(押下で沈む) */
+    --color-on-accent:     #FFFFFF;
+    --color-accent-tint:   rgba(0,95,162,0.12);
+
+    /* ブランド補助色(AUX) */
+    --brand-navy:    #003a63;   /* 主色・ブランドマーク */
+    --brand-skyblue: #009fe8;   /* 明るいハイライト(任意) */
+
+    /* ステータス(Apple System Colors。機能色としてブランドと非競合) */
+    --color-success: #34C759;
+    --color-warning: #FF9500;
+    --color-danger:  #FF3B30;
+
+    /* グレースケール(systemGray 1–6) */
+    --color-gray:  #8E8E93; --color-gray2: #AEAEB2; --color-gray3: #C7C7CC;
+    --color-gray4: #D1D1D6; --color-gray5: #E5E5EA; --color-gray6: #F2F2F7;
+
+    /* スペーシング(8pt 基調 / 導出) */
+    --space-1: 2px;  --space-2: 4px;  --space-3: 8px;   --space-4: 12px;
+    --space-5: 16px; --space-6: 20px; --space-7: 24px;  --space-8: 32px;
+    --space-9: 40px; --space-10: 48px; --space-11: 64px; --space-12: 80px;
+
+    /* 角丸(iOS 連続角丸の近似 / 導出) */
+    --radius-s: 8px;
+    --radius-m: 12px;
+    --radius-l: 18px;
+    --radius-xl: 28px;
+    --radius-pill: 980px;
+
+    /* 影(控えめ。奥行きは素材/層が主 / 導出) */
+    --shadow-1: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-2: 0 8px 30px rgba(0,0,0,0.10);
+
+    /* a11y 下限(不可侵) */
+    --touch-min: 44px;
+
+    /* レイアウト */
+    --sidebar-width: 264px;
+    --panel-width: 460px;
+
+    /* 名前空間トークン(Apple 派生の補助。本体トークンは非改変) */
+    --scrim:        rgba(0,0,0,0.40);
+    --fill-success: rgba(52,199,89,0.16);
+    --fill-warning: rgba(255,149,0,0.16);
+    --fill-neutral: rgba(120,120,128,0.14);
+    --row-hover:    rgba(120,120,128,0.08);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    font-family: var(--font-sans);
+    font-size: var(--text-body);
+    line-height: var(--leading-body);
+    color: var(--color-label);
+    background: var(--color-bg-secondary);
+    -webkit-font-smoothing: antialiased;
+  }
+  svg { display: block; }
+
+  /* ── アプリ: サイドバー | メイン ─────────────────────────── */
+  .app { display: flex; min-height: 100vh; }
+
+  /* ── サイドバー(起点 / systemGray6 キャンバス) ──────────────── */
+  .sidebar {
+    width: var(--sidebar-width);
+    flex: 0 0 var(--sidebar-width);
+    background: var(--color-bg-secondary);
+    border-right: 1px solid var(--color-separator);
+    display: flex;
+    flex-direction: column;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+  }
+  .sidebar__brand {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    height: 64px;
+    padding: 0 var(--space-5);
+    font-size: var(--text-headline);
+    font-weight: var(--weight-headline);
+    color: var(--brand-navy);
+    flex: 0 0 auto;
+  }
+  .sidebar__brand .mark {
+    width: 28px; height: 28px;
+    border-radius: var(--radius-s);
+    flex: 0 0 auto;
+    background: var(--brand-navy);
+    color: var(--color-on-accent);
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .sidebar__nav { flex: 1 1 auto; overflow-y: auto; padding: var(--space-3) var(--space-4); }
+  .sidebar__label {
+    padding: var(--space-3) var(--space-3) var(--space-2);
+    font-size: var(--text-footnote);
+    color: var(--color-label-secondary);
+  }
+  .sidebar__list { list-style: none; margin: 0; padding: 0; }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    min-height: var(--touch-min);
+    padding: var(--space-2) var(--space-4);
+    margin-bottom: var(--space-1);
+    border-radius: var(--radius-m);
+    color: var(--color-label);
+    font-size: var(--text-callout);
+    cursor: pointer;
+    user-select: none;
+  }
+  .nav-item .nav-ico { color: var(--color-label-secondary); flex: 0 0 auto; }
+  .nav-item .nav-ico svg { width: 22px; height: 22px; }
+  .nav-item:hover { background: var(--row-hover); }
+  .nav-item:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+  .nav-item[aria-current="page"] {
+    background: var(--color-accent-tint);
+    color: var(--color-accent);
+    font-weight: var(--weight-headline);
+  }
+  .nav-item[aria-current="page"] .nav-ico { color: var(--color-accent); }
+
+  .sidebar__user {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    padding: var(--space-4) var(--space-5);
+    border-top: 1px solid var(--color-separator);
+  }
+  .sidebar__user .ava {
+    width: 36px; height: 36px;
+    border-radius: var(--radius-pill);
+    flex: 0 0 auto;
+    background: var(--brand-navy);
+    color: var(--color-on-accent);
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: var(--text-subhead);
+    font-weight: var(--weight-headline);
+  }
+  .sidebar__user .who { display: flex; flex-direction: column; min-width: 0; }
+  .sidebar__user .who .nm { font-size: var(--text-subhead); color: var(--color-label); font-weight: var(--weight-headline); }
+  .sidebar__user .who .rl { font-size: var(--text-footnote); color: var(--color-label-secondary); }
+
+  /* ── メイン: systemGray6 キャンバス + 余白 + カード ─────────── */
+  .main {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    background: var(--color-bg-secondary);
+    padding: var(--space-7);
+    gap: var(--space-6);
+  }
+
+  /* ヘッダー: 検索のみ(右端寄せ・キャンバス上で軽やかに) */
+  .content-header {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex: 0 0 auto;
+  }
+  .search {
+    position: relative;
+    width: 100%;
+    max-width: 320px;
+  }
+  .search .ico {
+    position: absolute;
+    left: var(--space-4);
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--color-label-secondary);
+    pointer-events: none;
+  }
+  .search input {
+    width: 100%;
+    height: 40px;
+    border: none;
+    border-radius: var(--radius-m);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-1);
+    padding: 0 var(--space-5) 0 var(--space-9);
+    font-family: var(--font-sans);
+    font-size: var(--text-callout);
+    color: var(--color-label);
+  }
+  .search input::placeholder { color: var(--color-label-secondary); }
+  .search input:focus { outline: 2px solid var(--color-accent); outline-offset: 1px; }
+
+  /* 一覧カード(白・角丸・微細影。周囲に余白) */
+  .card {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    background: var(--color-surface);
+    border-radius: var(--radius-l);
+    box-shadow: var(--shadow-1);
+    overflow: hidden;
+  }
+
+  /* ── 一覧(罫線控えめ + inset セパレータ) ────────────────── */
+  .table-wrap { flex: 1 1 auto; width: 100%; overflow: auto; }
+  table.list { width: 100%; border-collapse: collapse; font-size: var(--text-subhead); }
+  table.list thead th {
+    position: sticky; top: 0; z-index: 1;
+    text-align: left;
+    font-size: var(--text-footnote);
+    font-weight: var(--weight-body);
+    color: var(--color-label-secondary);
+    padding: var(--space-4) var(--space-7);
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-separator);
+    white-space: nowrap;
+  }
+  table.list thead th.col-end { width: 44px; }
+  table.list tbody td {
+    padding: var(--space-4) var(--space-7);
+    border-bottom: 1px solid var(--color-separator);
+    color: var(--color-label-secondary);
+    vertical-align: middle;
+    height: 60px;
+  }
+  table.list tbody tr { cursor: pointer; }
+  table.list tbody tr:hover { background: var(--row-hover); }
+  table.list tbody tr:last-child td { border-bottom: none; }
+  table.list tbody tr:focus-visible { outline: 2px solid var(--color-accent); outline-offset: -2px; }
+
+  .person { display: flex; align-items: center; gap: var(--space-4); }
+  .person .ava {
+    width: 34px; height: 34px;
+    border-radius: var(--radius-pill);
+    flex: 0 0 auto;
+    background: var(--color-fill);
+    color: var(--color-label-secondary);
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: var(--text-subhead);
+    font-weight: var(--weight-headline);
+  }
+  .person .name { font-size: var(--text-callout); font-weight: var(--weight-headline); color: var(--color-label); }
+  .col-email { color: var(--color-label-secondary); }
+
+  /* ロール pill(中立) */
+  .pill {
+    display: inline-flex; align-items: center;
+    height: 26px;
+    padding: 0 var(--space-4);
+    border-radius: var(--radius-pill);
+    background: var(--fill-neutral);
+    color: var(--color-label-secondary);
+    font-size: var(--text-footnote);
+    white-space: nowrap;
+  }
+  .pill--admin { background: var(--color-fill-strong); color: var(--color-label); font-weight: var(--weight-headline); }
+
+  /* ステータス(tint pill + 色ドット + ラベル) */
+  .status {
+    display: inline-flex; align-items: center;
+    gap: var(--space-3);
+    height: 26px;
+    padding: 0 var(--space-4);
+    border-radius: var(--radius-pill);
+    font-size: var(--text-footnote);
+    color: var(--color-label);
+    white-space: nowrap;
+  }
+  .status .dot { width: 8px; height: 8px; border-radius: var(--radius-pill); flex: 0 0 auto; }
+  .status--active   { background: var(--fill-success); }
+  .status--active   .dot { background: var(--color-success); }
+  .status--invited  { background: var(--fill-warning); }
+  .status--invited  .dot { background: var(--color-warning); }
+  .status--disabled { background: var(--fill-neutral); color: var(--color-label-secondary); }
+  .status--disabled .dot { background: var(--color-gray); }
+
+  .muted { color: var(--color-label-tertiary); }
+  .chev { color: var(--color-label-tertiary); }
+
+  /* ── ページネーション(カード内フッター) ──────────────────── */
+  .pagination {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-5);
+    padding: var(--space-4) var(--space-7);
+    border-top: 1px solid var(--color-separator);
+    font-size: var(--text-subhead);
+    color: var(--color-label-secondary);
+    flex-wrap: wrap;
+  }
+  .pagination__group { display: flex; align-items: center; gap: var(--space-4); }
+  .pages select {
+    appearance: none; -webkit-appearance: none;
+    height: 36px;
+    border: none;
+    border-radius: var(--radius-m);
+    background: var(--color-fill);
+    padding: 0 var(--space-7) 0 var(--space-4);
+    font-family: var(--font-sans);
+    font-size: var(--text-subhead);
+    color: var(--color-label);
+    cursor: pointer;
+  }
+  .seg { display: inline-flex; background: var(--color-fill); border-radius: var(--radius-m); padding: var(--space-1); gap: var(--space-1); }
+  .seg button {
+    min-width: 40px; height: 36px;
+    border: none; background: transparent; cursor: pointer;
+    border-radius: var(--radius-s);
+    color: var(--color-label);
+    font-family: var(--font-sans);
+    font-size: var(--text-subhead);
+  }
+  .seg button:hover:not(:disabled) { background: var(--color-surface); }
+  .seg button:disabled { color: var(--color-label-tertiary); cursor: not-allowed; }
+  .seg button:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 1px; }
+
+  /* ── 詳細スライドシート ──────────────────────────────────── */
+  .scrim {
+    position: fixed; inset: 0;
+    background: var(--scrim);
+    opacity: 0; visibility: hidden;
+    transition: opacity .2s ease;
+    z-index: 50;
+  }
+  .scrim.open { opacity: 1; visibility: visible; }
+  .sheet {
+    position: fixed;
+    top: 0; right: 0;
+    height: 100vh;
+    width: var(--panel-width);
+    max-width: 92vw;
+    background: var(--color-surface);
+    border-top-left-radius: var(--radius-xl);
+    border-bottom-left-radius: var(--radius-xl);
+    box-shadow: var(--shadow-2);
+    transform: translateX(100%);
+    transition: transform .26s cubic-bezier(.32,.72,0,1);
+    z-index: 60;
+    display: flex; flex-direction: column;
+  }
+  .sheet.open { transform: translateX(0); }
+  .sheet__header {
+    display: flex; align-items: center; gap: var(--space-4);
+    padding: var(--space-6);
+    border-bottom: 1px solid var(--color-separator);
+  }
+  .sheet__id { color: var(--color-label-secondary); font-size: var(--text-footnote); }
+  .sheet__close {
+    margin-left: auto;
+    width: var(--touch-min); height: var(--touch-min);
+    flex: 0 0 auto;
+    border: none;
+    border-radius: var(--radius-pill);
+    background: var(--color-fill);
+    color: var(--color-label-secondary);
+    cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .sheet__close:hover { background: var(--color-fill-strong); color: var(--color-label); }
+  .sheet__close:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+  .sheet__hero { display: flex; align-items: center; gap: var(--space-5); padding: var(--space-6); }
+  .sheet__hero .ava-lg {
+    width: 56px; height: 56px;
+    border-radius: var(--radius-pill);
+    background: var(--brand-navy);
+    color: var(--color-on-accent);
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: var(--text-title3);
+    font-weight: var(--weight-headline);
+  }
+  .sheet__title { margin: 0; font-size: var(--text-title3); line-height: var(--leading-title3); font-weight: var(--weight-headline); color: var(--color-label); }
+  .sheet__body { padding: 0 var(--space-6) var(--space-7); overflow-y: auto; }
+  .group { background: var(--color-bg-secondary); border-radius: var(--radius-m); overflow: hidden; }
+  .field {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: var(--space-5);
+    padding: var(--space-4) var(--space-5);
+    border-bottom: 1px solid var(--color-separator);
+  }
+  .field:last-child { border-bottom: none; }
+  .field__label { color: var(--color-label-secondary); font-size: var(--text-subhead); }
+  .field__value { color: var(--color-label); font-size: var(--text-callout); text-align: right; }
+
+  .visually-hidden {
+    position: absolute; width: 1px; height: 1px;
+    margin: -1px; padding: 0; overflow: hidden;
+    clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+  }
+
+  /* ── レスポンシブ ────────────────────────────────────────── */
+  @media (max-width: 767px) {
+    .sidebar { position: fixed; left: 0; top: 0; z-index: 30; transform: translateX(-100%); }
+    .main { padding: var(--space-5); }
+    .col-email { display: none; }
+    .search { max-width: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- サイドバー(起点): ブランド + ナビ + アカウント -->
+  <nav class="sidebar" aria-label="管理データ">
+    <div class="sidebar__brand">
+      <span class="mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </span>
+      AUX 管理コンソール
+    </div>
+
+    <div class="sidebar__nav">
+      <div class="sidebar__label">管理データ</div>
+      <ul class="sidebar__list">
+        <li class="nav-item" tabindex="0">
+          <span class="nav-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg></span>
+          ダッシュボード
+        </li>
+        <li class="nav-item" tabindex="0" aria-current="page">
+          <span class="nav-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M5 20a7 7 0 0114 0"/></svg></span>
+          ユーザー
+        </li>
+        <li class="nav-item" tabindex="0">
+          <span class="nav-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h2M8 12h2M8 16h2M14 8h2M14 12h2M14 16h2"/></svg></span>
+          組織・部署
+        </li>
+        <li class="nav-item" tabindex="0">
+          <span class="nav-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/></svg></span>
+          ロール・権限
+        </li>
+        <li class="nav-item" tabindex="0">
+          <span class="nav-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="4"/><path d="M11 11l8 8M16 16l2-2M19 19l1.5-1.5"/></svg></span>
+          API キー
+        </li>
+        <li class="nav-item" tabindex="0">
+          <span class="nav-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></span>
+          監査ログ
+        </li>
+        <li class="nav-item" tabindex="0">
+          <span class="nav-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2.4"/><circle cx="8" cy="17" r="2.4"/></svg></span>
+          設定
+        </li>
+      </ul>
+    </div>
+
+    <div class="sidebar__user">
+      <span class="ava" aria-hidden="true">大</span>
+      <span class="who">
+        <span class="nm">大林 管理者</span>
+        <span class="rl">管理者</span>
+      </span>
+    </div>
+  </nav>
+
+  <!-- メイン -->
+  <main class="main">
+    <h1 class="visually-hidden">ユーザー一覧</h1>
+
+    <!-- ヘッダー: 検索のみ(右端寄せ) -->
+    <div class="content-header">
+      <div class="search">
+        <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M16.5 16.5L21 21"/></svg></span>
+        <input type="search" placeholder="名前・メールで検索" aria-label="ユーザーを検索">
+      </div>
+    </div>
+
+    <!-- 一覧カード(周囲に余白) -->
+    <div class="card">
+      <div class="table-wrap">
+        <table class="list">
+          <thead>
+            <tr>
+              <th scope="col">名前</th>
+              <th scope="col" class="col-email">メール</th>
+              <th scope="col">ロール</th>
+              <th scope="col">ステータス</th>
+              <th scope="col">最終ログイン</th>
+              <th scope="col" class="col-end"><span class="visually-hidden">詳細</span></th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+
+      <!-- ページネーション -->
+      <div class="pagination">
+        <div class="pagination__group">
+          <select class="pages" aria-label="1ページの表示件数">
+            <option>25 件 / ページ</option>
+            <option>50 件 / ページ</option>
+            <option>100 件 / ページ</option>
+          </select>
+          <span>1–25 / 128 件</span>
+        </div>
+        <div class="pagination__group">
+          <span>ページ 1 / 6</span>
+          <div class="seg">
+            <button aria-label="前のページ" disabled>‹</button>
+            <button aria-label="次のページ">›</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- 詳細スライドシート -->
+<div class="scrim" id="scrim"></div>
+<aside class="sheet" id="sheet" aria-hidden="true" aria-label="ユーザー詳細">
+  <div class="sheet__header">
+    <span class="sheet__id" id="s-id">—</span>
+    <button class="sheet__close" id="sheetClose" aria-label="詳細を閉じる">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+  </div>
+  <div class="sheet__hero">
+    <span class="ava-lg" id="s-ava">—</span>
+    <div>
+      <h2 class="sheet__title" id="s-name">—</h2>
+      <span class="sheet__id" id="s-email-sub">—</span>
+    </div>
+  </div>
+  <div class="sheet__body">
+    <div class="group">
+      <div class="field"><span class="field__label">メールアドレス</span><span class="field__value" id="s-email">—</span></div>
+      <div class="field"><span class="field__label">ロール</span><span class="field__value" id="s-role">—</span></div>
+      <div class="field"><span class="field__label">ステータス</span><span class="field__value" id="s-status">—</span></div>
+      <div class="field"><span class="field__label">最終ログイン</span><span class="field__value" id="s-login">—</span></div>
+      <div class="field"><span class="field__label">作成日</span><span class="field__value" id="s-created">—</span></div>
+    </div>
+  </div>
+</aside>
+
+<script>
+  const USERS = [
+    { name: "佐藤 健一", initial: "佐", email: "k.sato@example.co.jp",      role: "管理者", status: "active",   login: "2026/06/27 09:14", created: "2023/04/01", id: "USR-1042" },
+    { name: "鈴木 美咲", initial: "鈴", email: "m.suzuki@example.co.jp",    role: "一般",   status: "active",   login: "2026/06/26 18:02", created: "2023/05/12", id: "USR-1043" },
+    { name: "高橋 亮",   initial: "高", email: "r.takahashi@example.co.jp", role: "一般",   status: "invited",  login: "—",                created: "2026/06/20", id: "USR-1101" },
+    { name: "田中 由紀", initial: "田", email: "y.tanaka@example.co.jp",    role: "管理者", status: "active",   login: "2026/06/27 08:41", created: "2022/11/03", id: "USR-0918" },
+    { name: "伊藤 直樹", initial: "伊", email: "n.ito@example.co.jp",       role: "一般",   status: "disabled", login: "2026/03/02 11:20", created: "2021/08/19", id: "USR-0612" },
+    { name: "渡辺 彩",   initial: "渡", email: "a.watanabe@example.co.jp",  role: "一般",   status: "active",   login: "2026/06/25 14:33", created: "2024/01/15", id: "USR-1188" },
+    { name: "山本 大輔", initial: "山", email: "d.yamamoto@example.co.jp",  role: "一般",   status: "invited",  login: "—",                created: "2026/06/24", id: "USR-1190" },
+    { name: "中村 香織", initial: "中", email: "k.nakamura@example.co.jp",  role: "管理者", status: "active",   login: "2026/06/27 07:55", created: "2023/02/28", id: "USR-1009" },
+    { name: "小林 翔",   initial: "小", email: "s.kobayashi@example.co.jp", role: "一般",   status: "disabled", login: "2025/12/10 16:48", created: "2022/06/07", id: "USR-0744" },
+    { name: "加藤 真衣", initial: "加", email: "m.kato@example.co.jp",      role: "一般",   status: "active",   login: "2026/06/26 22:17", created: "2024/03/30", id: "USR-1205" },
+    { name: "吉田 拓海", initial: "吉", email: "t.yoshida@example.co.jp",   role: "一般",   status: "active",   login: "2026/06/26 10:08", created: "2023/09/02", id: "USR-1120" },
+    { name: "松本 千夏", initial: "松", email: "c.matsumoto@example.co.jp", role: "一般",   status: "active",   login: "2026/06/25 09:51", created: "2024/05/18", id: "USR-1233" },
+    { name: "井上 健太", initial: "井", email: "k.inoue@example.co.jp",     role: "管理者", status: "disabled", login: "2025/11/22 13:40", created: "2021/03/11", id: "USR-0501" },
+    { name: "木村 さくら", initial: "木", email: "s.kimura@example.co.jp",  role: "一般",   status: "invited",  login: "—",                created: "2026/06/23", id: "USR-1198" }
+  ];
+
+  const STATUS = {
+    active:   { label: "有効",   cls: "status--active" },
+    invited:  { label: "招待中", cls: "status--invited" },
+    disabled: { label: "無効",   cls: "status--disabled" }
+  };
+
+  const CHEV = '<span class="chev" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span>';
+
+  const tbody = document.getElementById("rows");
+  USERS.forEach((u) => {
+    const s = STATUS[u.status];
+    const pillCls = u.role === "管理者" ? "pill pill--admin" : "pill";
+    const tr = document.createElement("tr");
+    tr.tabIndex = 0;
+    tr.setAttribute("role", "button");
+    tr.setAttribute("aria-label", u.name + " の詳細を開く");
+    tr.innerHTML =
+      '<td><span class="person"><span class="ava">' + u.initial + '</span><span class="name">' + u.name + '</span></span></td>' +
+      '<td class="col-email">' + u.email + '</td>' +
+      '<td><span class="' + pillCls + '">' + u.role + '</span></td>' +
+      '<td><span class="status ' + s.cls + '"><span class="dot" aria-hidden="true"></span>' + s.label + '</span></td>' +
+      '<td class="' + (u.login === "—" ? "muted" : "") + '">' + u.login + '</td>' +
+      '<td>' + CHEV + '</td>';
+    tr.addEventListener("click", () => openSheet(u));
+    tr.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openSheet(u); } });
+    tbody.appendChild(tr);
+  });
+
+  const scrim = document.getElementById("scrim");
+  const sheet = document.getElementById("sheet");
+  function openSheet(u) {
+    document.getElementById("s-id").textContent = u.id;
+    document.getElementById("s-ava").textContent = u.initial;
+    document.getElementById("s-name").textContent = u.name;
+    document.getElementById("s-email-sub").textContent = u.email;
+    document.getElementById("s-email").textContent = u.email;
+    document.getElementById("s-role").textContent = u.role;
+    document.getElementById("s-status").textContent = STATUS[u.status].label;
+    document.getElementById("s-login").textContent = u.login;
+    document.getElementById("s-created").textContent = u.created;
+    sheet.classList.add("open");
+    scrim.classList.add("open");
+    sheet.setAttribute("aria-hidden", "false");
+    document.getElementById("sheetClose").focus();
+  }
+  function closeSheet() {
+    sheet.classList.remove("open");
+    scrim.classList.remove("open");
+    sheet.setAttribute("aria-hidden", "true");
+  }
+  document.getElementById("sheetClose").addEventListener("click", closeSheet);
+  scrim.addEventListener("click", closeSheet);
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeSheet(); });
+</script>
+</body>
+</html>
