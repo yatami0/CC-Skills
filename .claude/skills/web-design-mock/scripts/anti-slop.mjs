@@ -14,9 +14,12 @@
  *   T2 アクセント色相 … --color-accent が indigo/violet レンジ(hue∈[230,300] & sat>0.5) [soft]
  *   T3 グラデ         … *-gradient() の多用 / stop 色が紫レンジ
  *   T4 radius 平坦化  … markup が参照する radius が単一の非ゼロ値に潰れている
- *   T5 影整合(任意)  … --philosophy=carbon 指定時、タイル等に overlay 以外の影
  *
- * 使い方:  node scripts/anti-slop.mjs <html-file> [--philosophy=apple|carbon]
+ * 注: 影の整合(例 Carbon=タイルに影なし / Ant=白カードに微細影あり)は **哲学固有の規律**
+ *     なので script には持たせない(自己トークン整合の原則を保つ)。影は子リファレンスの
+ *     規律、または任意の LLM ルーブリック評価に委ねる。
+ *
+ * 使い方:  node scripts/anti-slop.mjs <html-file>
  * 終了コード: 常に 0(advisory)。使い方エラーのみ 2。
  */
 import { readFileSync } from "node:fs";
@@ -29,7 +32,6 @@ const DECL = /(--[\w-]+)\s*:\s*([^;]+);/g; // :root 内のトークン宣言
 const VAR_REF = /var\(\s*(--[\w-]+)\s*\)/g;
 const FONT_FAMILY = /font-family\s*:\s*([^;}]+)/gi;
 const BORDER_RADIUS = /\bborder-radius\s*:\s*([^;}]+)/gi;
-const BOX_SHADOW = /\bbox-shadow\s*:\s*([^;}]+)/gi;
 const GRADIENT = /(?:linear|radial|conic)-gradient\s*\(/gi;
 const HEX = /#[0-9a-fA-F]{3,8}\b/g;
 
@@ -260,31 +262,13 @@ function checkT4RadiusFlatness(model, warn) {
     );
 }
 
-function checkT5Shadow(model, philosophy, warn) {
-  if (philosophy !== "carbon") return; // 任意・Carbon のみ
-  const { tokens, markup, html } = model;
-  for (const [absOff, seg] of markup) {
-    BOX_SHADOW.lastIndex = 0;
-    let m;
-    while ((m = BOX_SHADOW.exec(seg)) !== null) {
-      const val = m[1].trim();
-      if (/var\(\s*--shadow-overlay\s*\)/.test(val)) continue; // overlay は許容
-      if (/^none$/i.test(val)) continue;
-      const abs = absOff + m.index;
-      warn("T5", lineOf(html, abs), `box-shadow を使用(Carbon はタイル/カードに影を足さない。面の階層は layer 段差で)`);
-    }
-  }
-}
-
 /* ───────────────────────── メイン ───────────────────────── */
 
 function main() {
   const args = process.argv.slice(2);
   const files = args.filter((a) => !a.startsWith("--"));
-  const philFlag = args.find((a) => a.startsWith("--philosophy="));
-  const philosophy = philFlag ? philFlag.split("=")[1].toLowerCase() : null;
   if (files.length !== 1) {
-    console.error("usage: node scripts/anti-slop.mjs <html-file> [--philosophy=apple|carbon]");
+    console.error("usage: node scripts/anti-slop.mjs <html-file>");
     return 2;
   }
   let html;
@@ -303,7 +287,6 @@ function main() {
   checkT2Accent(model, warn);
   checkT3Gradient(model, warn);
   checkT4RadiusFlatness(model, warn);
-  checkT5Shadow(model, philosophy, warn);
 
   if (warnings.length === 0) {
     console.log(`CLEAN ${files[0]}`);
