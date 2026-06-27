@@ -1,6 +1,6 @@
 # web-design-mock — Claude Code スキル
 
-権威あるデザインシステム（**Apple HIG** / **IBM Carbon**）の原則と正確なデザイントークンから、
+権威あるデザインシステム（**Apple HIG** / **IBM Carbon** / **Ant Design** / **Material 3**）の原則と正確なデザイントークンから、
 一貫した手順で「**自己完結した単一ファイル HTML**」の Web デザインモックを生成する Claude Code スキル。
 
 毎回ゼロから「いい感じに」作らせると見た目も手順も揺れる。哲学の原則とトークンを型に固め、
@@ -17,14 +17,16 @@ sdd/
 │   ├── SKILL.md                      #   親: ルーター + パイプライン + ゲート + 出力ルール
 │   ├── references/                   #   子: 各哲学の原則・正確なトークン・レイアウト規約
 │   │   ├── apple/apple.md            #     Apple(数値トークン非公開 → パターン+a11y数値で構成)
-│   │   └── carbon/carbon.md          #     Carbon(公式トークンをコピー)
+│   │   ├── carbon/carbon.md          #     Carbon(公式トークンをコピー)
+│   │   ├── ant/ant.md                #     Ant Design v5 + Pro(SaaS 管理画面・ブランド色サイダー)
+│   │   └── material/material.md      #     Material 3 / Material You(表現的なコンシューマアプリ UI)
 │   └── scripts/                      #   Node・依存ゼロのユーティリティ
 │       ├── validate.mjs              #     不変条件チェッカー(色値ハードコード等)
 │       └── list-projects.mjs        #     再開用: 既存モックの発見(§0 / SessionStart hook)
 ├── evals/                            ← スキル評価(開発用。配布物には含めない)
 │   ├── 01-apple-lp.json              #   Apple 風 LP
 │   ├── 02-router-carbon.json         #   哲学未指定 → ルーターが Carbon を選ぶ
-│   └── 03-fallback.json              #   未実装哲学(Material)のフォールバック
+│   └── 03-fallback.json              #   未実装哲学(Fluent 2)のフォールバック
 ├── install.sh / install.ps1          ← 他リポジトリ/個人用への設置スクリプト(非破壊)
 ├── web-design設計.md                 ← 設計書(意思決定の根拠。運用には不要)
 └── README.md                         ← 本ファイル
@@ -89,8 +91,10 @@ pwsh ./install.ps1 -User
 
 | 画面タイプ | 哲学 |
 |---|---|
-| マーケLP / プロダクト紹介 / コンシューマ向けアプリUI | **Apple** |
-| エンタープライズ管理画面 / ダッシュボード / データテーブル | **Carbon** |
+| マーケLP / プロダクト紹介 / 静謐なコンシューマ向けUI(余白・低彩度) | **Apple** |
+| 工業的・高密度・直角の基幹系 管理画面 / データテーブル | **Carbon** |
+| SaaS 管理画面 / ブランド色サイダー付きダッシュボード(白カード+角丸+微細影) | **Ant** |
+| 表現的・カラフルなコンシューマアプリUI / フォーム&リスト中心アプリ / PWA | **Material** |
 
 - ユーザーが哲学を明示指定したらそれを優先。2 つを丸ごと混ぜない（範囲限定ハイブリッドのみ可）。
 - **未実装の哲学**を指定された場合は値を捏造せず、最も近い実装済み哲学を提案してユーザーに選択を仰ぐ。
@@ -152,7 +156,7 @@ node "${CLAUDE_SKILL_DIR}/scripts/validate.mjs" output/mock-vN.html
 - §1 原則 / §2 トークンの出所（公式コピー or 導出かを明記）
 - §3 `:root` トークン / §4 レイアウト規約 / §5 look 報告 / §6 ハイブリッド注意
 
-その後、親 `SKILL.md` §3 のルーター表に 1 行追加する。次の候補: **Material（M3 基準）**。
+その後、親 `SKILL.md` §3 のルーター表に 1 行追加する。次の候補: **Fluent 2（MS。生産性アプリ）** / **Spectrum（Adobe。制作ツール）**。
 
 ---
 

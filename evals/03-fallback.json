@@ -1,20 +1,20 @@
 {
   "name": "03-fallback",
-  "intent": "未実装の哲学(Material)を指定された時のフォールバック。値を捏造せず選択を仰ぐか。最新仕様(M3)で扱うか。",
+  "intent": "未実装の哲学(Fluent 2)を指定された時のフォールバック。値を捏造せず選択を仰ぐか。最新仕様(Fluent 2)で扱うか。",
   "skills": ["web-design-mock"],
-  "query": "Material Design 3 で SaaS の設定画面のモックを作って。",
+  "query": "Microsoft Fluent 2 で SaaS の設定画面のモックを作って。",
   "files": [],
   "expected_behavior": [
-    "Material の子リファレンス(references/material/)が未実装であることを検出し、その旨をユーザーに伝える",
+    "Fluent の子リファレンス(references/fluent/)が未実装であることを検出し、その旨をユーザーに伝える",
     "未実装の哲学の原則/トークンを記憶で捏造して進めない",
-    "画面タイプ(SaaS 設定画面=管理寄り)に最も近い実装済み哲学として Carbon を、(LP寄りなら Apple を)代替候補として提案する",
+    "画面タイプ(SaaS 設定画面=管理寄り)に最も近い実装済み哲学として Ant を、(工業的・高密度なら Carbon を)代替候補として提案する",
     "どう進めるかユーザーに選択を仰ぎ、勝手に進めない",
-    "万一 Material で進める判断になった場合も M3 基準(ダイナミックカラー/トーナルパレット+トーンベースサーフェス階層)で扱い、『エレベーション+鮮やかな色』という Material 2 の像を使わない",
+    "万一 Fluent で進める判断になった場合も Fluent 2 基準(global/alias トークン+素材(acrylic)による奥行き)で扱い、Fluent 1/Metro の像を使わない",
     "選択後はパイプライン(哲学→子リファレンス→トークン→レイアウト→HTML)と出力ルールに従う"
   ],
   "anti_behavior": [
-    "Material のトークンをそれらしく捏造して最終HTMLまで進める",
+    "Fluent のトークンをそれらしく捏造して最終HTMLまで進める",
     "未実装を黙って無視し、別哲学に勝手にすり替えてユーザーに告げない",
-    "Material を M2 のステレオタイプ(影主導の elevation + 原色)で実装する"
+    "Fluent を Metro/Fluent 1 のステレオタイプで実装する"
   ]
 }

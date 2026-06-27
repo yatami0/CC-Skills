@@ -31,7 +31,9 @@
 
 ## 1. 原則(Clarity / Deference / Depth)
 
-Apple HIG のコアは 3 原則。トークン・レイアウト判断はすべてここから導く。
+本リファレンスはトークン・レイアウト判断を Apple の古典的 3 原則 **Clarity / Deference / Depth**
+(iOS 7 以来の設計言語)から導く。「余白・素材・控えめなクローム」という Apple らしさを最も
+直接に表す操作的レンズだからである。
 
 - **Clarity(明瞭さ)**: テキストは全サイズで可読、アイコンは精密、装飾は控えめ、機能が形を導く。
   → 余白を惜しまない / 十分なコントラスト / 1画面1焦点。
@@ -39,6 +41,13 @@ Apple HIG のコアは 3 原則。トークン・レイアウト判断はすべ�
   → 装飾的な枠線・濃い影・原色のベタ塗りを避ける。半透明/ぼかしで階層を示す。
 - **Depth(奥行き)**: リアルな層・動き・素材(materials)で階層と遷移を伝える。
   → 奥行きは**濃いドロップシャドウではなく**、半透明レイヤー・blur(vibrancy)・微細な影で表現。
+
+> **現行 HIG の表記について**: 2025 の HIG 刷新で「Design principles」ページは
+> *Make something meaningful / Let people do things their own way / Care about every detail /
+> Make it human* の 4 つを掲げる形に変わり、Clarity/Deference/Depth は現行ページの見出しからは
+> 外れた。ただし **Depth は Materials(現行の Liquid Glass、§4.4)として健在**で、本リファレンスの
+> 「素材で奥行きを出す」方針はそのまま現行 HIG と整合する。3 原則は今も有効な操作的ヒューリスティック
+> として採用する。
 
 ---
 
@@ -103,7 +112,7 @@ Apple は **固定の数値トークン表(spacing scale 等)を公開してい�
   /* 区切り / 塗り */
   --color-separator:        rgba(60,60,67,0.29);    /* separator */
   --color-separator-opaque: #C6C6C8;               /* opaqueSeparator */
-  --color-fill:             rgba(120,120,128,0.20); /* secondarySystemFill */
+  --color-fill:             rgba(120,120,128,0.20); /* systemFill(secondarySystemFill は 0.16)*/
 
   /* アクセント(=systemBlue)。定義はここ 1 箇所のみ。全 CTA はこれを参照 */
   --color-accent:        #007AFF;   /* systemBlue */
@@ -177,10 +186,13 @@ Apple は px 固定でなく **size class(compact / regular)** で考える。We
 ### 4.4 奥行きの作り方(Depth)
 - 濃いドロップシャドウで階層を作らない。**`--shadow-1`(微細)**を基本、浮く要素のみ `--shadow-2`。
 - 重なり/ナビバー等は **`backdrop-filter: var(--blur-material)`** + 半透明背景で「素材」を表現。
+- 現行 HIG の素材表現は **Liquid Glass**(iOS 26 / 2025)へ進化したが、本質は同じ
+  「半透明 + 屈折で奥行き」。Web モックでは `backdrop-filter` の近似で十分(CSS で完全再現は不可)。
 
 ### 4.5 アクセシビリティ [公式・不可侵]
 - タッチターゲット **44×44px 以上**(`--touch-min`)。
-- コントラスト **本文 4.5:1 / 大文字・非テキスト・コントロール 3:1 以上**。
+- コントラスト **本文 4.5:1 / 非テキスト(コントロール・図形・状態表示)3:1 以上**(Apple の表記基準)。
+  大文字テキストは WCAG 上 3:1 で可だが、Apple は 3:1 を「非テキスト要素」に対して定義する。
   - 注意: `--color-label-tertiary`/`quaternary` や `--color-gray` 系は本文に使わない(低コントラスト)。プレースホルダ/装飾のみ。
 
 ---

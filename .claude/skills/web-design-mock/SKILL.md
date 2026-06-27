@@ -1,12 +1,12 @@
 ---
 name: web-design-mock
 description: >-
-  権威あるデザインシステム(Apple HIG / IBM Carbon)の原則と正確なデザイントークンから、
+  権威あるデザインシステム(Apple HIG / IBM Carbon / Ant Design)の原則と正確なデザイントークンから、
   一貫した手順で高品質な「自己完結した単一ファイル HTML」の Web デザインモックを生成する。
   要件定義→基本設計→詳細設計→実装の 4 フェーズをユーザー検証ゲート付きで進め、進捗を
   ログファイルに残してセッションをまたいで再開する。Use when the user wants to design or mock
   a web page or UI, create an HTML mockup/wireframe, build a marketing landing page or an
-  enterprise admin dashboard, apply a design system (Apple, Carbon, Material), generate design
+  enterprise admin dashboard, apply a design system (Apple, Carbon, Ant Design, Material), generate design
   tokens, or asks for a "Webデザイン / モック / ランディングページ / 管理画面 / UIデザイン".
 ---
 
@@ -93,7 +93,7 @@ description: >-
     「anti-slop して」等、AIっぽさを気にする発話を**この点検の合図**として扱い、下記を回す
     (固定コマンド文字列は不要)。曖昧な時は「最新の mock に anti-slop を回しますか?」と一言確認する。
   ```bash
-  node "${CLAUDE_SKILL_DIR}/scripts/anti-slop.mjs" output/mock-vN.html [--philosophy=apple|carbon]
+  node "${CLAUDE_SKILL_DIR}/scripts/anti-slop.mjs" output/mock-vN.html
   ```
   検出(逃げフォント/紫アクセント/紫グラデ/角丸の平坦化 等)はすべて **warning**。指摘を反映した版を
   **`output/mock-vN-anti-slop.html`** として別名保存する(内側ループの一反復・承認不要。`-anti-slop`
@@ -120,15 +120,42 @@ description: >-
 | 画面タイプ | 既定の哲学 | 子リファレンス |
 |---|---|---|
 | マーケLP / プロダクト紹介 / コンシューマ向けアプリUI / オンボーディング | **Apple** | `references/apple/apple.md` |
-| エンタープライズ管理画面 / ダッシュボード / データテーブル / 密なフォーム | **Carbon** | `references/carbon/carbon.md` |
+| 工業的・高密度・フラット(直角/影なし)な基幹系の管理画面 / データテーブル / 密なフォーム | **Carbon** | `references/carbon/carbon.md` |
+| SaaS の管理画面 / **ブランド色のサイダー**付きダッシュボード / admin コンソール(白カード+角丸+微細影) | **Ant** | `references/ant/ant.md` |
+| Android/Web の**コンシューマ向けアプリUI** / 表現的・カラフルなプロダクト / フォーム&リスト中心アプリ / PWA | **Material** | `references/material/material.md` |
+
+> **Carbon と Ant の選び分け**(共にエンタープライズ管理画面): *工業的・直角・影なし・面は段差*なら
+> **Carbon**。*SaaS 的・角丸・白カードに微細影・色付きサイダー*なら **Ant**。
+> **Apple と Material の選び分け**(共にコンシューマ): *静謐・余白主導・低彩度・blur 素材*なら
+> **Apple**。*表現的・ブランド色を生成して主役に・角丸大きめ・elevation+tint*なら **Material**。
 
 - ユーザーが哲学を**明示指定**したらそれを使う(画面タイプ判定より優先)。
 - **未実装の哲学を指定された場合のフォールバック**: 値を捏造しない。
   (1) その哲学が未実装であることを伝える → (2) 画面タイプ的に最も近い**実装済み**哲学を提案
-  (例: Material 指定 → 管理画面なら Carbon、LP なら Apple)→ (3) ユーザーに選択を仰ぐ。
+  (例: Fluent 指定 → 管理画面なら Carbon/Ant、コンシューマなら Material/Apple)→ (3) ユーザーに選択を仰ぐ。
   勝手に進めない。万一進める場合も、その哲学の**最新仕様**で書く(例: Material は M3 基準。
   「エレベーション+鮮やかな色」という M2 の像を使わない)。
 - 2つの哲学を丸ごと混ぜない(平均化されて無個性になる)。範囲限定ハイブリッドのみ可(§6)。
+
+### 3.5 ユーザー哲学(empirical)の発見と選択 〔web-design-distill 連携〕
+
+上の表は**権威ある(authoritative)哲学**。これに加え、`web-design-distill` がモックから蒸留した
+**ユーザー哲学(empirical = 実測由来)**も候補に含める。両者は出自が違うので**混同せず併記**する。
+
+1. **発見**: フェーズ1で哲学を選ぶ前に、作業中ワークスペースの
+   `web-design-mock/_philosophies/*/*.md` を探す(無ければ何もしない。authoritative だけで進む)。
+2. **読む情報(front matter)**: `name` / `provenance: empirical` / `kind`(standalone|variant) /
+   `extends`(variant の base) / `validated_screens` / `screen_scope`(validated/partial/unfit) / `status`。
+3. **候補に出す条件**: `status: approved` のみ即候補。`draft` は「未検証」と明示して原則勧めない。
+   画面タイプは **`validated_screens` に一致**するものを優先し、**`screen_scope.unfit` の画面には選ばない**。
+4. **提示は出自を隠さない**: empirical 候補は「**実測由来・derived_from と validated_screens を併記**」して
+   ユーザーに舵を渡す(authoritative と同列に黙って混ぜない)。最終選択はユーザー。
+5. **選んだら子リファレンスとして読む**: 以降は通常パイプライン(§5)。ただし **`kind: variant` は
+   マージが要る**(下記 §5 の一行)。`provenance` を捏造の言い訳にしない — 値の出所は各ファイル §2 に従う。
+
+> 例: 画面タイプ=管理画面一覧 で `aux-admin`(empirical / variant: extends apple /
+> validated=管理画面・データテーブル)が見つかれば、Apple/Carbon/Ant と**並べて**「実測由来の選択肢」
+> として提示する。LP では出さない(その哲学の `unfit`)。
 
 ---
 
@@ -199,6 +226,9 @@ Status: not-started | draft | in-review | approved
   パターン + 確定 a11y 数値から組む(各子リファレンス §2 を参照)。
 - HTML は**トークンを消費**する。生の色/px 値を直書きせず、全部 `var(--…)`。
 - **初回(mock-v1)は 2〜3 の方向を分岐**して出し、選択後は単一案で磨く(§フェーズ3 / 設計 §8.4)。
+- **empirical の派生哲学を選んだ場合(§3.5)のマージ**: `kind: variant` は、まず `extends` の base
+  リファレンスの `:root` を出力し、その後に選んだファイルの**デルタ(§3 上書き/追加/省略)を適用**して
+  `:root` を組む(`base の :root` ← `variant のデルタ`)。standalone はそのまま全量を使う。
 
 ---
 
@@ -260,4 +290,6 @@ node "${CLAUDE_SKILL_DIR}/scripts/validate.mjs" output/mock-vN.html
 
 各哲学は `references/<name>/` 配下の自己完結フォルダ。`<name>.md`(原則 + 正確なトークン値 +
 レイアウト規約)と任意の `assets/`。追加時は **`references/apple/apple.md` の構造を踏襲**し、
-各哲学固有の値を自分のファイル内に閉じ込めて互いに漏れないようにする。次の候補: Material(M3 基準)。
+各哲学固有の値を自分のファイル内に閉じ込めて互いに漏れないようにする。
+実装済み: Apple / Carbon / **Ant(Ant Design v5 + Pro。SaaS 管理画面・ブランド色サイダー)** /
+**Material(M3 / Material You。表現的なコンシューマアプリ UI)**。次の候補: Fluent 2(MS。生産性アプリ)/ Spectrum(Adobe。制作ツール)。
