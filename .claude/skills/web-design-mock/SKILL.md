@@ -89,6 +89,9 @@ description: >-
   単一案を v2→vN で磨く。**分岐は初回のみ**(反復コスト増を初回に限定。以降は分岐しない)。
 - **(任意) anti-slop 追い込み**: 成果物を確認後、**ユーザーが希望したときだけ**「AIっぽさ(AI slop)」の
   tell を点検する。自動実行しない・ゲートにしない。
+  - **トリガー(口語)**: 「AIっぽさある?」「これAIっぽくない?」「量産/テンプレっぽい?」「slop チェックして」
+    「anti-slop して」等、AIっぽさを気にする発話を**この点検の合図**として扱い、下記を回す
+    (固定コマンド文字列は不要)。曖昧な時は「最新の mock に anti-slop を回しますか?」と一言確認する。
   ```bash
   node "${CLAUDE_SKILL_DIR}/scripts/anti-slop.mjs" output/mock-vN.html [--philosophy=apple|carbon]
   ```
