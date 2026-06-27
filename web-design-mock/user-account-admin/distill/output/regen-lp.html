@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AUX Mobility — クラウド配車プラットフォーム</title>
+<style>
+  /* ============================================================
+     異型テスト: aux-admin(variant: extends apple)だけで LP を組む。
+     循環防御に従い哲学のみから導出。捏造(哲学に無いトークン)は使わない。
+     → aux-admin は largetitle〜title2 を「省略」、accent を塗りに使わない(V2/V3)。
+        LP がそれにどう反応するかを観察する(境界マッピング)。
+     ============================================================ */
+  :root {
+    --font-sans:
+      -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
+      "Helvetica Neue", "Noto Sans JP", "Hiragino Sans", "Hiragino Kaku Gothic ProN",
+      "Yu Gothic", Meiryo, sans-serif;
+
+    /* aux-admin が持つタイポ段（largetitle/title1/title2 は省略=無い） */
+    --text-title3:    20px; --leading-title3:   25px; --weight-title3:   400;
+    --text-headline:  17px; --leading-headline: 22px; --weight-headline: 600;
+    --text-body:      17px; --leading-body:     22px; --weight-body:     400;
+    --text-callout:   16px; --leading-callout:  21px; --weight-callout:  400;
+    --text-subhead:   15px; --leading-subhead:  20px; --weight-subhead:  400;
+    --text-footnote:  13px; --leading-footnote: 18px; --weight-footnote: 400;
+
+    --color-bg:            #FFFFFF;
+    --color-bg-secondary:  #F2F2F7;
+    --color-surface:       #FFFFFF;
+    --color-label:            rgba(0,0,0,1);
+    --color-label-secondary:  rgba(60,60,67,0.60);
+    --color-separator:        rgba(60,60,67,0.29);
+    --color-fill:             rgba(120,120,128,0.20);
+
+    --space-3: 8px; --space-4: 12px; --space-5: 16px; --space-6: 20px;
+    --space-7: 24px; --space-8: 32px; --space-9: 40px;
+    --radius-m: 12px; --radius-l: 18px; --radius-pill: 980px;
+    --shadow-1: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --touch-min: 44px;
+
+    /* aux-admin デルタ */
+    --color-accent:        #005fa2;   /* V2: フォーカス/状態のみ。塗りCTAには使わない */
+    --color-accent-hover:  #003a63;
+    --color-on-accent:     #FFFFFF;
+    --color-accent-tint:   rgba(0,95,162,0.12);
+    --brand-navy:    #003a63;
+    --brand-skyblue: #009fe8;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  body {
+    margin: 0; font-family: var(--font-sans);
+    font-size: var(--text-body); line-height: var(--leading-body);
+    color: var(--color-label); background: var(--color-bg);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 980px; margin: 0 auto; padding: 0 var(--space-7); }
+
+  /* ヒーロー: aux-admin の最大見出しは title3(20px)しか無い → ヒーロー感が出ない */
+  .hero { padding: var(--space-9) 0; text-align: center; }
+  .hero h1 {
+    margin: 0 0 var(--space-5);
+    font-size: var(--text-title3);          /* 20px が上限。LP の主役見出しとして弱い */
+    line-height: var(--leading-title3);
+    font-weight: var(--weight-headline);
+  }
+  .hero p { margin: 0 auto var(--space-7); max-width: 600px; color: var(--color-label-secondary); font-size: var(--text-callout); }
+
+  /* CTA: V2 で accent は塗りに使わない → 枠線 only の弱い CTA しか作れない */
+  .cta {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-height: var(--touch-min); padding: 0 var(--space-7);
+    border-radius: var(--radius-m);
+    border: 1px solid var(--color-accent);
+    background: var(--color-surface);       /* 塗らない(V2)→ LP の主 CTA として迫力不足 */
+    color: var(--color-accent);
+    font-family: var(--font-sans); font-size: var(--text-callout); font-weight: var(--weight-headline);
+    cursor: pointer; text-decoration: none;
+  }
+  .cta:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+
+  /* 特徴3カラム */
+  .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-6); padding: var(--space-8) 0; }
+  .feature { background: var(--color-bg-secondary); border-radius: var(--radius-l); padding: var(--space-7); }
+  .feature h3 { margin: 0 0 var(--space-3); font-size: var(--text-headline); font-weight: var(--weight-headline); }
+  .feature p { margin: 0; color: var(--color-label-secondary); font-size: var(--text-subhead); }
+
+  footer { border-top: 1px solid var(--color-separator); padding: var(--space-7) 0; color: var(--color-label-secondary); font-size: var(--text-footnote); }
+
+  @media (max-width: 767px) { .features { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="hero">
+      <h1>配車も請求も、ひとつのクラウドで。</h1>
+      <p>AUX Mobility は車両・ドライバー・請求を一元管理するクラウド配車プラットフォーム。導入は最短即日、既存システムとも API で連携できます。</p>
+      <a class="cta" href="#">無料で試す</a>
+    </section>
+
+    <section class="features">
+      <div class="feature"><h3>リアルタイム配車</h3><p>需要に応じて最適なドライバーを自動アサイン。待ち時間を最小化します。</p></div>
+      <div class="feature"><h3>自動請求</h3><p>運行データから請求書を自動生成。締め作業の工数を大幅に削減。</p></div>
+      <div class="feature"><h3>API 連携</h3><p>既存の基幹・会計システムと REST API で双方向に接続できます。</p></div>
+    </section>
+
+    <footer class="wrap">© 2026 AUX Mobility, Inc.</footer>
+  </main>
+</body>
+</html>

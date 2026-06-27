@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>管理コンソール — 監査ログ</title>
+<style>
+  /* ============================================================
+     :root — aux-admin(variant: extends apple)を D4 暫定マージ。
+     apple.md §3 の base トークン + _philosophies/aux-admin デルタ。
+     ※ D4 はこの哲学ファイルのみから生成(ソース mock-v6 は見ない)。
+     ============================================================ */
+  :root {
+    /* ── aux-admin デルタ: font 上書き(base stack に "Noto Sans JP" 挿入) ── */
+    --font-sans:
+      -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
+      "Helvetica Neue", "Noto Sans JP", "Hiragino Sans", "Hiragino Kaku Gothic ProN",
+      "Yu Gothic", Meiryo, sans-serif;
+    /* ── aux-admin デルタ: 等幅(密データ用) ── */
+    --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+    /* ── base: タイポ Dynamic Type(largetitle〜title2 は aux-admin で省略=未使用) ── */
+    --text-title3:    20px; --leading-title3:   25px; --weight-title3:   400;
+    --text-headline:  17px; --leading-headline: 22px; --weight-headline: 600;
+    --text-body:      17px; --leading-body:     22px; --weight-body:     400;
+    --text-callout:   16px; --leading-callout:  21px; --weight-callout:  400;
+    --text-subhead:   15px; --leading-subhead:  20px; --weight-subhead:  400;
+    --text-footnote:  13px; --leading-footnote: 18px; --weight-footnote: 400;
+    --text-caption1:  12px; --leading-caption1: 16px; --weight-caption1: 400;
+
+    /* ── base: カラー System Colors / light ── */
+    --color-bg:            #FFFFFF;
+    --color-bg-secondary:  #F2F2F7;
+    --color-surface:       #FFFFFF;
+    --color-label:            rgba(0,0,0,1);
+    --color-label-secondary:  rgba(60,60,67,0.60);
+    --color-label-tertiary:   rgba(60,60,67,0.30);
+    --color-separator:        rgba(60,60,67,0.29);
+    --color-fill:             rgba(120,120,128,0.20);
+
+    /* ── base: ステータス System Colors ── */
+    --color-success: #34C759;
+    --color-warning: #FF9500;
+    --color-danger:  #FF3B30;
+    --color-gray:    #8E8E93;
+
+    /* ── base: スペーシング(8pt) ── */
+    --space-1: 2px;  --space-2: 4px;  --space-3: 8px;   --space-4: 12px;
+    --space-5: 16px; --space-6: 20px; --space-7: 24px;  --space-8: 32px;
+    --space-9: 40px;
+
+    /* ── base: 角丸 ── */
+    --radius-s: 8px; --radius-m: 12px; --radius-l: 18px; --radius-xl: 28px; --radius-pill: 980px;
+
+    /* ── base: 影(blur-material は aux-admin で省略=未使用) ── */
+    --shadow-1: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-2: 0 8px 30px rgba(0,0,0,0.10);
+
+    /* ── base: a11y ── */
+    --touch-min: 44px;
+
+    /* ════ aux-admin デルタ: 上書き ════ */
+    --color-accent:        #005fa2;   /* AUX corporate blue(systemBlue を上書き)。宣言1箇所 */
+    --color-accent-hover:  #003a63;
+    --color-on-accent:     #FFFFFF;
+
+    /* ════ aux-admin デルタ: 追加 ════ */
+    --color-accent-tint:   rgba(0,95,162,0.12);
+    --brand-navy:    #003a63;
+    --brand-skyblue: #009fe8;
+    --color-fill-strong: rgba(120,120,128,0.32);
+    --fill-success: rgba(52,199,89,0.16);
+    --fill-warning: rgba(255,149,0,0.16);
+    --fill-danger:  rgba(255,59,48,0.16);
+    --fill-neutral: rgba(120,120,128,0.14);
+    --row-hover:    rgba(120,120,128,0.08);
+    --scrim:        rgba(0,0,0,0.40);
+    --sidebar-width: 264px;
+    --panel-width:   460px;
+
+    /* on-dark サイドバー(濃紺ゾーン限定 / V5) */
+    --sidebar-bg:          #003a63;
+    --sidebar-fg:          rgba(255,255,255,0.92);
+    --sidebar-fg-dim:      rgba(255,255,255,0.60);
+    --sidebar-fill:        rgba(255,255,255,0.10);
+    --sidebar-fill-strong: rgba(255,255,255,0.16);
+    --sidebar-border:      rgba(255,255,255,0.16);
+    --sidebar-accent:      #009fe8;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    font-family: var(--font-sans);
+    font-size: var(--text-body);
+    line-height: var(--leading-body);
+    color: var(--color-label);
+    background: var(--color-bg-secondary);
+    -webkit-font-smoothing: antialiased;
+  }
+  svg { display: block; }
+
+  .app { display: flex; min-height: 100vh; }
+
+  /* ── サイドバー(濃紺 chrome / on-dark / V2・V5) ── */
+  .sidebar {
+    width: var(--sidebar-width);
+    flex: 0 0 var(--sidebar-width);
+    background: var(--sidebar-bg);
+    color: var(--sidebar-fg);
+    display: flex; flex-direction: column;
+    position: sticky; top: 0; height: 100vh;
+  }
+  .sidebar__brand {
+    display: flex; align-items: center; gap: var(--space-3);
+    height: 64px; padding: 0 var(--space-5);
+    font-size: var(--text-headline); font-weight: var(--weight-headline);
+    color: var(--sidebar-fg); flex: 0 0 auto;
+  }
+  .sidebar__brand .mark {
+    width: 28px; height: 28px; border-radius: var(--radius-s); flex: 0 0 auto;
+    background: var(--sidebar-fill-strong); color: var(--sidebar-fg);
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .sidebar__nav { flex: 1 1 auto; overflow-y: auto; padding: var(--space-3) var(--space-4); }
+  .sidebar__label { padding: var(--space-3) var(--space-3) var(--space-2); font-size: var(--text-footnote); color: var(--sidebar-fg-dim); }
+  .sidebar__list { list-style: none; margin: 0; padding: 0; }
+  .nav-item {
+    display: flex; align-items: center; gap: var(--space-4);
+    min-height: var(--touch-min); padding: var(--space-2) var(--space-4);
+    margin-bottom: var(--space-1); border-radius: var(--radius-m);
+    color: var(--sidebar-fg); font-size: var(--text-callout); cursor: pointer; user-select: none;
+  }
+  .nav-item .nav-ico { color: var(--sidebar-fg-dim); flex: 0 0 auto; }
+  .nav-item .nav-ico svg { width: 22px; height: 22px; }
+  .nav-item:hover { background: var(--sidebar-fill); }
+  .nav-item:focus-visible { outline: 2px solid var(--sidebar-accent); outline-offset: 2px; }
+  .nav-item[aria-current="page"] { background: var(--sidebar-fill-strong); font-weight: var(--weight-headline); }
+  .nav-item[aria-current="page"] .nav-ico { color: var(--sidebar-accent); }
+  .sidebar__user {
+    flex: 0 0 auto; display: flex; align-items: center; gap: var(--space-4);
+    padding: var(--space-4) var(--space-5); border-top: 1px solid var(--sidebar-border);
+  }
+  .sidebar__user .ava {
+    width: 36px; height: 36px; border-radius: var(--radius-pill); flex: 0 0 auto;
+    background: var(--sidebar-fill-strong); color: var(--sidebar-fg);
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: var(--text-subhead); font-weight: var(--weight-headline);
+  }
+  .sidebar__user .who { display: flex; flex-direction: column; min-width: 0; }
+  .sidebar__user .who .nm { font-size: var(--text-subhead); font-weight: var(--weight-headline); }
+  .sidebar__user .who .rl { font-size: var(--text-footnote); color: var(--sidebar-fg-dim); }
+
+  /* ── メイン(gray canvas + 余白 + 白カード / V1) ── */
+  .main {
+    flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column;
+    background: var(--color-bg-secondary); padding: var(--space-7); gap: var(--space-6);
+  }
+  .content-header { display: flex; align-items: center; gap: var(--space-5); flex: 0 0 auto; flex-wrap: wrap; }
+  .filters { display: flex; align-items: center; gap: var(--space-3); }
+  .chip {
+    display: inline-flex; align-items: center; gap: var(--space-2);
+    height: 36px; padding: 0 var(--space-4);
+    border: none; border-radius: var(--radius-m);
+    background: var(--color-fill); color: var(--color-label);
+    font-family: var(--font-sans); font-size: var(--text-subhead); cursor: pointer;
+  }
+  .chip:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 1px; }
+  .chip--active { background: var(--color-accent-tint); color: var(--color-accent); font-weight: var(--weight-headline); }
+  .search { position: relative; margin-left: auto; width: 100%; max-width: 320px; }
+  .search .ico { position: absolute; left: var(--space-4); top: 50%; transform: translateY(-50%); color: var(--color-label-secondary); pointer-events: none; }
+  .search input {
+    width: 100%; height: 40px; border: none; border-radius: var(--radius-m);
+    background: var(--color-surface); box-shadow: var(--shadow-1);
+    padding: 0 var(--space-5) 0 var(--space-9);
+    font-family: var(--font-sans); font-size: var(--text-callout); color: var(--color-label);
+  }
+  .search input::placeholder { color: var(--color-label-secondary); }
+  .search input:focus { outline: 2px solid var(--color-accent); outline-offset: 1px; }
+
+  .card { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; background: var(--color-surface); border-radius: var(--radius-l); box-shadow: var(--shadow-1); overflow: hidden; }
+
+  /* ── テーブル(高密度・罫線控えめ / V3・V4) ── */
+  .table-wrap { flex: 1 1 auto; width: 100%; overflow: auto; }
+  table.list { width: 100%; border-collapse: collapse; font-size: var(--text-subhead); }
+  table.list thead th {
+    position: sticky; top: 0; z-index: 1; text-align: left;
+    font-size: var(--text-footnote); font-weight: var(--weight-body);
+    color: var(--color-label-secondary); padding: var(--space-4) var(--space-7);
+    background: var(--color-surface); border-bottom: 1px solid var(--color-separator); white-space: nowrap;
+  }
+  table.list tbody td {
+    padding: var(--space-4) var(--space-7); border-bottom: 1px solid var(--color-separator);
+    color: var(--color-label-secondary); vertical-align: middle; height: 56px;
+  }
+  table.list tbody tr { cursor: pointer; }
+  table.list tbody tr:hover { background: var(--row-hover); }
+  table.list tbody tr:last-child td { border-bottom: none; }
+  table.list tbody tr:focus-visible { outline: 2px solid var(--color-accent); outline-offset: -2px; }
+
+  .ts { color: var(--color-label); font-variant-numeric: tabular-nums; }
+  .ts .sub { color: var(--color-label-tertiary); font-size: var(--text-footnote); }
+  .actor { display: flex; align-items: center; gap: var(--space-4); }
+  .actor .ava {
+    width: 30px; height: 30px; border-radius: var(--radius-pill); flex: 0 0 auto;
+    background: var(--color-fill); color: var(--color-label-secondary);
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: var(--text-footnote); font-weight: var(--weight-headline);
+  }
+  .actor .name { font-size: var(--text-callout); font-weight: var(--weight-headline); color: var(--color-label); }
+  .mono { font-family: var(--font-mono); font-size: var(--text-footnote); color: var(--color-label-secondary); }
+
+  /* アクション pill(中立。重要操作のみ強段 / V4) */
+  .pill { display: inline-flex; align-items: center; height: 26px; padding: 0 var(--space-4); border-radius: var(--radius-pill); background: var(--fill-neutral); color: var(--color-label-secondary); font-size: var(--text-footnote); white-space: nowrap; }
+  .pill--strong { background: var(--color-fill-strong); color: var(--color-label); font-weight: var(--weight-headline); }
+
+  /* 結果ステータス(tint pill + ドット / V4) */
+  .status { display: inline-flex; align-items: center; gap: var(--space-3); height: 26px; padding: 0 var(--space-4); border-radius: var(--radius-pill); font-size: var(--text-footnote); color: var(--color-label); white-space: nowrap; }
+  .status .dot { width: 8px; height: 8px; border-radius: var(--radius-pill); flex: 0 0 auto; }
+  .status--ok    { background: var(--fill-success); } .status--ok .dot { background: var(--color-success); }
+  .status--warn  { background: var(--fill-warning); } .status--warn .dot { background: var(--color-warning); }
+  .status--fail  { background: var(--fill-danger);  color: var(--color-label); } .status--fail .dot { background: var(--color-danger); }
+
+  .chev { color: var(--color-label-tertiary); }
+
+  .pagination {
+    flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between;
+    gap: var(--space-5); padding: var(--space-4) var(--space-7);
+    border-top: 1px solid var(--color-separator); font-size: var(--text-subhead);
+    color: var(--color-label-secondary); flex-wrap: wrap;
+  }
+  .pagination__group { display: flex; align-items: center; gap: var(--space-4); }
+  .seg { display: inline-flex; background: var(--color-fill); border-radius: var(--radius-m); padding: var(--space-1); gap: var(--space-1); }
+  .seg button { min-width: 40px; height: 36px; border: none; background: transparent; cursor: pointer; border-radius: var(--radius-s); color: var(--color-label); font-family: var(--font-sans); font-size: var(--text-subhead); }
+  .seg button:hover:not(:disabled) { background: var(--color-surface); }
+  .seg button:disabled { color: var(--color-label-tertiary); cursor: not-allowed; }
+  .seg button:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 1px; }
+
+  .visually-hidden { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+  @media (max-width: 767px) {
+    .sidebar { position: fixed; left: 0; top: 0; z-index: 30; transform: translateX(-100%); }
+    .main { padding: var(--space-5); }
+    .col-ip { display: none; }
+    .search { max-width: none; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <nav class="sidebar" aria-label="管理データ">
+    <div class="sidebar__brand">
+      <span class="mark" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></span>
+      AUX 管理コンソール
+    </div>
+    <div class="sidebar__nav">
+      <div class="sidebar__label">管理データ</div>
+      <ul class="sidebar__list">
+        <li class="nav-item" tabindex="0"><span class="nav-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg></span>ダッシュボード</li>
+        <li class="nav-item" tabindex="0"><span class="nav-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M5 20a7 7 0 0114 0"/></svg></span>ユーザー</li>
+        <li class="nav-item" tabindex="0"><span class="nav-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/></svg></span>ロール・権限</li>
+        <li class="nav-item" tabindex="0" aria-current="page"><span class="nav-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></span>監査ログ</li>
+        <li class="nav-item" tabindex="0"><span class="nav-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2.4"/><circle cx="8" cy="17" r="2.4"/></svg></span>設定</li>
+      </ul>
+    </div>
+    <div class="sidebar__user">
+      <span class="ava" aria-hidden="true">大</span>
+      <span class="who"><span class="nm">大林 管理者</span><span class="rl">管理者</span></span>
+    </div>
+  </nav>
+
+  <main class="main">
+    <h1 class="visually-hidden">監査ログ</h1>
+    <div class="content-header">
+      <div class="filters">
+        <button class="chip chip--active">すべて</button>
+        <button class="chip">ログイン</button>
+        <button class="chip">権限変更</button>
+        <button class="chip">削除</button>
+      </div>
+      <div class="search">
+        <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M16.5 16.5L21 21"/></svg></span>
+        <input type="search" placeholder="操作者・対象で検索" aria-label="監査ログを検索">
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="table-wrap">
+        <table class="list">
+          <thead>
+            <tr>
+              <th scope="col">日時</th>
+              <th scope="col">操作者</th>
+              <th scope="col">アクション</th>
+              <th scope="col">対象</th>
+              <th scope="col" class="col-ip">IP アドレス</th>
+              <th scope="col">結果</th>
+              <th scope="col"><span class="visually-hidden">詳細</span></th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+      <div class="pagination">
+        <div class="pagination__group"><span>1–25 / 3,418 件</span></div>
+        <div class="pagination__group">
+          <span>ページ 1 / 137</span>
+          <div class="seg">
+            <button aria-label="前のページ" disabled>‹</button>
+            <button aria-label="次のページ">›</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+  const LOGS = [
+    { date: "2026/06/27", time: "09:42:11", actor: "佐藤 健一", initial: "佐", action: "ログイン", kind: "", target: "管理コンソール", ip: "203.0.113.24", result: "ok", label: "成功" },
+    { date: "2026/06/27", time: "09:38:02", actor: "田中 由紀", initial: "田", action: "権限変更", kind: "strong", target: "鈴木 美咲 → 管理者", ip: "203.0.113.24", result: "ok", label: "成功" },
+    { date: "2026/06/27", time: "09:15:55", actor: "system", initial: "S", action: "招待送信", kind: "", target: "r.takahashi@example.co.jp", ip: "—", result: "ok", label: "成功" },
+    { date: "2026/06/27", time: "08:50:19", actor: "高橋 亮", initial: "高", action: "ログイン", kind: "", target: "管理コンソール", ip: "198.51.100.7", result: "fail", label: "失敗" },
+    { date: "2026/06/27", time: "08:50:02", actor: "高橋 亮", initial: "高", action: "ログイン", kind: "", target: "管理コンソール", ip: "198.51.100.7", result: "fail", label: "失敗" },
+    { date: "2026/06/26", time: "23:11:40", actor: "中村 香織", initial: "中", action: "ユーザー削除", kind: "strong", target: "USR-0744 小林 翔", ip: "203.0.113.88", result: "warn", label: "要確認" },
+    { date: "2026/06/26", time: "20:07:33", actor: "伊藤 直樹", initial: "伊", action: "API キー発行", kind: "", target: "key_live_…f29a", ip: "192.0.2.51", result: "ok", label: "成功" },
+    { date: "2026/06/26", time: "18:24:09", actor: "鈴木 美咲", initial: "鈴", action: "設定変更", kind: "", target: "パスワードポリシー", ip: "203.0.113.24", result: "ok", label: "成功" },
+    { date: "2026/06/26", time: "17:02:48", actor: "system", initial: "S", action: "バックアップ", kind: "", target: "日次スナップショット", ip: "—", result: "ok", label: "成功" },
+    { date: "2026/06/26", time: "14:39:21", actor: "山本 大輔", initial: "山", action: "ログイン", kind: "", target: "管理コンソール", ip: "198.51.100.130", result: "ok", label: "成功" },
+    { date: "2026/06/26", time: "11:55:03", actor: "加藤 真衣", initial: "加", action: "ロール変更", kind: "strong", target: "監査担当ロール作成", ip: "203.0.113.24", result: "ok", label: "成功" },
+    { date: "2026/06/26", time: "10:18:36", actor: "井上 健太", initial: "井", action: "ログイン", kind: "", target: "管理コンソール", ip: "203.0.113.201", result: "warn", label: "要確認" },
+    { date: "2026/06/25", time: "22:47:12", actor: "system", initial: "S", action: "監査エクスポート", kind: "", target: "audit_2026-06.csv", ip: "—", result: "ok", label: "成功" },
+    { date: "2026/06/25", time: "19:30:58", actor: "松本 千夏", initial: "松", action: "ユーザー追加", kind: "", target: "USR-1233 松本 千夏", ip: "203.0.113.24", result: "ok", label: "成功" }
+  ];
+  const RESULT = { ok: "status--ok", warn: "status--warn", fail: "status--fail" };
+  const CHEV = '<span class="chev" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span>';
+  const tbody = document.getElementById("rows");
+  LOGS.forEach((l) => {
+    const tr = document.createElement("tr");
+    tr.tabIndex = 0; tr.setAttribute("role", "button"); tr.setAttribute("aria-label", l.actor + " の " + l.action + " ログ詳細");
+    const pillCls = l.kind === "strong" ? "pill pill--strong" : "pill";
+    tr.innerHTML =
+      '<td><span class="ts">' + l.time + '<br><span class="sub">' + l.date + '</span></span></td>' +
+      '<td><span class="actor"><span class="ava">' + l.initial + '</span><span class="name">' + l.actor + '</span></span></td>' +
+      '<td><span class="' + pillCls + '">' + l.action + '</span></td>' +
+      '<td>' + l.target + '</td>' +
+      '<td class="col-ip"><span class="mono">' + l.ip + '</span></td>' +
+      '<td><span class="status ' + RESULT[l.result] + '"><span class="dot" aria-hidden="true"></span>' + l.label + '</span></td>' +
+      '<td>' + CHEV + '</td>';
+    tbody.appendChild(tr);
+  });
+</script>
+</body>
+</html>
