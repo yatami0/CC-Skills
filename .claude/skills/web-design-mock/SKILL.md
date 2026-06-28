@@ -37,12 +37,13 @@ description: >-
      示し、**どれを再開するか/新規にするか**をユーザーに尋ねる。再開を選んだら、その
      `00-state.md` の `next_action` から続ける(セッション横断の真実の源)。
    - 0件(exit 3)なら新規へ。ユーザーが置き場所/プロジェクトを明示指定したらそれを優先。
+
 2. 新規プロジェクトの場合、プロジェクト名を確認して slug を決め、`web-design-mock/<slug>/` を
    作成し、下記「2. 4フェーズ」をフェーズ1から開始してログファイル一式(§4)を作る。
 
 > この §0 の発見ステップは**スキル起動時に毎回**行う。常時自動化したい場合は、利用側リポの
 > `.claude/settings.json` に `SessionStart` hook を任意で追加できる(README 参照。`list-projects.mjs
-> --hook`)。スキル本体に hook を同梱しないのは、Claude Code に「スキル起動」イベントが無く、
+--hook`)。スキル本体に hook を同梱しないのは、Claude Code に「スキル起動」イベントが無く、
 > スキル同梱の SessionStart hook はセッション開始時点では発火しないため。
 
 ---
@@ -67,12 +68,14 @@ description: >-
 ゲートでのユーザーの役割は承認印でなく**「検証・批判」**。穴をここで捕まえ下流の手戻りを防ぐ。
 
 ### フェーズ1 — 要件定義 → `01-requirements.md`
+
 - 何のサイトか・誰向けか・トーン(無ければ一度だけ簡潔に聞く)。
 - **哲学を画面タイプで選ぶ(§3 ルーター)**。ユーザー指定があればそれを使う。2つを混ぜない。
 - **ゲート観点**: 目的/対象を取り違えていないか? 選んだ哲学はこの画面タイプに正しいか
   (単なる好みでないか)? 見落とした制約は(ロケール/CJK・アクセシビリティ・データ密度)?
 
 ### フェーズ2 — 基本設計 → `02-basic-design.md`
+
 - 画面構成・レイアウト骨格・機能インベントリ(ナビ/サイドバー/テーブル/カード/検索/
   ページネーション等)。何を載せ何を削るかの高速ループ。
 - 哲学のレイアウト規約(グリッド/ブレークポイント/セクションリズム)を**骨格レベル**で適用。
@@ -80,6 +83,7 @@ description: >-
 - **ゲート観点**: 必要な画面・要素が揃っているか? 欠け/冗長はないか?
 
 ### フェーズ3 — 詳細設計 → `03-detail-design.md`
+
 - **子リファレンスを読む**(記憶で作らない): `references/<philosophy>/<philosophy>.md`。
   正確な余白/タイポ/影/色規律が本物感の源。
 - **パイプラインを回す**(§5)。`:root` トークンを子リファレンスから導出 → レイアウト適用 →
@@ -104,6 +108,7 @@ description: >-
   accent と競合)。矛盾は実装に持ち込む前に直す(持ち込むとカスケードする)。
 
 ### フェーズ4 — 実装 → `output/`
+
 - 最終成果物は `output/` 内の**自己完結した単一 `.html`**。これが納品物。
 - 出力ルール(§7)を適用。**機械チェック**を実行(§7・`scripts/validate.mjs`)。
 - ダウンロード用に `/mnt/user-data/outputs/` にもコピー(その環境がある場合)。
@@ -117,11 +122,11 @@ description: >-
 選択軸は **画面タイプが第一、トーン/好みが第二**(§フェーズ1)。各哲学の詳細な得意/不得意は
 子リファレンスの「§0 ルーター用メタ」を読んで確認する。
 
-| 画面タイプ | 既定の哲学 | 子リファレンス |
-|---|---|---|
-| マーケLP / プロダクト紹介 / コンシューマ向けアプリUI / オンボーディング | **Apple** | `references/apple/apple.md` |
-| 工業的・高密度・フラット(直角/影なし)な基幹系の管理画面 / データテーブル / 密なフォーム | **Carbon** | `references/carbon/carbon.md` |
-| SaaS の管理画面 / **ブランド色のサイダー**付きダッシュボード / admin コンソール(白カード+角丸+微細影) | **Ant** | `references/ant/ant.md` |
+| 画面タイプ                                                                                                  | 既定の哲学   | 子リファレンス                    |
+| ----------------------------------------------------------------------------------------------------------- | ------------ | --------------------------------- |
+| マーケLP / プロダクト紹介 / コンシューマ向けアプリUI / オンボーディング                                     | **Apple**    | `references/apple/apple.md`       |
+| 工業的・高密度・フラット(直角/影なし)な基幹系の管理画面 / データテーブル / 密なフォーム                     | **Carbon**   | `references/carbon/carbon.md`     |
+| SaaS の管理画面 / **ブランド色のサイダー**付きダッシュボード / admin コンソール(白カード+角丸+微細影)       | **Ant**      | `references/ant/ant.md`           |
 | Android/Web の**コンシューマ向けアプリUI** / 表現的・カラフルなプロダクト / フォーム&リスト中心アプリ / PWA | **Material** | `references/material/material.md` |
 
 > **Carbon と Ant の選び分け**(共にエンタープライズ管理画面): *工業的・直角・影なし・面は段差*なら
@@ -153,7 +158,7 @@ description: >-
 5. **選んだら子リファレンスとして読む**: 以降は通常パイプライン(§5)。ただし **`kind: variant` は
    マージが要る**(下記 §5 の一行)。`provenance` を捏造の言い訳にしない — 値の出所は各ファイル §2 に従う。
 
-> 例: 画面タイプ=管理画面一覧 で `aux-admin`(empirical / variant: extends apple /
+> 例: 画面タイプ=管理画面一覧 で `tmp-admin`(empirical / variant: extends apple /
 > validated=管理画面・データテーブル)が見つかれば、Apple/Carbon/Ant と**並べて**「実測由来の選択肢」
 > として提示する。LP では出さない(その哲学の `unfit`)。
 
@@ -164,6 +169,7 @@ description: >-
 プロジェクト状態はチャット履歴でなくプロジェクトフォルダに置く。
 
 ### 4.0 置き場所の規約
+
 - **ベース**: 作業中ワークスペース直下の `web-design-mock/`。各モックはその下の
   `<project-slug>/`(kebab-case。例 `airpods-lp` / `inventory-admin`。同名衝突時は `-2`,`-3` を付す)。
 - **スキル本体には書かない**: `.claude/skills/web-design-mock/` は読み取り専用の配布物。
@@ -185,6 +191,7 @@ description: >-
 ```
 
 運用ルール:
+
 - **`00-state.md` は薄い baton(アーカイブではない)**。書くのは「今どのフェーズ・各ゲートの
   状況・唯一の next-action・どのファイルを開くか」だけ。どのセッションも最初にこれを読む。
 - **ポインタであって複製ではない**。フェーズファイルは互いを参照する(「哲学+トークンは 01 参照」)。
@@ -193,24 +200,26 @@ description: >-
   `updated_at` / `next_action`。次の一手の前に必ず `next_action` を読む。
 
 ### `00-state.md` テンプレート
+
 ```markdown
 ---
 project: <name>
-current_phase: requirements   # requirements | basic-design | detail-design | implementation
+current_phase: requirements # requirements | basic-design | detail-design | implementation
 updated_at: <date>
 next_action: <次セッションが最初にやる唯一のこと>
 ---
+
 # State
 
-| Phase | File | Status |
-|---|---|---|
+| Phase       | File                | Status      |
+| ----------- | ------------------- | ----------- |
 | 1. 要件定義 | 01-requirements.md  | draft       |
 | 2. 基本設計 | 02-basic-design.md  | not-started |
 | 3. 詳細設計 | 03-detail-design.md | not-started |
 | 4. 実装     | output/             | not-started |
 
 Status: not-started | draft | in-review | approved
-毎セッション §0 の手順で web-design-mock/*/00-state.md を探し、対象の current_phase の
+毎セッション §0 の手順で web-design-mock/\*/00-state.md を探し、対象の current_phase の
 ファイルの next_action を実行。
 ```
 
@@ -269,8 +278,10 @@ AI 生成 UI は「学習データの平均」へ収束し既定の見た目に�
 > (§フェーズ3)で確認できる(上記 フォント/色/グラデ/平坦化 は T1–T4 に対応)。
 
 ### 機械チェック可能な不変条件(実装フェーズで必ず実行)
+
 次の 3 つを満たすこと。Node(依存ゼロ)で検証する。CWD に依らず動くよう、スキル同梱
 スクリプトは `${CLAUDE_SKILL_DIR}` 経由で呼ぶ:
+
 1. **ハードコードの色値ゼロ**(`:root` 以外に生の hex/rgb()/hsl()/名前色が無い)。
 2. **accent 定義は 1 箇所**(`--color-accent:` の宣言が `:root` に 1 つだけ)。
 3. **全参照が `var(--…)`**(`:root` 外の色プロパティはトークン参照)。
@@ -280,6 +291,7 @@ node "${CLAUDE_SKILL_DIR}/scripts/validate.mjs" output/mock-vN.html
 ```
 
 > **2 つのスクリプトの役割を混同しない**:
+>
 > - `validate.mjs` = 実装フェーズの**必須ゲート**(器の不変条件。違反は exit 1 でブロック)。
 > - `anti-slop.mjs` = **ユーザー起動の任意 advisory**(AI slop の tell。常に warning・exit 0、ブロックしない)。
 >   実行タイミングと使い方は §フェーズ3「anti-slop 追い込み」を参照。

@@ -1,5 +1,5 @@
 ---
-name: aux-admin
+name: tmp-admin
 provenance: empirical            # authoritative(Apple/Carbon)ではない。実測由来
 kind: variant
 extends: apple                   # base = references/apple/apple.md
@@ -18,7 +18,7 @@ status: approved                 # D4: 同型・不足ゼロ + ホリスティ�
 updated_at: 2026-06-27
 ---
 
-# aux-admin 哲学リファレンス(variant: extends apple)
+# tmp-admin 哲学リファレンス(variant: extends apple)
 
 Apple HIG の Deference/Depth を**エンタープライズ管理画面へ適応**させた派生哲学。
 `mock-v6.html`(ユーザー管理一覧)から蒸留。**本ファイルは apple.md への "デルタ" のみ**を持つ。
@@ -77,7 +77,7 @@ base 由来のトークンは apple.md §2 に従う。本 variant が**足し�
 |---|---|---|
 | `--font-sans` 上書き(CJK 挿入) | **実測(mock由来)** = "Noto Sans JP" を base stack に挿入 | 日本語本文。ロケールで差替 |
 | `--font-mono`(追加) | **推論**(導出: SF Mono 系) | 密データ等幅(§4.4) |
-| accent 上書き(`--color-accent` 等) | **実測(mock由来)** = AUX ブランド青 | ブランド色。差し替え可(§5) |
+| accent 上書き(`--color-accent` 等) | **実測(mock由来)** = tmp ブランド青 | ブランド色。差し替え可(§5) |
 | brand 補助(`--brand-navy/skyblue`) | **実測(mock由来)** | ブランド面・ハイライト |
 | 状態 tint(`--fill-success/warning/neutral`) | **推論**(System Color × 低 α の tint 化) | 機能色。非競合 |
 | on-dark(`--sidebar-*`) | **推論**(白 × 不透明度で on-dark 階調を構成) | ゾーン限定 |
@@ -101,9 +101,9 @@ base 由来のトークンは apple.md §2 に従う。本 variant が**足し�
     "Helvetica Neue", "Noto Sans JP", "Hiragino Sans", "Hiragino Kaku Gothic ProN",
     "Yu Gothic", Meiryo, sans-serif;
 
-  /* accent = AUX コーポレートブルー(base の systemBlue #007AFF を上書き)。宣言はここ1箇所 */
-  --color-accent:        #005fa2;            /* AUX corporate blue(実測) */
-  --color-accent-hover:  #003a63;            /* AUX navy / 押下で沈む(実測) */
+  /* accent = tmp コーポレートブルー(base の systemBlue #007AFF を上書き)。宣言はここ1箇所 */
+  --color-accent:        #005fa2;            /* tmp corporate blue(実測) */
+  --color-accent-hover:  #003a63;            /* tmp navy / 押下で沈む(実測) */
   /* --color-on-accent は base と同値(#FFFFFF)→ 再掲しない */
 }
 

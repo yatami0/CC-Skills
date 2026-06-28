@@ -91,6 +91,19 @@
     --fill-warning: rgba(255,149,0,0.16);
     --fill-neutral: rgba(120,120,128,0.14);
     --row-hover:    rgba(120,120,128,0.08);
+    /* 列見出し帯: キャンバスの systemGray6(#F2F2F7)とは被らせない。
+       極薄オフホワイト(Ant headerBg #fafafa / Primer #f6f8fa 相当)。必ず地より明るく保つ。
+       sticky 見出しのため不透明 solid(半透明だとスクロール行が透ける) */
+    --thead-bg:     #FAFAFA;
+
+    /* サイドバー on-dark トークン(濃紺ゾーン限定。範囲限定ブランド上書き) */
+    --sidebar-bg:          #003a63;            /* tmp navy */
+    --sidebar-fg:          rgba(255,255,255,0.92);
+    --sidebar-fg-dim:      rgba(255,255,255,0.60);
+    --sidebar-fill:        rgba(255,255,255,0.10);
+    --sidebar-fill-strong: rgba(255,255,255,0.16);
+    --sidebar-border:      rgba(255,255,255,0.16);
+    --sidebar-accent:      #009fe8;            /* tmp skyblue(選択アイコン) */
   }
 
   *, *::before, *::after { box-sizing: border-box; }
@@ -107,14 +120,14 @@
   svg { display: block; }
 
   /* ── アプリ: サイドバー | メイン ─────────────────────────── */
-  .app { display: flex; min-height: 100vh; }
+  .app { display: flex; height: 100vh; overflow: hidden; }
 
-  /* ── サイドバー(起点 / systemGray6 キャンバス) ──────────────── */
+  /* ── サイドバー(起点 / 濃紺ブランド面・on-dark) ──────────────── */
   .sidebar {
     width: var(--sidebar-width);
     flex: 0 0 var(--sidebar-width);
-    background: var(--color-bg-secondary);
-    border-right: 1px solid var(--color-separator);
+    background: var(--sidebar-bg);
+    color: var(--sidebar-fg);
     display: flex;
     flex-direction: column;
     position: sticky;
@@ -129,22 +142,22 @@
     padding: 0 var(--space-5);
     font-size: var(--text-headline);
     font-weight: var(--weight-headline);
-    color: var(--brand-navy);
+    color: var(--sidebar-fg);
     flex: 0 0 auto;
   }
   .sidebar__brand .mark {
     width: 28px; height: 28px;
     border-radius: var(--radius-s);
     flex: 0 0 auto;
-    background: var(--brand-navy);
-    color: var(--color-on-accent);
+    background: var(--sidebar-fill-strong);
+    color: var(--sidebar-fg);
     display: inline-flex; align-items: center; justify-content: center;
   }
   .sidebar__nav { flex: 1 1 auto; overflow-y: auto; padding: var(--space-3) var(--space-4); }
   .sidebar__label {
     padding: var(--space-3) var(--space-3) var(--space-2);
     font-size: var(--text-footnote);
-    color: var(--color-label-secondary);
+    color: var(--sidebar-fg-dim);
   }
   .sidebar__list { list-style: none; margin: 0; padding: 0; }
   .nav-item {
@@ -155,21 +168,21 @@
     padding: var(--space-2) var(--space-4);
     margin-bottom: var(--space-1);
     border-radius: var(--radius-m);
-    color: var(--color-label);
+    color: var(--sidebar-fg);
     font-size: var(--text-callout);
     cursor: pointer;
     user-select: none;
   }
-  .nav-item .nav-ico { color: var(--color-label-secondary); flex: 0 0 auto; }
+  .nav-item .nav-ico { color: var(--sidebar-fg-dim); flex: 0 0 auto; }
   .nav-item .nav-ico svg { width: 22px; height: 22px; }
-  .nav-item:hover { background: var(--row-hover); }
-  .nav-item:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+  .nav-item:hover { background: var(--sidebar-fill); }
+  .nav-item:focus-visible { outline: 2px solid var(--sidebar-accent); outline-offset: 2px; }
   .nav-item[aria-current="page"] {
-    background: var(--color-accent-tint);
-    color: var(--color-accent);
+    background: var(--sidebar-fill-strong);
+    color: var(--sidebar-fg);
     font-weight: var(--weight-headline);
   }
-  .nav-item[aria-current="page"] .nav-ico { color: var(--color-accent); }
+  .nav-item[aria-current="page"] .nav-ico { color: var(--sidebar-accent); }
 
   .sidebar__user {
     flex: 0 0 auto;
@@ -177,44 +190,68 @@
     align-items: center;
     gap: var(--space-4);
     padding: var(--space-4) var(--space-5);
-    border-top: 1px solid var(--color-separator);
+    border-top: 1px solid var(--sidebar-border);
   }
   .sidebar__user .ava {
     width: 36px; height: 36px;
     border-radius: var(--radius-pill);
     flex: 0 0 auto;
-    background: var(--brand-navy);
-    color: var(--color-on-accent);
+    background: var(--sidebar-fill-strong);
+    color: var(--sidebar-fg);
     display: inline-flex; align-items: center; justify-content: center;
     font-size: var(--text-subhead);
     font-weight: var(--weight-headline);
   }
   .sidebar__user .who { display: flex; flex-direction: column; min-width: 0; }
-  .sidebar__user .who .nm { font-size: var(--text-subhead); color: var(--color-label); font-weight: var(--weight-headline); }
-  .sidebar__user .who .rl { font-size: var(--text-footnote); color: var(--color-label-secondary); }
+  .sidebar__user .who .nm { font-size: var(--text-subhead); color: var(--sidebar-fg); font-weight: var(--weight-headline); }
+  .sidebar__user .who .rl { font-size: var(--text-footnote); color: var(--sidebar-fg-dim); }
 
   /* ── メイン: systemGray6 キャンバス + 余白 + カード ─────────── */
   .main {
     flex: 1 1 auto;
     min-width: 0;
+    min-height: 0;
     display: flex;
     flex-direction: column;
     background: var(--color-bg-secondary);
     padding: var(--space-7);
-    gap: var(--space-6);
+    gap: var(--space-7);
   }
 
-  /* ヘッダー: 検索のみ(右端寄せ・キャンバス上で軽やかに) */
-  .content-header {
+  /* ページヘッダー帯: タイトル(=ページ識別)。カード外・キャンバス上に置く
+     (Atlassian PageHeader / Polaris Page の定石。"ページ全体" の操作はここ) */
+  .page-header {
+    flex: 0 0 auto;
     display: flex;
     align-items: center;
-    justify-content: flex-end;
-    flex: 0 0 auto;
+    justify-content: space-between;
+    gap: var(--space-5);
+    min-height: 36px;
   }
+  .page-header h1 {
+    margin: 0;
+    font-size: var(--text-title2);
+    line-height: var(--leading-title2);
+    font-weight: var(--weight-headline);
+    color: var(--color-label);
+  }
+
+  /* カード内ツールバー: 検索(=リストへの操作)。表に内属させる
+     (Polaris IndexFilters / Carbon TableToolbar の定石。下にヘアラインで行と分離) */
+  .toolbar {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: var(--space-5);
+    padding: var(--space-5) var(--space-7);
+    border-bottom: 1px solid var(--color-separator);
+  }
+  /* 検索[C]: グレーキャンバス上に置くので fill 地でなく「白+微細影」で地から持ち上げる
+     (gray 地に gray fill は溶けるため。Atlassian PageHeader 流に検索をヘッダーへ) */
   .search {
     position: relative;
-    width: 100%;
-    max-width: 320px;
+    flex: 0 1 360px;
+    max-width: 360px;
   }
   .search .ico {
     position: absolute;
@@ -258,7 +295,8 @@
     position: sticky; top: 0; z-index: 1;
     text-align: left;
     font-size: var(--text-footnote);
-    font-weight: var(--weight-body);
+    font-weight: var(--weight-headline);
+    letter-spacing: 0.02em;
     color: var(--color-label-secondary);
     padding: var(--space-4) var(--space-7);
     background: var(--color-surface);
@@ -341,18 +379,6 @@
     flex-wrap: wrap;
   }
   .pagination__group { display: flex; align-items: center; gap: var(--space-4); }
-  .pages select {
-    appearance: none; -webkit-appearance: none;
-    height: 36px;
-    border: none;
-    border-radius: var(--radius-m);
-    background: var(--color-fill);
-    padding: 0 var(--space-7) 0 var(--space-4);
-    font-family: var(--font-sans);
-    font-size: var(--text-subhead);
-    color: var(--color-label);
-    cursor: pointer;
-  }
   .seg { display: inline-flex; background: var(--color-fill); border-radius: var(--radius-m); padding: var(--space-1); gap: var(--space-1); }
   .seg button {
     min-width: 40px; height: 36px;
@@ -444,7 +470,8 @@
     .sidebar { position: fixed; left: 0; top: 0; z-index: 30; transform: translateX(-100%); }
     .main { padding: var(--space-5); }
     .col-email { display: none; }
-    .search { max-width: none; }
+    .page-header { flex-wrap: wrap; }
+    .search { max-width: none; flex-basis: 100%; }
   }
 </style>
 </head>
@@ -504,19 +531,18 @@
     </div>
   </nav>
 
-  <!-- メイン -->
+  <!-- メイン[C: 検索をページヘッダーへ] -->
   <main class="main">
-    <h1 class="visually-hidden">ユーザー一覧</h1>
-
-    <!-- ヘッダー: 検索のみ(右端寄せ) -->
-    <div class="content-header">
+    <!-- ページヘッダー帯(カード外・キャンバス上): タイトル(左) + 検索(右) -->
+    <header class="page-header">
+      <h1>ユーザー一覧</h1>
       <div class="search">
         <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M16.5 16.5L21 21"/></svg></span>
         <input type="search" placeholder="名前・メールで検索" aria-label="ユーザーを検索">
       </div>
-    </div>
+    </header>
 
-    <!-- 一覧カード(周囲に余白) -->
+    <!-- 一覧カード(周囲に余白)。検索ツールバーを持たず、純粋に表だけ -->
     <div class="card">
       <div class="table-wrap">
         <table class="list">
@@ -537,11 +563,6 @@
       <!-- ページネーション -->
       <div class="pagination">
         <div class="pagination__group">
-          <select class="pages" aria-label="1ページの表示件数">
-            <option>25 件 / ページ</option>
-            <option>50 件 / ページ</option>
-            <option>100 件 / ページ</option>
-          </select>
           <span>1–25 / 128 件</span>
         </div>
         <div class="pagination__group">

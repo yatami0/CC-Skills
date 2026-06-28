@@ -6,7 +6,7 @@
 <title>管理コンソール — ユーザー</title>
 <style>
   /* ============================================================
-     :root — Apple HIG(light)ベース + AUX Mobility ブランド上書き
+     :root — Apple HIG(light)ベース + tmp Mobility ブランド上書き
      哲学は Apple のまま。accent をブランド色(コーポレートブルー)へ差し替え。
      System Colors / Dynamic Type は公式値 / spacing・角丸・影は導出。
      以降のスタイルは全て var(--…) を参照する。
@@ -43,13 +43,13 @@
     --color-fill:             rgba(120,120,128,0.20);
     --color-fill-strong:      rgba(120,120,128,0.32);
 
-    /* アクセント = AUX コーポレートブルー(ブランド上書き)。宣言はここ 1 箇所のみ */
-    --color-accent:        #005fa2;   /* AUX corporate blue */
-    --color-accent-hover:  #003a63;   /* AUX navy(押下で沈む) */
+    /* アクセント = tmp コーポレートブルー(ブランド上書き)。宣言はここ 1 箇所のみ */
+    --color-accent:        #005fa2;   /* tmp corporate blue */
+    --color-accent-hover:  #003a63;   /* tmp navy(押下で沈む) */
     --color-on-accent:     #FFFFFF;
     --color-accent-tint:   rgba(0,95,162,0.12);
 
-    /* ブランド補助色(AUX) */
+    /* ブランド補助色(tmp) */
     --brand-navy:    #003a63;   /* 主色・ブランドマーク */
     --brand-skyblue: #009fe8;   /* 明るいハイライト(任意) */
 
@@ -93,13 +93,13 @@
     --row-hover:    rgba(120,120,128,0.08);
 
     /* サイドバー on-dark トークン(濃紺ゾーン限定。範囲限定ブランド上書き) */
-    --sidebar-bg:          #003a63;            /* AUX navy */
+    --sidebar-bg:          #003a63;            /* tmp navy */
     --sidebar-fg:          rgba(255,255,255,0.92);
     --sidebar-fg-dim:      rgba(255,255,255,0.60);
     --sidebar-fill:        rgba(255,255,255,0.10);
     --sidebar-fill-strong: rgba(255,255,255,0.16);
     --sidebar-border:      rgba(255,255,255,0.16);
-    --sidebar-accent:      #009fe8;            /* AUX skyblue(選択アイコン) */
+    --sidebar-accent:      #009fe8;            /* tmp skyblue(選択アイコン) */
   }
 
   *, *::before, *::after { box-sizing: border-box; }
@@ -467,7 +467,7 @@
       <span class="mark" aria-hidden="true">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
       </span>
-      AUX 管理コンソール
+      tmp 管理コンソール
     </div>
 
     <div class="sidebar__nav">

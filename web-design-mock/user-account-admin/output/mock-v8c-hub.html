@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>管理コンソール — ユーザー</title>
+<style>
+  /* ============================================================
+     :root — Apple HIG(light)ベース + tmp Mobility ブランド上書き
+     哲学は Apple のまま。accent をブランド色(コーポレートブルー)へ差し替え。
+     System Colors / Dynamic Type は公式値 / spacing・角丸・影は導出。
+     以降のスタイルは全て var(--…) を参照する。
+     ============================================================ */
+  :root {
+    --font-sans:
+      -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
+      "Helvetica Neue", "Noto Sans JP", "Hiragino Sans",
+      "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
+
+    /* タイポ: Dynamic Type iOS デフォルト(Large) */
+    --text-largetitle: 34px; --leading-largetitle: 41px; --weight-largetitle: 400;
+    --text-title1:     28px; --leading-title1:     34px; --weight-title1:     400;
+    --text-title2:     22px; --leading-title2:     28px; --weight-title2:     400;
+    --text-title3:     20px; --leading-title3:     25px; --weight-title3:     400;
+    --text-headline:   17px; --leading-headline:   22px; --weight-headline:   600;
+    --text-body:       17px; --leading-body:       22px; --weight-body:       400;
+    --text-callout:    16px; --leading-callout:    21px; --weight-callout:    400;
+    --text-subhead:    15px; --leading-subhead:    20px; --weight-subhead:    400;
+    --text-footnote:   13px; --leading-footnote:   18px; --weight-footnote:   400;
+    --text-caption1:   12px; --leading-caption1:   16px; --weight-caption1:   400;
+
+    /* カラー: System Colors / light(背景・ラベル・区切りは Apple のまま) */
+    --color-bg:            #FFFFFF;
+    --color-bg-secondary:  #F2F2F7;
+    --color-surface:       #FFFFFF;
+
+    --color-label:            rgba(0,0,0,1);
+    --color-label-secondary:  rgba(60,60,67,0.60);
+    --color-label-tertiary:   rgba(60,60,67,0.30);
+
+    --color-separator:        rgba(60,60,67,0.29);
+    --color-separator-opaque: #C6C6C8;
+    --color-fill:             rgba(120,120,128,0.20);
+    --color-fill-strong:      rgba(120,120,128,0.32);
+
+    /* アクセント = tmp コーポレートブルー(ブランド上書き)。宣言はここ 1 箇所のみ */
+    --color-accent:        #005fa2;   /* tmp corporate blue */
+    --color-accent-hover:  #003a63;   /* tmp navy(押下で沈む) */
+    --color-on-accent:     #FFFFFF;
+    --color-accent-tint:   rgba(0,95,162,0.12);
+
+    /* ブランド補助色(tmp) */
+    --brand-navy:    #003a63;   /* 主色・ブランドマーク */
+    --brand-skyblue: #009fe8;   /* 明るいハイライト(任意) */
+
+    /* ステータス(Apple System Colors。機能色としてブランドと非競合) */
+    --color-success: #34C759;
+    --color-warning: #FF9500;
+    --color-danger:  #FF3B30;
+
+    /* グレースケール(systemGray 1–6) */
+    --color-gray:  #8E8E93; --color-gray2: #AEAEB2; --color-gray3: #C7C7CC;
+    --color-gray4: #D1D1D6; --color-gray5: #E5E5EA; --color-gray6: #F2F2F7;
+
+    /* スペーシング(8pt 基調 / 導出) */
+    --space-1: 2px;  --space-2: 4px;  --space-3: 8px;   --space-4: 12px;
+    --space-5: 16px; --space-6: 20px; --space-7: 24px;  --space-8: 32px;
+    --space-9: 40px; --space-10: 48px; --space-11: 64px; --space-12: 80px;
+
+    /* 角丸(iOS 連続角丸の近似 / 導出) */
+    --radius-s: 8px;
+    --radius-m: 12px;
+    --radius-l: 18px;
+    --radius-xl: 28px;
+    --radius-pill: 980px;
+
+    /* 影(控えめ。奥行きは素材/層が主 / 導出) */
+    --shadow-1: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-2: 0 8px 30px rgba(0,0,0,0.10);
+
+    /* a11y 下限(不可侵) */
+    --touch-min: 44px;
+
+    /* レイアウト */
+    --sidebar-width: 264px;
+    --panel-width: 460px;
+
+    /* 名前空間トークン(Apple 派生の補助。本体トークンは非改変) */
+    --scrim:        rgba(0,0,0,0.40);
+    --fill-success: rgba(52,199,89,0.16);
+    --fill-warning: rgba(255,149,0,0.16);
+    --fill-neutral: rgba(120,120,128,0.14);
+    --row-hover:    rgba(120,120,128,0.08);
+    /* 列見出し帯: キャンバスの systemGray6(#F2F2F7)とは被らせない。
+       極薄オフホワイト(Ant headerBg #fafafa / Primer #f6f8fa 相当)。必ず地より明るく保つ。
+       sticky 見出しのため不透明 solid(半透明だとスクロール行が透ける) */
+    --thead-bg:     #FAFAFA;
+
+    /* サイドバー on-dark トークン(濃紺ゾーン限定。範囲限定ブランド上書き) */
+    --sidebar-bg:          #003a63;            /* tmp navy */
+    --sidebar-fg:          rgba(255,255,255,0.92);
+    --sidebar-fg-dim:      rgba(255,255,255,0.60);
+    --sidebar-fill:        rgba(255,255,255,0.10);
+    --sidebar-fill-strong: rgba(255,255,255,0.16);
+    --sidebar-border:      rgba(255,255,255,0.16);
+    --sidebar-accent:      #009fe8;            /* tmp skyblue(選択アイコン) */
+    /* 選択ハイライト(インセット角丸塗り。左バーは使わない)。案ごとにこの 1 行を差し替える */
+    --sidebar-sel:         rgba(255,255,255,0.16);   /* neutral: 白16%(navy が主役) */
+    /* スクロールバー(細・半透明白・ホバーで出現) */
+    --sidebar-scroll:       rgba(255,255,255,0.24);
+    --sidebar-scroll-hover: rgba(255,255,255,0.40);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    font-family: var(--font-sans);
+    font-size: var(--text-body);
+    line-height: var(--leading-body);
+    color: var(--color-label);
+    background: var(--color-bg-secondary);
+    -webkit-font-smoothing: antialiased;
+  }
+  svg { display: block; }
+
+  /* ── アプリ: サイドバー | メイン ─────────────────────────── */
+  .app { display: flex; height: 100vh; overflow: hidden; }
+
+  /* ── サイドバー(起点 / 濃紺ブランド面・on-dark) ──────────────── */
+  .sidebar {
+    width: var(--sidebar-width);
+    flex: 0 0 var(--sidebar-width);
+    background: var(--sidebar-bg);
+    color: var(--sidebar-fg);
+    display: flex;
+    flex-direction: column;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+  }
+  .sidebar__brand {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    height: 64px;
+    padding: 0 var(--space-5);
+    font-size: var(--text-headline);
+    font-weight: var(--weight-headline);
+    color: var(--sidebar-fg);
+    flex: 0 0 auto;
+  }
+  .sidebar__brand .mark {
+    width: 28px; height: 28px;
+    border-radius: var(--radius-s);
+    flex: 0 0 auto;
+    background: var(--sidebar-fill-strong);
+    color: var(--sidebar-fg);
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .sidebar__nav {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    padding: var(--space-3) var(--space-4);
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;   /* 既定は不可視 */
+  }
+  .sidebar__nav:hover { scrollbar-color: var(--sidebar-scroll) transparent; }
+  .sidebar__nav::-webkit-scrollbar { width: 8px; }
+  .sidebar__nav::-webkit-scrollbar-track { background-color: transparent; }
+  .sidebar__nav::-webkit-scrollbar-thumb {
+    background-color: transparent;             /* ホバーまで隠す */
+    border-radius: var(--radius-pill);
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+  .sidebar__nav:hover::-webkit-scrollbar-thumb { background-color: var(--sidebar-scroll); }
+  .sidebar__nav::-webkit-scrollbar-thumb:hover { background-color: var(--sidebar-scroll-hover); }
+  .sidebar__label {
+    padding: var(--space-3) var(--space-3) var(--space-2);
+    font-size: var(--text-footnote);
+    color: var(--sidebar-fg-dim);
+  }
+  .sidebar__list { list-style: none; margin: 0; padding: 0; }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    min-height: var(--touch-min);
+    padding: var(--space-2) var(--space-4);
+    margin-bottom: var(--space-1);
+    border-radius: var(--radius-m);
+    color: var(--sidebar-fg);
+    font-size: var(--text-callout);
+    cursor: pointer;
+    user-select: none;
+  }
+  .nav-item .nav-ico { color: var(--sidebar-fg-dim); flex: 0 0 auto; }
+  .nav-item .nav-ico svg { width: 22px; height: 22px; }
+  .nav-item:hover { background: var(--sidebar-fill); }
+  .nav-item:focus-visible { outline: 2px solid var(--sidebar-accent); outline-offset: 2px; }
+  .nav-item[aria-current="page"] {
+    background: var(--sidebar-fill-strong);
+    color: var(--sidebar-fg);
+    font-weight: var(--weight-headline);
+  }
+  .nav-item[aria-current="page"] .nav-ico { color: var(--sidebar-accent); }
+
+  .sidebar__user {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    padding: var(--space-4) var(--space-5);
+    border-top: 1px solid var(--sidebar-border);
+  }
+  .sidebar__user .ava {
+    width: 36px; height: 36px;
+    border-radius: var(--radius-pill);
+    flex: 0 0 auto;
+    background: var(--sidebar-fill-strong);
+    color: var(--sidebar-fg);
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: var(--text-subhead);
+    font-weight: var(--weight-headline);
+  }
+  .sidebar__user .who { display: flex; flex-direction: column; min-width: 0; }
+  .sidebar__user .who .nm { font-size: var(--text-subhead); color: var(--sidebar-fg); font-weight: var(--weight-headline); }
+  .sidebar__user .who .rl { font-size: var(--text-footnote); color: var(--sidebar-fg-dim); }
+
+  /* ── サイドバー: マスタ・ナビ(~30件フラット + 絞り込み + ピン留め) ──────
+     Salesforce Quick Find / AWS 検索 / Stripe Shortcuts の定石を on-dark で実装 */
+  .nav-section + .nav-section { margin-top: var(--space-5); }
+  .sidebar__label.sub {
+    padding: var(--space-3) var(--space-3) var(--space-2);
+    font-size: var(--text-caption1);
+    letter-spacing: 0.04em;
+    color: var(--sidebar-fg-dim);
+  }
+  /* マスタ見出し+絞り込みは、スクロール時に上端へ固定(Quick Find を常時可視) */
+  .nav-masthead {
+    position: sticky; top: 0; z-index: 2;
+    background: var(--sidebar-bg);
+    padding-bottom: var(--space-2);
+  }
+  .nav-filter { position: relative; padding: 0 var(--space-3); }
+  .nav-filter .ico {
+    position: absolute; left: calc(var(--space-3) + var(--space-4)); top: 50%;
+    transform: translateY(-50%); color: var(--sidebar-fg-dim); pointer-events: none;
+  }
+  .nav-filter input {
+    width: 100%; height: 36px;
+    border: none; border-radius: var(--radius-s);
+    background: var(--sidebar-fill);
+    color: var(--sidebar-fg);
+    padding: 0 var(--space-4) 0 var(--space-9);
+    font-family: var(--font-sans); font-size: var(--text-subhead);
+  }
+  .nav-filter input::placeholder { color: var(--sidebar-fg-dim); }
+  .nav-filter input:focus { outline: 2px solid var(--sidebar-accent); outline-offset: 1px; }
+
+  /* マスタ項目(テキスト主体・密度高め・アイコン無し) */
+  .nav-item.master {
+    min-height: 40px;
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-s);
+    font-size: var(--text-subhead);
+    color: var(--sidebar-fg-dim);
+  }
+  .nav-item.master:hover { color: var(--sidebar-fg); background: var(--sidebar-fill); }
+  /* 選択中: インセットの角丸塗りハイライト(左バーは使わない / Notion・Linear・VS Code・Finder の定石) */
+  .nav-item.master[aria-current="page"] {
+    background: var(--sidebar-sel);
+    color: var(--sidebar-fg);
+    font-weight: var(--weight-headline);
+  }
+  .nav-sep { height: 1px; margin: var(--space-3) var(--space-4); background: var(--sidebar-border); }
+  .nav-empty { padding: var(--space-4); font-size: var(--text-footnote); color: var(--sidebar-fg-dim); }
+  .nav-count { margin-left: auto; font-size: var(--text-caption1); color: var(--sidebar-fg-dim); }
+
+  /* ── メイン: systemGray6 キャンバス + 余白 + カード ─────────── */
+  .main {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    background: var(--color-bg-secondary);
+    padding: var(--space-7);
+    gap: var(--space-7);
+  }
+
+  /* ページヘッダー帯: タイトル(=ページ識別)。カード外・キャンバス上に置く
+     (Atlassian PageHeader / Polaris Page の定石。"ページ全体" の操作はここ) */
+  .page-header {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-5);
+    min-height: 36px;
+  }
+  .page-header h1 {
+    margin: 0;
+    font-size: var(--text-title2);
+    line-height: var(--leading-title2);
+    font-weight: var(--weight-headline);
+    color: var(--color-label);
+  }
+  /* パンくず(ハブ→マスタのドリルイン)。Metabase/Object Manager の戻り導線 */
+  .ph-main { display: flex; flex-direction: column; gap: var(--space-1); min-width: 0; }
+  .crumbs { display: flex; align-items: center; gap: var(--space-3); font-size: var(--text-footnote); color: var(--color-label-secondary); }
+  .crumbs[hidden] { display: none; }   /* display 指定が hidden 属性を打ち消すのを防ぐ */
+  .crumbs a { color: var(--color-accent); text-decoration: none; cursor: pointer; }
+  .crumbs a:hover { text-decoration: underline; }
+  .crumb-sep { color: var(--color-label-tertiary); }
+  /* ハブ一覧のセル */
+  .m-name { font-weight: var(--weight-headline); color: var(--color-label); }
+  .col-num, th.col-num { text-align: right; }
+  .num { font-variant-numeric: tabular-nums; }
+
+  /* カード内ツールバー[B]: 検索ゾーンだけを薄オフホワイトの帯にして差別化。
+     列見出し(thead)は素の白で一覧と揃える(ユーザー方針 / Polaris・Carbon) */
+  .toolbar {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: var(--space-5);
+    padding: var(--space-5) var(--space-7);
+    background: var(--thead-bg);
+    border-bottom: 1px solid var(--color-separator);
+  }
+  /* 検索: カード内なので「白＋影」ではなく fill 地に沈める(Apple の検索フィールド作法) */
+  .search {
+    position: relative;
+    flex: 0 1 360px;
+    max-width: 360px;
+  }
+  .search .ico {
+    position: absolute;
+    left: var(--space-4);
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--color-label-secondary);
+    pointer-events: none;
+  }
+  /* 検索[v8c]: グレーキャンバス上に置くので fill でなく白+微細影で持ち上げる */
+  .search input {
+    width: 100%;
+    height: 40px;
+    border: none;
+    border-radius: var(--radius-m);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-1);
+    padding: 0 var(--space-5) 0 var(--space-9);
+    font-family: var(--font-sans);
+    font-size: var(--text-callout);
+    color: var(--color-label);
+  }
+  .search input::placeholder { color: var(--color-label-secondary); }
+  .search input:focus { outline: 2px solid var(--color-accent); outline-offset: 1px; }
+
+  /* 一覧カード(白・角丸・微細影。周囲に余白) */
+  .card {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    background: var(--color-surface);
+    border-radius: var(--radius-l);
+    box-shadow: var(--shadow-1);
+    overflow: hidden;
+  }
+
+  /* ── 一覧(罫線控えめ + inset セパレータ) ────────────────── */
+  .table-wrap { flex: 1 1 auto; width: 100%; overflow: auto; }
+  table.list { width: 100%; border-collapse: collapse; font-size: var(--text-subhead); }
+  table.list thead th {
+    position: sticky; top: 0; z-index: 1;
+    text-align: left;
+    font-size: var(--text-footnote);
+    font-weight: var(--weight-headline);
+    letter-spacing: 0.02em;
+    color: var(--color-label-secondary);
+    padding: var(--space-4) var(--space-7);
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-separator);
+    white-space: nowrap;
+  }
+  table.list thead th.col-end { width: 44px; }
+  table.list tbody td {
+    padding: var(--space-4) var(--space-7);
+    border-bottom: 1px solid var(--color-separator);
+    color: var(--color-label-secondary);
+    vertical-align: middle;
+    height: 60px;
+  }
+  table.list tbody tr { cursor: pointer; }
+  table.list tbody tr:hover { background: var(--row-hover); }
+  table.list tbody tr:last-child td { border-bottom: none; }
+  table.list tbody tr:focus-visible { outline: 2px solid var(--color-accent); outline-offset: -2px; }
+
+  .person { display: flex; align-items: center; gap: var(--space-4); }
+  .person .ava {
+    width: 34px; height: 34px;
+    border-radius: var(--radius-pill);
+    flex: 0 0 auto;
+    background: var(--color-fill);
+    color: var(--color-label-secondary);
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: var(--text-subhead);
+    font-weight: var(--weight-headline);
+  }
+  .person .name { font-size: var(--text-callout); font-weight: var(--weight-headline); color: var(--color-label); }
+  .col-email { color: var(--color-label-secondary); }
+
+  /* ロール pill(中立) */
+  .pill {
+    display: inline-flex; align-items: center;
+    height: 26px;
+    padding: 0 var(--space-4);
+    border-radius: var(--radius-pill);
+    background: var(--fill-neutral);
+    color: var(--color-label-secondary);
+    font-size: var(--text-footnote);
+    white-space: nowrap;
+  }
+  .pill--admin { background: var(--color-fill-strong); color: var(--color-label); font-weight: var(--weight-headline); }
+
+  /* ステータス(tint pill + 色ドット + ラベル) */
+  .status {
+    display: inline-flex; align-items: center;
+    gap: var(--space-3);
+    height: 26px;
+    padding: 0 var(--space-4);
+    border-radius: var(--radius-pill);
+    font-size: var(--text-footnote);
+    color: var(--color-label);
+    white-space: nowrap;
+  }
+  .status .dot { width: 8px; height: 8px; border-radius: var(--radius-pill); flex: 0 0 auto; }
+  .status--active   { background: var(--fill-success); }
+  .status--active   .dot { background: var(--color-success); }
+  .status--invited  { background: var(--fill-warning); }
+  .status--invited  .dot { background: var(--color-warning); }
+  .status--disabled { background: var(--fill-neutral); color: var(--color-label-secondary); }
+  .status--disabled .dot { background: var(--color-gray); }
+
+  .muted { color: var(--color-label-tertiary); }
+  .chev { color: var(--color-label-tertiary); }
+
+  /* ── ページネーション(カード内フッター) ──────────────────── */
+  .pagination {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-5);
+    padding: var(--space-4) var(--space-7);
+    border-top: 1px solid var(--color-separator);
+    font-size: var(--text-subhead);
+    color: var(--color-label-secondary);
+    flex-wrap: wrap;
+  }
+  .pagination__group { display: flex; align-items: center; gap: var(--space-4); }
+  .seg { display: inline-flex; background: var(--color-fill); border-radius: var(--radius-m); padding: var(--space-1); gap: var(--space-1); }
+  .seg button {
+    min-width: 40px; height: 36px;
+    border: none; background: transparent; cursor: pointer;
+    border-radius: var(--radius-s);
+    color: var(--color-label);
+    font-family: var(--font-sans);
+    font-size: var(--text-subhead);
+  }
+  .seg button:hover:not(:disabled) { background: var(--color-surface); }
+  .seg button:disabled { color: var(--color-label-tertiary); cursor: not-allowed; }
+  .seg button:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 1px; }
+
+  /* ── 詳細スライドシート ──────────────────────────────────── */
+  .scrim {
+    position: fixed; inset: 0;
+    background: var(--scrim);
+    opacity: 0; visibility: hidden;
+    transition: opacity .2s ease;
+    z-index: 50;
+  }
+  .scrim.open { opacity: 1; visibility: visible; }
+  .sheet {
+    position: fixed;
+    top: 0; right: 0;
+    height: 100vh;
+    width: var(--panel-width);
+    max-width: 92vw;
+    background: var(--color-surface);
+    border-top-left-radius: var(--radius-xl);
+    border-bottom-left-radius: var(--radius-xl);
+    box-shadow: var(--shadow-2);
+    transform: translateX(100%);
+    transition: transform .26s cubic-bezier(.32,.72,0,1);
+    z-index: 60;
+    display: flex; flex-direction: column;
+  }
+  .sheet.open { transform: translateX(0); }
+  .sheet__header {
+    display: flex; align-items: center; gap: var(--space-4);
+    padding: var(--space-6);
+    border-bottom: 1px solid var(--color-separator);
+  }
+  .sheet__id { color: var(--color-label-secondary); font-size: var(--text-footnote); }
+  .sheet__close {
+    margin-left: auto;
+    width: var(--touch-min); height: var(--touch-min);
+    flex: 0 0 auto;
+    border: none;
+    border-radius: var(--radius-pill);
+    background: var(--color-fill);
+    color: var(--color-label-secondary);
+    cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .sheet__close:hover { background: var(--color-fill-strong); color: var(--color-label); }
+  .sheet__close:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+  .sheet__hero { display: flex; align-items: center; gap: var(--space-5); padding: var(--space-6); }
+  .sheet__hero .ava-lg {
+    width: 56px; height: 56px;
+    border-radius: var(--radius-pill);
+    background: var(--brand-navy);
+    color: var(--color-on-accent);
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: var(--text-title3);
+    font-weight: var(--weight-headline);
+  }
+  .sheet__title { margin: 0; font-size: var(--text-title3); line-height: var(--leading-title3); font-weight: var(--weight-headline); color: var(--color-label); }
+  .sheet__body { padding: 0 var(--space-6) var(--space-7); overflow-y: auto; }
+  .group { background: var(--color-bg-secondary); border-radius: var(--radius-m); overflow: hidden; }
+  .field {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: var(--space-5);
+    padding: var(--space-4) var(--space-5);
+    border-bottom: 1px solid var(--color-separator);
+  }
+  .field:last-child { border-bottom: none; }
+  .field__label { color: var(--color-label-secondary); font-size: var(--text-subhead); }
+  .field__value { color: var(--color-label); font-size: var(--text-callout); text-align: right; }
+
+  .visually-hidden {
+    position: absolute; width: 1px; height: 1px;
+    margin: -1px; padding: 0; overflow: hidden;
+    clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+  }
+
+  /* ── レスポンシブ ────────────────────────────────────────── */
+  @media (max-width: 767px) {
+    .sidebar { position: fixed; left: 0; top: 0; z-index: 30; transform: translateX(-100%); }
+    .main { padding: var(--space-5); }
+    .col-email { display: none; }
+    .page-header { flex-wrap: wrap; }
+    .search { max-width: none; flex-basis: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- サイドバー(起点): ブランド + ナビ + アカウント -->
+  <nav class="sidebar" aria-label="管理データ">
+    <div class="sidebar__brand">
+      <span class="mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </span>
+      tmp 管理コンソール
+    </div>
+
+    <div class="sidebar__nav">
+      <!-- セクション1: ユーザー管理 -->
+      <div class="nav-section">
+        <div class="sidebar__label">ユーザー管理</div>
+        <ul class="sidebar__list">
+          <li class="nav-item" data-view="users" aria-current="page" tabindex="0">
+            <span class="nav-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M5 20a7 7 0 0114 0"/></svg></span>
+            ユーザー一覧
+          </li>
+          <li class="nav-item" data-view="roles" tabindex="0">
+            <span class="nav-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/></svg></span>
+            権限・ロール
+          </li>
+        </ul>
+      </div>
+
+      <!-- セクション2: マスタ管理(30件はハブ画面で俯瞰。サイドバーは1項目) -->
+      <div class="nav-section">
+        <div class="sidebar__label">データ管理</div>
+        <ul class="sidebar__list">
+          <li class="nav-item" data-view="hub" tabindex="0">
+            <span class="nav-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="4" cy="6" r="0.6"/></svg></span>
+            マスタ管理
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="sidebar__user">
+      <span class="ava" aria-hidden="true">大</span>
+      <span class="who">
+        <span class="nm">大林 管理者</span>
+        <span class="rl">管理者</span>
+      </span>
+    </div>
+  </nav>
+
+  <!-- メイン -->
+  <main class="main">
+    <!-- ページヘッダー帯(カード外・キャンバス上): ページ識別 = タイトル -->
+    <!-- ページヘッダー帯[v8c]: 左=タイトル/パンくず・右=検索(白+影)。カードは表のみ -->
+    <header class="page-header">
+      <div class="ph-main">
+        <nav class="crumbs" id="crumbs" hidden aria-label="パンくず">
+          <a id="crumbHub" href="#">マスタ管理</a><span class="crumb-sep" aria-hidden="true">/</span><span id="crumbCur"></span>
+        </nav>
+        <h1 id="pageTitle">ユーザー一覧</h1>
+      </div>
+      <div class="search">
+        <span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M16.5 16.5L21 21"/></svg></span>
+        <input type="search" id="rowSearch" placeholder="一覧を検索" aria-label="一覧を検索">
+      </div>
+    </header>
+
+    <!-- 一覧カード: 検索ツールバーを持たず、純粋に表だけ -->
+    <div class="card">
+      <div class="table-wrap">
+        <table class="list">
+          <thead id="thead"></thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+
+      <!-- ページネーション -->
+      <div class="pagination">
+        <div class="pagination__group">
+          <span id="rangeText">—</span>
+        </div>
+        <div class="pagination__group">
+          <span id="pageText">ページ 1 / 1</span>
+          <div class="seg">
+            <button aria-label="前のページ" disabled>‹</button>
+            <button aria-label="次のページ">›</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- 詳細スライドシート -->
+<div class="scrim" id="scrim"></div>
+<aside class="sheet" id="sheet" aria-hidden="true" aria-label="ユーザー詳細">
+  <div class="sheet__header">
+    <span class="sheet__id" id="s-id">—</span>
+    <button class="sheet__close" id="sheetClose" aria-label="詳細を閉じる">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+  </div>
+  <div class="sheet__hero">
+    <span class="ava-lg" id="s-ava">—</span>
+    <div>
+      <h2 class="sheet__title" id="s-name">—</h2>
+      <span class="sheet__id" id="s-email-sub">—</span>
+    </div>
+  </div>
+  <div class="sheet__body">
+    <div class="group">
+      <div class="field"><span class="field__label">メールアドレス</span><span class="field__value" id="s-email">—</span></div>
+      <div class="field"><span class="field__label">ロール</span><span class="field__value" id="s-role">—</span></div>
+      <div class="field"><span class="field__label">ステータス</span><span class="field__value" id="s-status">—</span></div>
+      <div class="field"><span class="field__label">最終ログイン</span><span class="field__value" id="s-login">—</span></div>
+      <div class="field"><span class="field__label">作成日</span><span class="field__value" id="s-created">—</span></div>
+    </div>
+  </div>
+</aside>
+
+<script>
+  /* ======================= 共通 ======================= */
+  const STATUS = {
+    active:   { label: "有効",   cls: "status--active" },
+    invited:  { label: "招待中", cls: "status--invited" },
+    disabled: { label: "無効",   cls: "status--disabled" },
+    on:       { label: "有効",   cls: "status--active" },
+    off:      { label: "無効",   cls: "status--disabled" }
+  };
+  const CHEV = '<span class="chev" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span>';
+  const statusPill = (k) => '<span class="status ' + STATUS[k].cls + '"><span class="dot" aria-hidden="true"></span>' + STATUS[k].label + '</span>';
+
+  const pageTitle = document.getElementById("pageTitle");
+  const thead = document.getElementById("thead");
+  const tbody = document.getElementById("rows");
+  const rangeText = document.getElementById("rangeText");
+  const pageText = document.getElementById("pageText");
+  const rowSearch = document.getElementById("rowSearch");
+  const crumbs = document.getElementById("crumbs");
+  const crumbCur = document.getElementById("crumbCur");
+
+  /* ======================= ユーザー一覧データ ======================= */
+  const USERS = [
+    { name:"佐藤 健一", initial:"佐", email:"k.sato@example.co.jp",      role:"管理者", status:"active",   login:"2026/06/27 09:14", created:"2023/04/01", id:"USR-1042" },
+    { name:"鈴木 美咲", initial:"鈴", email:"m.suzuki@example.co.jp",    role:"一般",   status:"active",   login:"2026/06/26 18:02", created:"2023/05/12", id:"USR-1043" },
+    { name:"高橋 亮",   initial:"高", email:"r.takahashi@example.co.jp", role:"一般",   status:"invited",  login:"—",                created:"2026/06/20", id:"USR-1101" },
+    { name:"田中 由紀", initial:"田", email:"y.tanaka@example.co.jp",    role:"管理者", status:"active",   login:"2026/06/27 08:41", created:"2022/11/03", id:"USR-0918" },
+    { name:"伊藤 直樹", initial:"伊", email:"n.ito@example.co.jp",       role:"一般",   status:"disabled", login:"2026/03/02 11:20", created:"2021/08/19", id:"USR-0612" },
+    { name:"渡辺 彩",   initial:"渡", email:"a.watanabe@example.co.jp",  role:"一般",   status:"active",   login:"2026/06/25 14:33", created:"2024/01/15", id:"USR-1188" },
+    { name:"山本 大輔", initial:"山", email:"d.yamamoto@example.co.jp",  role:"一般",   status:"invited",  login:"—",                created:"2026/06/24", id:"USR-1190" },
+    { name:"中村 香織", initial:"中", email:"k.nakamura@example.co.jp",  role:"管理者", status:"active",   login:"2026/06/27 07:55", created:"2023/02/28", id:"USR-1009" },
+    { name:"小林 翔",   initial:"小", email:"s.kobayashi@example.co.jp", role:"一般",   status:"disabled", login:"2025/12/10 16:48", created:"2022/06/07", id:"USR-0744" },
+    { name:"加藤 真衣", initial:"加", email:"m.kato@example.co.jp",      role:"一般",   status:"active",   login:"2026/06/26 22:17", created:"2024/03/30", id:"USR-1205" },
+    { name:"吉田 拓海", initial:"吉", email:"t.yoshida@example.co.jp",   role:"一般",   status:"active",   login:"2026/06/26 10:08", created:"2023/09/02", id:"USR-1120" },
+    { name:"松本 千夏", initial:"松", email:"c.matsumoto@example.co.jp", role:"一般",   status:"active",   login:"2026/06/25 09:51", created:"2024/05/18", id:"USR-1233" },
+    { name:"井上 健太", initial:"井", email:"k.inoue@example.co.jp",     role:"管理者", status:"disabled", login:"2025/11/22 13:40", created:"2021/03/11", id:"USR-0501" },
+    { name:"木村 さくら", initial:"木", email:"s.kimura@example.co.jp",  role:"一般",   status:"invited",  login:"—",                created:"2026/06/23", id:"USR-1198" }
+  ];
+
+  /* ======================= マスタ定義(~30件・フラット) ======================= */
+  const DEFAULT_COLS = ["コード","名称","区分","更新日","ステータス"];
+  const MASTERS = [
+    { name:"商品マスタ", prefix:"PRD", pinned:true,
+      cols:["商品コード","商品名","カテゴリ","標準価格","ステータス"],
+      rows:[
+        ["PRD-1001","A4 コピー用紙 500枚","事務用品","¥480","on"],
+        ["PRD-1002","スチールラック 4段","什器","¥12,800","on"],
+        ["PRD-1003","液晶モニター 27型","OA機器","¥34,000","on"],
+        ["PRD-1004","ボールペン 10本入","事務用品","¥600","on"],
+        ["PRD-1005","会議用テーブル 1800","什器","¥28,500","off"],
+        ["PRD-1006","ノートPC 14型","OA機器","¥98,000","on"],
+        ["PRD-1007","シュレッダー 業務用","OA機器","¥41,000","on"],
+        ["PRD-1008","ホワイトボード 大","什器","¥18,200","on"],
+        ["PRD-1009","プリンタトナー","消耗品","¥7,900","off"],
+        ["PRD-1010","デスクチェア 標準","什器","¥15,600","on"]
+      ] },
+    { name:"取引先マスタ", prefix:"CUST", pinned:true,
+      cols:["取引先コード","取引先名","区分","担当部署","ステータス"],
+      rows:[
+        ["CUST-2001","株式会社山田製作所","得意先","営業1部","on"],
+        ["CUST-2002","東京商事株式会社","得意先","営業2部","on"],
+        ["CUST-2003","北海道物流株式会社","仕入先","購買部","on"],
+        ["CUST-2004","大阪電子工業","仕入先","購買部","off"],
+        ["CUST-2005","九州サービス株式会社","得意先","営業1部","on"],
+        ["CUST-2006","中部建設株式会社","得意先","営業3部","on"],
+        ["CUST-2007","関西流通センター","仕入先","物流部","on"],
+        ["CUST-2008","東北資材株式会社","仕入先","購買部","on"],
+        ["CUST-2009","四国産業株式会社","得意先","営業2部","off"],
+        ["CUST-2010","信越テクノ株式会社","得意先","営業3部","on"]
+      ] },
+    { name:"価格マスタ", prefix:"PRC", pinned:true },
+    { name:"部署マスタ", prefix:"DEPT",
+      cols:["部署コード","部署名","親部署","拠点","ステータス"],
+      rows:[
+        ["DEPT-001","経営企画部","—","本社","on"],
+        ["DEPT-002","営業1部","営業本部","本社","on"],
+        ["DEPT-003","営業2部","営業本部","大阪支店","on"],
+        ["DEPT-004","購買部","管理本部","本社","on"],
+        ["DEPT-005","物流部","管理本部","東京物流センター","on"],
+        ["DEPT-006","経理部","管理本部","本社","on"],
+        ["DEPT-007","人事部","管理本部","本社","on"],
+        ["DEPT-008","情報システム部","管理本部","本社","off"],
+        ["DEPT-009","カスタマーサポート部","営業本部","大阪支店","on"]
+      ] },
+    { name:"商品カテゴリマスタ", prefix:"CAT" },
+    { name:"仕入先マスタ", prefix:"SUP" },
+    { name:"顧客マスタ", prefix:"CLI" },
+    { name:"役職マスタ", prefix:"POS" },
+    { name:"拠点マスタ", prefix:"LOC" },
+    { name:"倉庫マスタ", prefix:"WH" },
+    { name:"単位マスタ", prefix:"UNIT" },
+    { name:"通貨マスタ", prefix:"CUR" },
+    { name:"税区分マスタ", prefix:"TAX" },
+    { name:"勘定科目マスタ", prefix:"ACC" },
+    { name:"支払条件マスタ", prefix:"PAY" },
+    { name:"配送方法マスタ", prefix:"SHIP" },
+    { name:"銀行マスタ", prefix:"BANK" },
+    { name:"プロジェクトマスタ", prefix:"PRJ" },
+    { name:"契約マスタ", prefix:"CTR" },
+    { name:"ブランドマスタ", prefix:"BRD" },
+    { name:"メーカーマスタ", prefix:"MFR" },
+    { name:"国・地域マスタ", prefix:"CTRY" },
+    { name:"言語マスタ", prefix:"LANG" },
+    { name:"祝日マスタ", prefix:"HOL" },
+    { name:"タグマスタ", prefix:"TAG" },
+    { name:"帳票テンプレートマスタ", prefix:"TPL" },
+    { name:"通知テンプレートマスタ", prefix:"NTPL" },
+    { name:"在庫区分マスタ", prefix:"STK" },
+    { name:"取引区分マスタ", prefix:"TRX" }
+  ];
+
+  /* 行が未定義のマスタは、共通カラムで体裁の整ったプレースホルダ行を生成 */
+  const GEN_POOL = ["東日本","西日本","本社","第一","第二","標準","特例","臨時","国内","予備"];
+  function genRows(m) {
+    const short = m.name.replace(/マスタ$/, "");
+    const seed = m.name.length;
+    const out = [];
+    for (let j = 0; j < 10; j++) {
+      out.push([
+        m.prefix + "-" + (1001 + j),
+        short + "・" + GEN_POOL[(j + seed) % GEN_POOL.length],
+        (j % 2 === 0 ? "標準" : "特別"),
+        "2026/0" + ((j % 6) + 1) + "/" + String((j * 3 % 27) + 1).padStart(2, "0"),
+        (j % 7 === 0 ? "off" : "on")
+      ]);
+    }
+    return out;
+  }
+
+  /* ======================= メタデータ(ハブ一覧用) ======================= */
+  const META_DESC = {
+    "商品マスタ":"取り扱い商品の基本情報", "取引先マスタ":"得意先・仕入先の企業情報", "価格マスタ":"商品ごとの価格設定",
+    "部署マスタ":"組織の部署構成", "顧客マスタ":"顧客の登録情報", "役職マスタ":"役職と等級の定義",
+    "拠点マスタ":"事業所・拠点の情報", "勘定科目マスタ":"会計の勘定科目", "税区分マスタ":"消費税の区分設定"
+  };
+  function metaOf(m, idx) {
+    const short = m.name.replace(/マスタ$/, "");
+    return {
+      desc: META_DESC[m.name] || (short + "の登録情報"),
+      count: m.rows ? m.rows.length : (42 + (m.name.length * 17 + idx * 29) % 1180),
+      updated: "2026/0" + ((idx % 6) + 1) + "/" + String((idx * 4 % 27) + 1).padStart(2, "0")
+    };
+  }
+  const SORTED = MASTERS.slice().sort((a, b) => a.name.localeCompare(b.name, "ja"));
+
+  /* ======================= ビルダー ======================= */
+  function usersView() {
+    return {
+      title: "ユーザー一覧", searchPlaceholder: "ユーザーを検索",
+      columns: [
+        { label:"名前" }, { label:"メール", cls:"col-email" }, { label:"ロール" },
+        { label:"ステータス" }, { label:"最終ログイン" }, { label:"詳細", cls:"col-end", hidden:true }
+      ],
+      rows: USERS.map((u) => [
+        '<span class="person"><span class="ava">' + u.initial + '</span><span class="name">' + u.name + '</span></span>',
+        u.email,
+        '<span class="' + (u.role === "管理者" ? "pill pill--admin" : "pill") + '">' + u.role + '</span>',
+        statusPill(u.status),
+        (u.login === "—" ? '<span class="muted">—</span>' : u.login),
+        CHEV
+      ]),
+      rowClick: (i) => openSheet(USERS[i]),
+      rowLabel: (i) => USERS[i].name + " の詳細を開く"
+    };
+  }
+  function rolesView() {
+    const cols = ["ロール名","説明","ユーザー数","種別","ステータス"];
+    const raw = [
+      ["システム管理者","全機能の管理権限","3","システム","on"],
+      ["マスタ管理者","マスタの作成・編集権限","8","業務","on"],
+      ["一般ユーザー","閲覧と自身の情報編集","112","業務","on"],
+      ["監査担当","監査ログの閲覧","4","システム","on"],
+      ["ゲスト","限定的な閲覧のみ","5","外部","off"]
+    ];
+    return masterLikeView("権限・ロール", cols, raw);
+  }
+  function masterView(m, fromHub) {
+    const cols = m.cols || DEFAULT_COLS;
+    const raw = m.rows || genRows(m);
+    const v = masterLikeView(m.name, cols, raw);
+    if (fromHub) v.crumb = m.name;
+    return v;
+  }
+  function masterLikeView(title, cols, raw) {
+    const last = cols.length - 1;
+    return {
+      title: title, searchPlaceholder: "一覧を検索",
+      columns: cols.map((c) => ({ label: c })),
+      rows: raw.map((r) => r.map((v, ci) => ci === last ? statusPill(v) : v))
+    };
+  }
+  /* マスタ一覧ハブ: 30件をメタデータ付きで俯瞰(Metabase / phpMyAdmin / Object Manager) */
+  function hubView() {
+    return {
+      title: "マスタ管理", searchPlaceholder: "マスタを検索",
+      columns: [
+        { label:"マスタ名" }, { label:"説明", cls:"col-email" },
+        { label:"件数", cls:"col-num" }, { label:"最終更新" }, { label:"開く", cls:"col-end", hidden:true }
+      ],
+      rows: SORTED.map((m, i) => {
+        const meta = metaOf(m, i);
+        return [
+          '<span class="m-name">' + m.name + '</span>',
+          '<span class="muted">' + meta.desc + '</span>',
+          '<span class="num">' + meta.count.toLocaleString() + '</span>',
+          meta.updated,
+          CHEV
+        ];
+      }),
+      rowClick: (i) => openMaster(SORTED[i]),
+      rowLabel: (i) => SORTED[i].name + " を開く"
+    };
+  }
+
+  /* ======================= 描画 ======================= */
+  function render(view) {
+    if (view.crumb) { crumbs.hidden = false; crumbCur.textContent = view.crumb; }
+    else { crumbs.hidden = true; }
+    pageTitle.textContent = view.title;
+    rowSearch.placeholder = view.searchPlaceholder || "一覧を検索";
+    rowSearch.value = "";
+
+    thead.innerHTML = "<tr>" + view.columns.map((c) =>
+      "<th scope=\"col\"" + (c.cls ? " class=\"" + c.cls + "\"" : "") + ">" +
+      (c.hidden ? '<span class="visually-hidden">' + (c.label || "操作") + "</span>" : c.label) + "</th>"
+    ).join("") + "</tr>";
+
+    tbody.innerHTML = "";
+    view.rows.forEach((cells, i) => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = cells.map((html, ci) =>
+        "<td" + (view.columns[ci].cls ? " class=\"" + view.columns[ci].cls + "\"" : "") + ">" + html + "</td>"
+      ).join("");
+      if (view.rowClick) {
+        tr.tabIndex = 0;
+        tr.setAttribute("role", "button");
+        if (view.rowLabel) tr.setAttribute("aria-label", view.rowLabel(i));
+        tr.addEventListener("click", () => view.rowClick(i));
+        tr.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); view.rowClick(i); } });
+      }
+      tbody.appendChild(tr);
+    });
+
+    const n = view.rows.length;
+    rangeText.textContent = n ? ("1–" + n + " / " + n + " 件") : "0 件";
+    pageText.textContent = "ページ 1 / 1";
+  }
+
+  /* ======================= 行内検索(現在の一覧を絞り込み) ======================= */
+  rowSearch.addEventListener("input", () => {
+    const q = rowSearch.value.trim();
+    tbody.querySelectorAll("tr").forEach((tr) => {
+      tr.hidden = q.length > 0 && !tr.textContent.includes(q);
+    });
+  });
+
+  /* ======================= ナビ選択 + ハブのドリルイン ======================= */
+  const VIEWS = { users: usersView, roles: rolesView, hub: hubView };
+  const sidebarNav = document.querySelector(".sidebar__nav");
+  const hubItem = () => sidebarNav.querySelector('[data-view="hub"]');
+  function setNavActive(el) {
+    sidebarNav.querySelectorAll(".nav-item").forEach((n) => n.removeAttribute("aria-current"));
+    if (el) el.setAttribute("aria-current", "page");
+  }
+  function selectNav(el) { setNavActive(el); render(VIEWS[el.dataset.view]()); }
+  function openMaster(m) { setNavActive(hubItem()); render(masterView(m, true)); }
+  sidebarNav.addEventListener("click", (e) => { const el = e.target.closest(".nav-item"); if (el) selectNav(el); });
+  sidebarNav.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") { const el = e.target.closest(".nav-item"); if (el) { e.preventDefault(); selectNav(el); } }
+  });
+  document.getElementById("crumbHub").addEventListener("click", (e) => { e.preventDefault(); setNavActive(hubItem()); render(hubView()); });
+
+  /* ======================= 詳細シート(ユーザー一覧のみ) ======================= */
+  const scrim = document.getElementById("scrim");
+  const sheet = document.getElementById("sheet");
+  function openSheet(u) {
+    document.getElementById("s-id").textContent = u.id;
+    document.getElementById("s-ava").textContent = u.initial;
+    document.getElementById("s-name").textContent = u.name;
+    document.getElementById("s-email-sub").textContent = u.email;
+    document.getElementById("s-email").textContent = u.email;
+    document.getElementById("s-role").textContent = u.role;
+    document.getElementById("s-status").textContent = STATUS[u.status].label;
+    document.getElementById("s-login").textContent = u.login;
+    document.getElementById("s-created").textContent = u.created;
+    sheet.classList.add("open");
+    scrim.classList.add("open");
+    sheet.setAttribute("aria-hidden", "false");
+    document.getElementById("sheetClose").focus();
+  }
+  function closeSheet() {
+    sheet.classList.remove("open");
+    scrim.classList.remove("open");
+    sheet.setAttribute("aria-hidden", "true");
+  }
+  document.getElementById("sheetClose").addEventListener("click", closeSheet);
+  scrim.addEventListener("click", closeSheet);
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeSheet(); });
+
+  /* ======================= 初期描画 ======================= */
+  render(usersView());
+</script>
+</body>
+</html>
