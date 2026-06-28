@@ -3,17 +3,17 @@ phase: D4-validation
 status: approved
 updated_at: 2026-06-27
 verdict: 昇格（同型=不足ゼロ + 盲検 same-family 93 / 異型 LP=unfit 28）
-next_action: 完了。aux-admin は status:approved。任意で親 web-design-mock のルーターに empirical 哲学発見ステップを足す(設計 §8。親改変を伴うのでユーザー判断)。
+next_action: 完了。tmp-admin は status:approved。任意で親 web-design-mock のルーターに empirical 哲学発見ステップを足す(設計 §8。親改変を伴うのでユーザー判断)。
 ---
 
-> **更新(第2ラウンド)**: 下記 不足#1・#2 を D3(aux-admin.md)へ反映 → 同型を再生成。
+> **更新(第2ラウンド)**: 下記 不足#1・#2 を D3(tmp-admin.md)へ反映 → 同型を再生成。
 > `validate` PASS / `anti-slop` **CLEAN**(捏造ゼロ)。**同型の不足はゼロになった**(ハードゲート達成)。
 > 詳細は末尾「## 第2ラウンド」。
 
 # D4 — 汎化検証 / ラウンドトリップ
 
-哲学: `_philosophies/aux-admin/aux-admin.md`(variant: extends apple)。
-**循環防御**: 再生成はマージ哲学(apple base ← aux-admin デルタ)**のみ**から導出。ソース mock-v6 の
+哲学: `_philosophies/tmp-admin/tmp-admin.md`(variant: extends apple)。
+**循環防御**: 再生成はマージ哲学(apple base ← tmp-admin デルタ)**のみ**から導出。ソース mock-v6 の
 HTML は参照していない。捏造は「不足」としてログした。
 
 ---
@@ -41,7 +41,7 @@ HTML は参照していない。捏造は「不足」としてログした。
 
 ### 不足の詳細(同型 × 不足 → 哲学の穴)
 - **不足#1(軽微): font の CJK デルタ欠落**
-  ソース mock-v6 は `--font-sans` に **"Noto Sans JP"** を挿入していた(D1 §1.1)。aux-admin.md は
+  ソース mock-v6 は `--font-sans` に **"Noto Sans JP"** を挿入していた(D1 §1.1)。tmp-admin.md は
   これをデルタに入れ忘れ、base(apple)の font をそのまま使用。Hiragino 等の base CJK で機能代替は
   効くが、**ソースの意図した日本語フォントは再現できていない**。
 - **不足#2(本質的): mono フォント + 密データ規約の不在**
@@ -81,7 +81,7 @@ HTML は参照していない。捏造は「不足」としてログした。
 
 ## 第2ラウンド(D3 差し戻し → 再生成)
 
-D3(`aux-admin.md`)に以下を反映:
+D3(`tmp-admin.md`)に以下を反映:
 1. `--font-sans` を上書きデルタ化し "Noto Sans JP" を挿入(不足#1)。
 2. `--font-mono` を追加デルタ化(不足#2)。
 3. §4.4 に「密データ(ID/IP/キー/タイムスタンプ)は `--font-mono` + `tabular-nums`」規約を明文化。
@@ -108,7 +108,7 @@ D3(`aux-admin.md`)に以下を反映:
 
 ## 第3ラウンド(異型 LP + 盲検判定 → 昇格)
 
-### 異型: `output/regen-lp.html`(マーケLP を aux-admin のみで生成)
+### 異型: `output/regen-lp.html`(マーケLP を tmp-admin のみで生成)
 忠実遵守(捏造なし)で生成。`validate.mjs` **PASS** / `anti-slop.mjs` **CLEAN** ——
 **機械チェックは両方通る**。だが哲学に忠実なほど LP として壊れる(下記)。
 
@@ -125,7 +125,7 @@ D3(`aux-admin.md`)に以下を反映:
 ### D4.4 確定(昇格)
 - **同型**: 6項目すべて再現(項目6=same-family 93)→ **ハードゲート達成 + ホリスティック確認**。
 - **異型 LP**: weak 28 → `screen_scope.unfit` に記録。**忠実遵守で ずれ → スコープ外(正常)**。差し戻さない。
-- **判定 = 昇格**。`aux-admin.md` を `status: approved`、`validated_screens` / `screen_scope` を更新。
+- **判定 = 昇格**。`tmp-admin.md` を `status: approved`、`validated_screens` / `screen_scope` を更新。
 - **失敗マトリクスの精緻化(本ラウンドの産物)**: 異型の「不足」は (a)in-scope の穴=差し戻し /
   (b)意図的省略をジャンルが要求=unfit、に分かれる。異型では捏造より忠実遵守を優先。
   機械チェックは異型 unfit を検出できない → 項目6 が決定打。→ SKILL.md §D4 / 設計 §5.3a・5.3b に反映済。

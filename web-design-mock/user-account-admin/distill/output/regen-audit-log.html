@@ -6,20 +6,20 @@
 <title>管理コンソール — 監査ログ</title>
 <style>
   /* ============================================================
-     :root — aux-admin(variant: extends apple)を D4 暫定マージ。
-     apple.md §3 の base トークン + _philosophies/aux-admin デルタ。
+     :root — tmp-admin(variant: extends apple)を D4 暫定マージ。
+     apple.md §3 の base トークン + _philosophies/tmp-admin デルタ。
      ※ D4 はこの哲学ファイルのみから生成(ソース mock-v6 は見ない)。
      ============================================================ */
   :root {
-    /* ── aux-admin デルタ: font 上書き(base stack に "Noto Sans JP" 挿入) ── */
+    /* ── tmp-admin デルタ: font 上書き(base stack に "Noto Sans JP" 挿入) ── */
     --font-sans:
       -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
       "Helvetica Neue", "Noto Sans JP", "Hiragino Sans", "Hiragino Kaku Gothic ProN",
       "Yu Gothic", Meiryo, sans-serif;
-    /* ── aux-admin デルタ: 等幅(密データ用) ── */
+    /* ── tmp-admin デルタ: 等幅(密データ用) ── */
     --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
-    /* ── base: タイポ Dynamic Type(largetitle〜title2 は aux-admin で省略=未使用) ── */
+    /* ── base: タイポ Dynamic Type(largetitle〜title2 は tmp-admin で省略=未使用) ── */
     --text-title3:    20px; --leading-title3:   25px; --weight-title3:   400;
     --text-headline:  17px; --leading-headline: 22px; --weight-headline: 600;
     --text-body:      17px; --leading-body:     22px; --weight-body:     400;
@@ -52,19 +52,19 @@
     /* ── base: 角丸 ── */
     --radius-s: 8px; --radius-m: 12px; --radius-l: 18px; --radius-xl: 28px; --radius-pill: 980px;
 
-    /* ── base: 影(blur-material は aux-admin で省略=未使用) ── */
+    /* ── base: 影(blur-material は tmp-admin で省略=未使用) ── */
     --shadow-1: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
     --shadow-2: 0 8px 30px rgba(0,0,0,0.10);
 
     /* ── base: a11y ── */
     --touch-min: 44px;
 
-    /* ════ aux-admin デルタ: 上書き ════ */
-    --color-accent:        #005fa2;   /* AUX corporate blue(systemBlue を上書き)。宣言1箇所 */
+    /* ════ tmp-admin デルタ: 上書き ════ */
+    --color-accent:        #005fa2;   /* tmp corporate blue(systemBlue を上書き)。宣言1箇所 */
     --color-accent-hover:  #003a63;
     --color-on-accent:     #FFFFFF;
 
-    /* ════ aux-admin デルタ: 追加 ════ */
+    /* ════ tmp-admin デルタ: 追加 ════ */
     --color-accent-tint:   rgba(0,95,162,0.12);
     --brand-navy:    #003a63;
     --brand-skyblue: #009fe8;
@@ -252,7 +252,7 @@
   <nav class="sidebar" aria-label="管理データ">
     <div class="sidebar__brand">
       <span class="mark" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></span>
-      AUX 管理コンソール
+      tmp 管理コンソール
     </div>
     <div class="sidebar__nav">
       <div class="sidebar__label">管理データ</div>

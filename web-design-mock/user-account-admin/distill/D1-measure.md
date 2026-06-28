@@ -42,8 +42,8 @@ footnote 13/18/400     caption1 12/16/400
 
 ### 1.4 アクセント = ブランド上書き(L46–50)※宣言1箇所
 ```
---color-accent       #005fa2   /* AUX corporate blue */
---color-accent-hover #003a63   /* AUX navy(押下で沈む) */
+--color-accent       #005fa2   /* tmp corporate blue */
+--color-accent-hover #003a63   /* tmp navy(押下で沈む) */
 --color-on-accent    #FFFFFF
 --color-accent-tint  rgba(0,95,162,0.12)
 ```
@@ -163,5 +163,5 @@ s:8  m:12  l:18  xl:28  pill:980
   4. ステータス **tint pill + ドット**、ロール pill の中立/強調2段。
   5. `fill-strong` 追加・`caption2`/`label-quaternary`/`blur-material` 省略(=高密度管理画面向けの取捨)。
   6. タイポは **largetitle〜title2 不使用**・weight コントラスト主体(ヒーロー無しの管理画面適応)。
-- **未確定の問い(D2/D3 で判断)**: これは「Apple そのもの」か、「Apple 派生の管理画面哲学(aux-admin)」か。
+- **未確定の問い(D2/D3 で判断)**: これは「Apple そのもの」か、「Apple 派生の管理画面哲学(tmp-admin)」か。
   差分2〜4・6 は apple.md に無い構造で、**再利用可能な独立哲学**になり得る。

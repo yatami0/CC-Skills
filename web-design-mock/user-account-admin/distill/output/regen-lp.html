@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AUX Mobility — クラウド配車プラットフォーム</title>
+<title>tmp Mobility — クラウド配車プラットフォーム</title>
 <style>
   /* ============================================================
-     異型テスト: aux-admin(variant: extends apple)だけで LP を組む。
+     異型テスト: tmp-admin(variant: extends apple)だけで LP を組む。
      循環防御に従い哲学のみから導出。捏造(哲学に無いトークン)は使わない。
-     → aux-admin は largetitle〜title2 を「省略」、accent を塗りに使わない(V2/V3)。
+     → tmp-admin は largetitle〜title2 を「省略」、accent を塗りに使わない(V2/V3)。
         LP がそれにどう反応するかを観察する(境界マッピング)。
      ============================================================ */
   :root {
@@ -17,7 +17,7 @@
       "Helvetica Neue", "Noto Sans JP", "Hiragino Sans", "Hiragino Kaku Gothic ProN",
       "Yu Gothic", Meiryo, sans-serif;
 
-    /* aux-admin が持つタイポ段（largetitle/title1/title2 は省略=無い） */
+    /* tmp-admin が持つタイポ段（largetitle/title1/title2 は省略=無い） */
     --text-title3:    20px; --leading-title3:   25px; --weight-title3:   400;
     --text-headline:  17px; --leading-headline: 22px; --weight-headline: 600;
     --text-body:      17px; --leading-body:     22px; --weight-body:     400;
@@ -39,7 +39,7 @@
     --shadow-1: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
     --touch-min: 44px;
 
-    /* aux-admin デルタ */
+    /* tmp-admin デルタ */
     --color-accent:        #005fa2;   /* V2: フォーカス/状態のみ。塗りCTAには使わない */
     --color-accent-hover:  #003a63;
     --color-on-accent:     #FFFFFF;
@@ -58,7 +58,7 @@
 
   .wrap { max-width: 980px; margin: 0 auto; padding: 0 var(--space-7); }
 
-  /* ヒーロー: aux-admin の最大見出しは title3(20px)しか無い → ヒーロー感が出ない */
+  /* ヒーロー: tmp-admin の最大見出しは title3(20px)しか無い → ヒーロー感が出ない */
   .hero { padding: var(--space-9) 0; text-align: center; }
   .hero h1 {
     margin: 0 0 var(--space-5);
@@ -96,7 +96,7 @@
   <main class="wrap">
     <section class="hero">
       <h1>配車も請求も、ひとつのクラウドで。</h1>
-      <p>AUX Mobility は車両・ドライバー・請求を一元管理するクラウド配車プラットフォーム。導入は最短即日、既存システムとも API で連携できます。</p>
+      <p>tmp Mobility は車両・ドライバー・請求を一元管理するクラウド配車プラットフォーム。導入は最短即日、既存システムとも API で連携できます。</p>
       <a class="cta" href="#">無料で試す</a>
     </section>
 
@@ -106,7 +106,7 @@
       <div class="feature"><h3>API 連携</h3><p>既存の基幹・会計システムと REST API で双方向に接続できます。</p></div>
     </section>
 
-    <footer class="wrap">© 2026 AUX Mobility, Inc.</footer>
+    <footer class="wrap">© 2026 tmp Mobility, Inc.</footer>
   </main>
 </body>
 </html>
