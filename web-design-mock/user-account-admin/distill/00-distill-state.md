@@ -3,8 +3,8 @@ source_mock: web-design-mock/user-account-admin/output/mock-v6.html
 philosophy_name: aux-admin   # 仮(D3で確定)
 kind: variant                # extends: apple(D1/D2 で確定)
 current_phase: 完了(approved) # D1-measure | D2-principles | D3-draft | D4-validate | 完了
-updated_at: 2026-06-27
-next_action: 蒸留完了。aux-admin = status:approved(同型 不足ゼロ + 盲検 same-family 93 / 異型LP unfit 28)。任意の後続: 親 web-design-mock のルーターに empirical 哲学発見ステップを足す(設計 §8。親改変を伴うのでユーザー判断)。
+updated_at: 2026-06-28
+next_action: 蒸留完了・ループ閉。aux-admin = status:approved(同型 不足ゼロ + 盲検 same-family 93 / 異型LP unfit 28)。親ルーター連携も実装済み(親 SKILL.md §3.5 + §5 variant マージ)。残タスクは設計 §9 の任意項目(extract-tokens.mjs / ルーブリック半機械化 / 入力ソース拡張)のみ。
 ---
 # Distill State — user-account-admin → aux-admin (variant: extends apple)
 

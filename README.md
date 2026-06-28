@@ -1,4 +1,4 @@
-# web-design-mock — Claude Code スキル
+# web-design — Claude Code スキル（生成 + 蒸留の対）
 
 権威あるデザインシステム（**Apple HIG** / **IBM Carbon** / **Ant Design** / **Material 3**）の原則と正確なデザイントークンから、
 一貫した手順で「**自己完結した単一ファイル HTML**」の Web デザインモックを生成する Claude Code スキル。
@@ -7,33 +7,44 @@
 **4 フェーズ（要件→基本設計→詳細設計→実装）をユーザー検証ゲート付き**で進め、進捗をログファイルに
 残してセッションをまたいで再開できる。
 
+2 つの対のスキルで構成する:
+- **`web-design-mock`**（生成）— 権威ある哲学 → モック。本 README の中心。
+- **`web-design-distill`**（蒸留）— 気に入ったモック → 再利用可能な哲学（逆向き）。→ [後述](#モックから哲学を蒸留するweb-design-distill)。
+
 ---
 
 ## リポジトリ構成
 
 ```
 sdd/
-├── .claude/skills/web-design-mock/   ← スキル本体(これが配布物。git clone でそのまま使える)
-│   ├── SKILL.md                      #   親: ルーター + パイプライン + ゲート + 出力ルール
-│   ├── references/                   #   子: 各哲学の原則・正確なトークン・レイアウト規約
-│   │   ├── apple/apple.md            #     Apple(数値トークン非公開 → パターン+a11y数値で構成)
-│   │   ├── carbon/carbon.md          #     Carbon(公式トークンをコピー)
-│   │   ├── ant/ant.md                #     Ant Design v5 + Pro(SaaS 管理画面・ブランド色サイダー)
-│   │   └── material/material.md      #     Material 3 / Material You(表現的なコンシューマアプリ UI)
-│   └── scripts/                      #   Node・依存ゼロのユーティリティ
-│       ├── validate.mjs              #     不変条件チェッカー(色値ハードコード等)
-│       └── list-projects.mjs        #     再開用: 既存モックの発見(§0 / SessionStart hook)
+├── .claude/skills/                   ← スキル本体(これが配布物。git clone でそのまま使える)
+│   ├── web-design-mock/              #  【生成】哲学 → モック
+│   │   ├── SKILL.md                  #     親: ルーター + パイプライン + ゲート + 出力ルール
+│   │   ├── references/               #     子: 各哲学の原則・正確なトークン・レイアウト規約
+│   │   │   ├── apple/apple.md        #       Apple(数値トークン非公開 → パターン+a11y数値で構成)
+│   │   │   ├── carbon/carbon.md      #       Carbon(公式トークンをコピー)
+│   │   │   ├── ant/ant.md            #       Ant Design v5 + Pro(SaaS 管理画面・ブランド色サイダー)
+│   │   │   └── material/material.md  #       Material 3 / Material You(表現的なコンシューマアプリ UI)
+│   │   └── scripts/                  #     Node・依存ゼロのユーティリティ
+│   │       ├── validate.mjs          #       不変条件チェッカー(色値ハードコード等)
+│   │       └── list-projects.mjs     #       再開用: 既存モックの発見(§0 / SessionStart hook)
+│   └── web-design-distill/           #  【蒸留】モック → 再利用可能な哲学(逆向き。mock と対)
+│       ├── SKILL.md                  #     計測→言語化→草案→汎化検証 の 4 フェーズ + ゲート
+│       └── scripts/
+│           └── list-distills.mjs     #       再開用: 既存の蒸留作業の発見(§1 / SessionStart hook)
 ├── evals/                            ← スキル評価(開発用。配布物には含めない)
 │   ├── 01-apple-lp.json              #   Apple 風 LP
 │   ├── 02-router-carbon.json         #   哲学未指定 → ルーターが Carbon を選ぶ
 │   └── 03-fallback.json              #   未実装哲学(Fluent 2)のフォールバック
-├── install.sh / install.ps1          ← 他リポジトリ/個人用への設置スクリプト(非破壊)
-├── web-design設計.md                 ← 設計書(意思決定の根拠。運用には不要)
+├── install.sh / install.ps1          ← 2 スキルを対で設置するスクリプト(非破壊)
+├── web-design設計.md                 ← 設計書(mock。意思決定の根拠。運用には不要)
+├── web-design-distill設計.md         ← 設計書(distill。同上)
 └── README.md                         ← 本ファイル
 ```
 
 > スキルは Claude Code に**自動検出**される。`.claude/skills/<name>/SKILL.md` が置かれていれば
-> `/web-design-mock` で起動できる。`references/` `scripts/` も自動で同梱される。
+> `/web-design-mock`(生成)/ `/web-design-distill`(蒸留)で起動できる。`references/` `scripts/` も自動で同梱される。
+> 2 つは**対のスキル**(distill は mock の `validate.mjs` と `references/` を共有)なので、設置は両方まとめて行う。
 
 ---
 
@@ -43,10 +54,12 @@ sdd/
 すでにプロジェクトスキルとして配置済み。このリポジトリを開いた Claude Code で:
 
 ```
-/web-design-mock
+/web-design-mock      # 哲学 → モックを生成
+/web-design-distill   # 既存モック → 再利用可能な哲学を蒸留(逆向き)
 ```
 
-と打つか、「Webデザイン / モック / ランディングページ / 管理画面 を作って」と頼めば起動する
+と打つか、「Webデザイン / モック / ランディングページ / 管理画面 を作って」（生成）、
+「このモックから哲学を抽出 / デザインシステム化して」（蒸留）と頼めば起動する
 （`description` のトリガー語で自動起動もする）。
 
 ### 他のリポジトリで使う（プロジェクトに同梱）
@@ -64,14 +77,15 @@ pwsh ./install.ps1 C:\path\to\your-repo  # Windows PowerShell
 ./install.sh /path/to/your-repo --force
 ```
 
-設置後、対象リポジトリで Claude Code を起動し（ワークスペースの信頼を承認）`/web-design-mock`。
-`.claude/skills/web-design-mock/` を git に commit すればチーム全員で共有できる。
+設置後、対象リポジトリで Claude Code を起動し（ワークスペースの信頼を承認）`/web-design-mock` /
+`/web-design-distill`。両スキルが `.claude/skills/` に入る（distill は単体では動かず mock に依存するため対で設置）。
+git に commit すればチーム全員で共有できる。
 
 ### 個人用（全プロジェクトで使う）
 `~/.claude/skills/` に置くと、どのプロジェクトでも使える。
 
 ```bash
-./install.sh --user            # → ~/.claude/skills/web-design-mock/
+./install.sh --user            # → ~/.claude/skills/{web-design-mock, web-design-distill}/
 pwsh ./install.ps1 -User
 ```
 
@@ -160,6 +174,29 @@ node "${CLAUDE_SKILL_DIR}/scripts/validate.mjs" output/mock-vN.html
 
 ---
 
+## モックから哲学を蒸留する（web-design-distill）
+
+上は Apple/Carbon のような**権威ある（authoritative）哲学**を手で足す道。もう一方の道が
+`web-design-distill` で、**気に入った 1 枚のモックに埋め込まれた暗黙のルールを、`references/<name>/<name>.md`
+と同じ形の哲学へ逆向きに蒸留**する。生成（mock）と蒸留（distill）でフィードバックループを閉じる。
+
+```
+/web-design-distill
+```
+
+- **過学習を防ぐ 2 原則**: トークンは**実測**（`:root` を逐語抽出・捏造ゼロ）/ 原則は**推論**（`inferred`
+  タグ + 根拠を付け、モック自身が守っているかで反証可能にする）。
+- **4 フェーズ + ゲート**: 計測（D1）→ 原則の言語化（D2）→ 草案（D3）→ **汎化検証 / ラウンドトリップ（D4）**。
+  D4 は哲学ファイルだけを入力に**別画面を再生成**し、同型で**不足ゼロ**なら `approved` に昇格させる。
+- **出力先**: 昇格した哲学は作業中ワークスペースの `web-design-mock/_philosophies/<name>/<name>.md`
+  に置く（配布物 `.claude/skills/` は汚さない）。`provenance: empirical` で authoritative と棚を分ける。
+- **ループの接続**: 親 `web-design-mock` のルーター（SKILL.md §3.5）が `_philosophies/` を発見し、
+  `status: approved` の empirical 哲学を **authoritative と併記**して候補に出す（出自を隠さない）。
+
+設計の根拠は `web-design-distill設計.md` を参照。
+
+---
+
 ## 開発（評価）
 
 `evals/*.json` は Anthropic 公式の eval 形式。ドキュメントより先に評価を用意する流儀に従う。
@@ -176,5 +213,5 @@ node "${CLAUDE_SKILL_DIR}/scripts/validate.mjs" output/mock-vN.html
 | プラグイン配布 | `.claude-plugin/plugin.json` + marketplace、`/plugin install` | 他人・多数リポジトリへ本格配布。バージョン管理/自動更新が要る場合 |
 
 本リポジトリは**プロジェクト同梱**を採用（clone → `install.sh` で設置）。将来、広く配布するなら
-plugin 化（`skills/web-design-mock/` をそのまま plugin の `skills/` に置き、`plugin.json` を追加）へ
-無改造で移行できる。
+plugin 化（`skills/web-design-mock/` と `skills/web-design-distill/` をそのまま plugin の `skills/` に置き、
+`plugin.json` を追加）へ無改造で移行できる。

@@ -282,7 +282,8 @@ updated_at: <date>
 
 ## 7. まだ詰める(TODO)
 
-- `scripts/list-distills.mjs`(§1 の発見スクリプト)の実装。親の `list-projects.mjs` を範に取る。
+- ~~`scripts/list-distills.mjs`(§1 の発見スクリプト)~~ **実装済み**(親 `list-projects.mjs` を範に。`--hook` モードも対応)。
+- ~~親ルーターの「empirical 哲学 発見ステップ」具体文言(§5-1)~~ **実装済み**(親 SKILL.md §3.5「ユーザー哲学(empirical)の発見と選択」+ §5 variant マージ一行)。ループは閉じた。
 - D1 の任意ツール `extract-tokens.mjs`(`:root` 逐語抽出 + 実使用棚卸しの機械化)。手作業でも可。
-- 親ルーターの「empirical 哲学 発見ステップ」具体文言(§5-1)。
+- D4.3 ルーブリック 1〜5 番の半機械化(6番=親子適合は人間/盲検 LLM のまま)。
 - 入力ソース拡張(任意 HTML / URL / 画像)は将来。計測の信頼性(captionでない実測)が前提条件。
